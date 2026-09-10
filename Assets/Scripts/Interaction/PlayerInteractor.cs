@@ -34,7 +34,12 @@ public class PlayerInteractor : MonoBehaviour
 
             if (interactable != null)
             {
-                interactable.Interact();
+                PlayerIdentity identity = GetComponent<PlayerIdentity>();
+
+                if (identity != null)
+                {
+                    interactable.Interact(identity);
+                }
             }
         }
     }

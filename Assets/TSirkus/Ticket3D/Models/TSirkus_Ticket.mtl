@@ -1,0 +1,9 @@
+# Material fallback for OBJ viewers. Unity setup creates URP/Lit explicitly.
+newmtl Ticket_Paper
+Ka 0.15 0.15 0.15
+Kd 1.0 1.0 1.0
+Ks 0.03 0.03 0.03
+Ns 6
+d 1.0
+illum 2
+map_Kd ../Textures/TSirkus_Ticket_Print.png

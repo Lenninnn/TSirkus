@@ -38,17 +38,26 @@ public class PlayerSpawner : MonoBehaviour
             }
 
             // Buscar cámara del jugador
-            Camera playerCamera =
-                newPlayer.GetComponentInChildren<Camera>();
+Camera playerCamera =
+    newPlayer.GetComponentInChildren<Camera>();
 
-            if (playerCamera != null)
-            {
-                ConfigureCamera(
-                    playerCamera,
-                    i,
-                    amountToSpawn
-                );
-            }
+if (playerCamera != null)
+{
+    ConfigureCamera(
+        playerCamera,
+        i,
+        amountToSpawn
+    );
+}
+
+AudioListener listener =
+    newPlayer.GetComponentInChildren<AudioListener>();
+
+if (listener != null)
+{
+    // Solo Player 1 tendrá AudioListener.
+    listener.enabled = (i == 0);
+}
         }
     }
 
