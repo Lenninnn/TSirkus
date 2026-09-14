@@ -38,7 +38,13 @@ MonoBehaviour:
     m_Modified: 0
     m_ErrorMessage: 
     m_UserModificationsEntityId:
+<<<<<<< HEAD
       m_rawData: 1099511639521
     m_OriginalEntityId:
       m_rawData: 1099511639522
+=======
+      m_rawData: 1099511629199
+    m_OriginalEntityId:
+      m_rawData: 1099511629200
+>>>>>>> origin/lennin
   m_LoadAssets: 0

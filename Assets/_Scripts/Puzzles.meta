@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<< HEAD:Assets/_Scripts/Puzzles.meta
 guid: 51bca849190d4764090ebc44dad0179b
+=======
+guid: 65ac3a5e4ac0246b98660b7abcc3d827
+>>>>>>> origin/lennin:Assets/Scripts/Puzzles.meta
 folderAsset: yes
 DefaultImporter:
   externalObjects: {}
