@@ -4207,7 +4207,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TestInteractable
   interactionMessage: "Interacci\xF3n realizada correctamente."
-  highlightMaterial: {fileID: 0}
+  highlightMaterial: {fileID: 2100000, guid: c845e655bd5ff7d42bba12b5c45dee99, type: 2}
 --- !u!1 &252773568
 GameObject:
   m_ObjectHideFlags: 0
@@ -9447,6 +9447,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -927199367670048503, guid: 89c20701a36451d4ab63c277a89953df, type: 3}
       insertIndex: -1
       addedObject: {fileID: 678391589}
+    - targetCorrespondingSourceObject: {fileID: -927199367670048503, guid: 89c20701a36451d4ab63c277a89953df, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 678391592}
   m_SourcePrefab: {fileID: 100100000, guid: 89c20701a36451d4ab63c277a89953df, type: 3}
 --- !u!1 &678391587 stripped
 GameObject:
@@ -9487,6 +9490,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TicketPickup
   amount: 1
+--- !u!114 &678391592
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 678391587}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db72df93f1d4148448c1ca34c2205274, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TestInteractable
+  interactionMessage: "Interacci\xF3n realizada correctamente."
+  highlightMaterial: {fileID: 2100000, guid: c845e655bd5ff7d42bba12b5c45dee99, type: 2}
 --- !u!1 &687220710
 GameObject:
   m_ObjectHideFlags: 0
@@ -9845,6 +9862,7 @@ GameObject:
   - component: {fileID: 721534821}
   - component: {fileID: 721534820}
   - component: {fileID: 721534819}
+  - component: {fileID: 721534824}
   m_Layer: 0
   m_Name: Switch_3
   m_TagString: Untagged
@@ -9959,6 +9977,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &721534824
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 721534818}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db72df93f1d4148448c1ca34c2205274, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TestInteractable
+  interactionMessage: "Interacci\xF3n realizada correctamente."
+  highlightMaterial: {fileID: 2100000, guid: c845e655bd5ff7d42bba12b5c45dee99, type: 2}
 --- !u!1 &728624929
 GameObject:
   m_ObjectHideFlags: 0
@@ -12643,6 +12675,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -927199367670048503, guid: 89c20701a36451d4ab63c277a89953df, type: 3}
       insertIndex: -1
       addedObject: {fileID: 892704714}
+    - targetCorrespondingSourceObject: {fileID: -927199367670048503, guid: 89c20701a36451d4ab63c277a89953df, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 892704718}
   m_SourcePrefab: {fileID: 100100000, guid: 89c20701a36451d4ab63c277a89953df, type: 3}
 --- !u!1 &892704713 stripped
 GameObject:
@@ -12683,6 +12718,20 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.3, y: 0.1, z: 0.23}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &892704718
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 892704713}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db72df93f1d4148448c1ca34c2205274, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TestInteractable
+  interactionMessage: "Interacci\xF3n realizada correctamente."
+  highlightMaterial: {fileID: 2100000, guid: c845e655bd5ff7d42bba12b5c45dee99, type: 2}
 --- !u!1 &893942643
 GameObject:
   m_ObjectHideFlags: 0
@@ -12951,6 +13000,7 @@ GameObject:
   - component: {fileID: 911181572}
   - component: {fileID: 911181571}
   - component: {fileID: 911181570}
+  - component: {fileID: 911181575}
   m_Layer: 0
   m_Name: Switch_4
   m_TagString: Untagged
@@ -13065,6 +13115,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &911181575
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 911181569}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db72df93f1d4148448c1ca34c2205274, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TestInteractable
+  interactionMessage: "Interacci\xF3n realizada correctamente."
+  highlightMaterial: {fileID: 2100000, guid: c845e655bd5ff7d42bba12b5c45dee99, type: 2}
 --- !u!1 &911945279
 GameObject:
   m_ObjectHideFlags: 0
@@ -13233,6 +13297,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -927199367670048503, guid: 89c20701a36451d4ab63c277a89953df, type: 3}
       insertIndex: -1
       addedObject: {fileID: 923186783}
+    - targetCorrespondingSourceObject: {fileID: -927199367670048503, guid: 89c20701a36451d4ab63c277a89953df, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 923186787}
   m_SourcePrefab: {fileID: 100100000, guid: 89c20701a36451d4ab63c277a89953df, type: 3}
 --- !u!1 &923186782 stripped
 GameObject:
@@ -13273,6 +13340,20 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.3, y: 0.1, z: 0.23}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &923186787
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 923186782}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db72df93f1d4148448c1ca34c2205274, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TestInteractable
+  interactionMessage: "Interacci\xF3n realizada correctamente."
+  highlightMaterial: {fileID: 2100000, guid: c845e655bd5ff7d42bba12b5c45dee99, type: 2}
 --- !u!1 &926602183
 GameObject:
   m_ObjectHideFlags: 0
@@ -17659,6 +17740,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -927199367670048503, guid: 89c20701a36451d4ab63c277a89953df, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1268550787}
+    - targetCorrespondingSourceObject: {fileID: -927199367670048503, guid: 89c20701a36451d4ab63c277a89953df, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1268550791}
   m_SourcePrefab: {fileID: 100100000, guid: 89c20701a36451d4ab63c277a89953df, type: 3}
 --- !u!1 &1268550786 stripped
 GameObject:
@@ -17699,6 +17783,20 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.3, y: 0.1, z: 0.23}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &1268550791
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1268550786}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db72df93f1d4148448c1ca34c2205274, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TestInteractable
+  interactionMessage: "Interacci\xF3n realizada correctamente."
+  highlightMaterial: {fileID: 2100000, guid: c845e655bd5ff7d42bba12b5c45dee99, type: 2}
 --- !u!1 &1282745496
 GameObject:
   m_ObjectHideFlags: 0
@@ -24641,6 +24739,7 @@ GameObject:
   - component: {fileID: 1793071099}
   - component: {fileID: 1793071098}
   - component: {fileID: 1793071097}
+  - component: {fileID: 1793071102}
   m_Layer: 0
   m_Name: Switch_2
   m_TagString: Untagged
@@ -24755,6 +24854,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1793071102
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1793071096}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db72df93f1d4148448c1ca34c2205274, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TestInteractable
+  interactionMessage: "Interacci\xF3n realizada correctamente."
+  highlightMaterial: {fileID: 2100000, guid: c845e655bd5ff7d42bba12b5c45dee99, type: 2}
 --- !u!1 &1796076487
 GameObject:
   m_ObjectHideFlags: 0
@@ -25009,7 +25122,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 42376faee44a8b74186705d886373c8c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MobileInputManager
-  serverIP: 192.168.1.7
+  serverIP: 10.33.39.255
   serverPort: 9000
 --- !u!4 &1846949560
 Transform:
@@ -25109,16 +25222,11 @@ MonoBehaviour:
   - {fileID: 335842353}
   balloonController: {fileID: 2130629007}
   requiredHoldTime: 5
-  enableDebugLogs: 1
-  enablePeriodicDebug: 1
-  periodicDebugInterval: 2
+  singlePlayerTestMode: 0
+  testPlayerId: 1
   puzzleActivated: 0
   allPlayersOnBases: 0
-  currentHoldTime: 0
-  failedAttempts: 0
-  totalTimeBelowFullInflation: 0
-  lastInflationPermission: 0
-  debugTimer: 0
+  allBalloonsHoldTimer: 0
 --- !u!1 &1865003326
 GameObject:
   m_ObjectHideFlags: 0
@@ -27983,6 +28091,8 @@ MonoBehaviour:
   minimumBlowToInflate: 0.08
   initialScale: 0.5
   inflationEnabled: 1
+  singleBalloonTestMode: 1
+  testPlayerId: 1
   inflations:
   - 0
   - 0

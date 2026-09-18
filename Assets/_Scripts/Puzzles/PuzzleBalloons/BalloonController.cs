@@ -10,14 +10,14 @@ public class BalloonController : MonoBehaviour
     [SerializeField] private float inflationSpeed = 0.8f;
     [SerializeField] private float deflationSpeed = 0.18f;
     [SerializeField] private float maxInflation = 2.5f;
-    [SerializeField] private float minimumBlowToInflate = 0.08f;
+    [SerializeField] private float minimumBlowToInflate = 0.35f;
 
     [Header("Escala inicial")]
     [SerializeField] private float initialScale = 0.5f;
 
     [Header("Control del puzzle")]
     [SerializeField] private bool inflationEnabled = false;
-
+ 
     [Header("Estado de los globos")]
     [SerializeField, Range(0f, 1f)]
     private float[] inflations = new float[4];
@@ -91,41 +91,53 @@ public class BalloonController : MonoBehaviour
     }
 
     private void UpdateBalloon(int index)
+{
+    if (balloons[index] == null)
+        return;
+
+    // El índice 0 corresponde al PlayerId 1.
+    int playerId = index + 1;
+
+    float blowIntensity =
+        mobileInput.GetBlowIntensity(playerId);
+
+    // Si el valor recibido está por debajo del umbral,
+    // se considera que el jugador no está soplando.
+    if (blowIntensity < minimumBlowToInflate)
     {
-        if (balloons[index] == null)
-            return;
-
-        // El índice 0 corresponde al PlayerId 1.
-        int playerId = index + 1;
-
-        float blowIntensity =
-            mobileInput.GetBlowIntensity(playerId);
-
-        bool isBlowing =
-            blowIntensity >= minimumBlowToInflate;
-
-        if (isBlowing)
-        {
-            inflations[index] +=
-                blowIntensity *
-                inflationSpeed *
-                Time.deltaTime;
-        }
-        else
-        {
-            inflations[index] -=
-                deflationSpeed *
-                Time.deltaTime;
-        }
-
-        inflations[index] =
-            Mathf.Clamp01(inflations[index]);
-
-        UpdateBalloonVisual(index);
-
-        balloonFinished[index] =
-            inflations[index] >= 0.999f;
+        inflations[index] -=
+            deflationSpeed *
+            Time.deltaTime;
     }
+    else
+    {
+        // Convierte el rango:
+        // minimumBlowToInflate → 1
+        // en:
+        // 0 → 1
+        float normalizedBlow =
+            Mathf.InverseLerp(
+                minimumBlowToInflate,
+                1f,
+                blowIntensity
+            );
+
+        normalizedBlow = Mathf.Clamp01(normalizedBlow);
+
+        inflations[index] +=
+            normalizedBlow *
+            inflationSpeed *
+            Time.deltaTime;
+    }
+
+    inflations[index] =
+        Mathf.Clamp01(inflations[index]);
+
+    UpdateBalloonVisual(index);
+
+    balloonFinished[index] =
+        inflations[index] >= 0.999f;
+}
 
     private void UpdateBalloonVisual(int index)
     {

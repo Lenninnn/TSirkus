@@ -18,14 +18,9 @@ public class PlayerInteractor : MonoBehaviour
     [Header("Raycast settings")]
     [SerializeField] private LayerMask interactableLayers = ~0;
 
-    [Header("Highlight")]
-    [SerializeField] private Material highlightMaterial;
-
     private IInteractable currentInteractable;
+    private IHighlightable currentHighlightable;
     private Collider currentCollider;
-
-    private Renderer[] currentRenderers;
-    private Material[][] originalMaterials;
 
     private bool previousActionPressed;
 
@@ -79,6 +74,7 @@ public class PlayerInteractor : MonoBehaviour
         );
 
         IInteractable detectedInteractable = null;
+        IHighlightable detectedHighlightable = null;
         Collider detectedCollider = null;
 
         if (hitSomething)
@@ -87,114 +83,48 @@ public class PlayerInteractor : MonoBehaviour
 
             detectedInteractable =
                 hit.collider.GetComponentInParent<IInteractable>();
+
+            detectedHighlightable =
+                hit.collider.GetComponentInParent<IHighlightable>();
         }
 
+        // Si cambió el objeto detectado.
         if (detectedInteractable != currentInteractable)
         {
-            RemoveHighlight();
+            // Quitar resaltado del objeto anterior.
+            if (currentHighlightable != null)
+            {
+                currentHighlightable.SetHighlight(false);
+            }
 
             currentInteractable = detectedInteractable;
+            currentHighlightable = detectedHighlightable;
             currentCollider = detectedCollider;
+
+            // Aplicar resaltado al objeto nuevo.
+            if (currentHighlightable != null)
+            {
+                currentHighlightable.SetHighlight(true);
+            }
 
             if (currentInteractable != null)
             {
-                Debug.Log(
-                    "Raycast detectó: " +
-                    ((MonoBehaviour)currentInteractable).gameObject.name
-                );
+                MonoBehaviour interactableObject =
+                    currentInteractable as MonoBehaviour;
 
-                ApplyHighlight();
+                if (interactableObject != null)
+                {
+                    Debug.Log(
+                        "Raycast detectó: " +
+                        interactableObject.gameObject.name
+                    );
+                }
             }
         }
         else
         {
             currentCollider = detectedCollider;
         }
-    }
-
-    private void ApplyHighlight()
-    {
-        if (currentInteractable == null)
-            return;
-
-        if (highlightMaterial == null)
-        {
-            Debug.LogWarning(
-                "No hay Highlight Material asignado en PlayerInteractor."
-            );
-            return;
-        }
-
-        MonoBehaviour interactableObject =
-            currentInteractable as MonoBehaviour;
-
-        if (interactableObject == null)
-            return;
-
-        // Busca todos los Renderers del objeto y sus hijos.
-        currentRenderers =
-            interactableObject.GetComponentsInChildren<Renderer>(true);
-
-        if (currentRenderers == null || currentRenderers.Length == 0)
-        {
-            Debug.LogWarning(
-                "El objeto detectado no tiene ningún Renderer: " +
-                interactableObject.gameObject.name
-            );
-
-            return;
-        }
-
-        originalMaterials = new Material[currentRenderers.Length][];
-
-        for (int i = 0; i < currentRenderers.Length; i++)
-        {
-            Renderer renderer = currentRenderers[i];
-
-            if (renderer == null)
-                continue;
-
-            // Guardamos todos los materiales originales.
-            originalMaterials[i] = renderer.materials;
-
-            // Creamos una matriz con el material de resaltado
-            // para todos los slots del Renderer.
-            Material[] highlightMaterials =
-                new Material[renderer.materials.Length];
-
-            for (int j = 0; j < highlightMaterials.Length; j++)
-            {
-                highlightMaterials[j] = highlightMaterial;
-            }
-
-            renderer.materials = highlightMaterials;
-        }
-
-        Debug.Log(
-            "Resaltado aplicado a " +
-            currentRenderers.Length +
-            " Renderer(s)."
-        );
-    }
-
-    private void RemoveHighlight()
-    {
-        if (currentRenderers == null || originalMaterials == null)
-            return;
-
-        for (int i = 0; i < currentRenderers.Length; i++)
-        {
-            if (currentRenderers[i] == null)
-                continue;
-
-            if (originalMaterials[i] == null)
-                continue;
-
-            currentRenderers[i].materials = originalMaterials[i];
-        }
-
-        currentRenderers = null;
-        originalMaterials = null;
     }
 
     private void CheckMobileAction()
@@ -230,10 +160,16 @@ public class PlayerInteractor : MonoBehaviour
     private void TryInteract()
     {
         if (currentInteractable == null)
+        {
+            Debug.Log("No hay objeto interactuable seleccionado.");
             return;
+        }
 
         if (currentCollider == null)
+        {
+            Debug.Log("No hay collider seleccionado.");
             return;
+        }
 
         if (playerIdentity == null)
         {
@@ -248,7 +184,9 @@ public class PlayerInteractor : MonoBehaviour
             return;
 
         Vector3 closestPoint =
-            currentCollider.ClosestPoint(playerCamera.transform.position);
+            currentCollider.ClosestPoint(
+                playerCamera.transform.position
+            );
 
         float distance = Vector3.Distance(
             playerCamera.transform.position,
@@ -284,7 +222,9 @@ public class PlayerInteractor : MonoBehaviour
             return false;
 
         Vector3 closestPoint =
-            currentCollider.ClosestPoint(playerCamera.transform.position);
+            currentCollider.ClosestPoint(
+                playerCamera.transform.position
+            );
 
         float distance = Vector3.Distance(
             playerCamera.transform.position,
@@ -296,6 +236,13 @@ public class PlayerInteractor : MonoBehaviour
 
     private void OnDisable()
     {
-        RemoveHighlight();
+        if (currentHighlightable != null)
+        {
+            currentHighlightable.SetHighlight(false);
+        }
+
+        currentInteractable = null;
+        currentHighlightable = null;
+        currentCollider = null;
     }
 }

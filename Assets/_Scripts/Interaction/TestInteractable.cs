@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class TestInteractable : MonoBehaviour, IInteractable
+public class TestInteractable : MonoBehaviour, IInteractable, IHighlightable
 {
     [Header("Interaction")]
     [SerializeField] private string interactionMessage =
@@ -41,15 +41,34 @@ public class TestInteractable : MonoBehaviour, IInteractable
     public void SetHighlight(bool highlighted)
     {
         if (objectRenderer == null)
-            return;
+        {
+            Debug.LogWarning(
+                "No se encontró Renderer en " + gameObject.name
+            );
 
-        if (highlighted && highlightMaterial != null)
-        {
-            objectRenderer.material = highlightMaterial;
+            return;
         }
-        else if (!highlighted && originalMaterial != null)
+
+        if (highlighted)
         {
-            objectRenderer.material = originalMaterial;
+            if (highlightMaterial != null)
+            {
+                objectRenderer.material = highlightMaterial;
+            }
+            else
+            {
+                Debug.LogWarning(
+                    "No hay Highlight Material asignado en " +
+                    gameObject.name
+                );
+            }
+        }
+        else
+        {
+            if (originalMaterial != null)
+            {
+                objectRenderer.material = originalMaterial;
+            }
         }
     }
 }
