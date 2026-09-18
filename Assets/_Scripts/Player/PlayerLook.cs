@@ -5,6 +5,7 @@ using UnityEngine.InputSystem;
 public class PlayerLook : MonoBehaviour
 {
     [Header("Cámara")]
+    [Tooltip("Objeto CameraHolder, que debe ser hijo del Player.")]
     [SerializeField] private Transform cameraHolder;
 
     [Header("Mouse")]
@@ -13,223 +14,216 @@ public class PlayerLook : MonoBehaviour
     [Header("Celular")]
     [SerializeField] private bool useMobileLook = true;
 
-    [SerializeField] private float mobileSensitivity = 0.12f;
+    [Tooltip("Multiplicador principal de sensibilidad móvil.")]
+    [SerializeField] private float mobileSensitivity = 15f;
 
-    [Header("Límites")]
+    [Tooltip("Amplifica aún más el desplazamiento recibido.")]
+    [SerializeField] private float mobileLookMultiplier = 3f;
+
+    [Tooltip("Invierte el eje vertical del dedo.")]
+    [SerializeField] private bool invertMobileY = false;
+
+    [Header("Límites verticales")]
     [SerializeField] private float minVerticalRotation = -80f;
-
     [SerializeField] private float maxVerticalRotation = 80f;
 
-
     private PlayerIdentity identity;
-
     private MobileInputManager mobileInput;
 
-    private float verticalRotation = 0f;
-
-
-    // =====================================================
-    // AWAKE
-    // =====================================================
+    private float verticalRotation;
 
     private void Awake()
     {
-        identity =
-            GetComponent<PlayerIdentity>();
+        identity = GetComponent<PlayerIdentity>();
 
-        mobileInput =
-            FindFirstObjectByType<MobileInputManager>();
+        mobileInput = FindFirstObjectByType<MobileInputManager>();
 
-
-        Debug.Log(
-            $"👀 PlayerLook iniciado → Player {identity.PlayerId}"
-        );
-
-
-        if (
-            mobileInput != null
-        )
-        {
-            Debug.Log(
-                $"✅ Player {identity.PlayerId} encontró MobileInputManager"
-            );
-        }
-        else
+        if (cameraHolder == null)
         {
             Debug.LogError(
-                $"❌ Player {identity.PlayerId} NO encontró MobileInputManager"
+                $"❌ PlayerLook del Player {identity.PlayerId}: " +
+                "Camera Holder no está asignado.",
+                this
+            );
+        }
+
+        if (mobileInput == null)
+        {
+            Debug.LogWarning(
+                $"⚠️ Player {identity.PlayerId}: " +
+                "No se encontró MobileInputManager.",
+                this
             );
         }
     }
-
-
-    // =====================================================
-    // START
-    // =====================================================
 
     private void Start()
     {
-        Cursor.lockState =
-            CursorLockMode.Locked;
+        if (cameraHolder != null)
+        {
+            verticalRotation = NormalizeAngle(
+                cameraHolder.localEulerAngles.x
+            );
 
-        Cursor.visible =
-            false;
+            verticalRotation = Mathf.Clamp(
+                verticalRotation,
+                minVerticalRotation,
+                maxVerticalRotation
+            );
+
+            cameraHolder.localRotation = Quaternion.Euler(
+                verticalRotation,
+                0f,
+                0f
+            );
+        }
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
-
-
-    // =====================================================
-    // UPDATE
-    // =====================================================
 
     private void Update()
     {
-        HandleMouseLook();
-
-        HandleMobileLook();
-    }
-
-
-    // =====================================================
-    // MOUSE
-    // =====================================================
-
-    private void HandleMouseLook()
-    {
-        if (
-            Mouse.current == null
-        )
+        if (cameraHolder == null)
             return;
 
+        bool mobileInputDetected = false;
 
-        Vector2 mouseDelta =
-            Mouse.current.delta.ReadValue();
-
-
-        float mouseX =
-            mouseDelta.x *
-            mouseSensitivity;
-
-
-        float mouseY =
-            mouseDelta.y *
-            mouseSensitivity;
-
-
-        // ---------------------------------------------
-        // IZQUIERDA / DERECHA
-        // ---------------------------------------------
-
-        transform.Rotate(
-            Vector3.up *
-            mouseX
-        );
-
-
-        // ---------------------------------------------
-        // ARRIBA / ABAJO
-        // ---------------------------------------------
-
-        verticalRotation -=
-            mouseY;
-
-
-        verticalRotation =
-            Mathf.Clamp(
-                verticalRotation,
-                minVerticalRotation,
-                maxVerticalRotation
-            );
-
-
-        cameraHolder.localRotation =
-            Quaternion.Euler(
-                verticalRotation,
-                0f,
-                0f
-            );
-    }
-
-
-    // =====================================================
-    // CELULAR
-    // =====================================================
-
-    private void HandleMobileLook()
-    {
-        if (
-            !useMobileLook ||
-            mobileInput == null
-        )
-            return;
-
-
-        Vector2 look =
-            mobileInput.GetLook(
+        if (useMobileLook && mobileInput != null)
+        {
+            Vector2 lookInput = mobileInput.GetLook(
                 identity.PlayerId
             );
 
+            if (lookInput.sqrMagnitude > 0.000001f)
+            {
+                HandleMobileLook(lookInput);
+                mobileInputDetected = true;
+            }
+        }
 
-        if (
-            look == Vector2.zero
-        )
+        // El mouse solo se procesa si no se recibió entrada móvil.
+        if (!mobileInputDetected)
+        {
+            HandleMouseLook();
+        }
+    }
+
+    private void HandleMouseLook()
+    {
+        if (Mouse.current == null)
             return;
 
+        Vector2 mouseDelta = Mouse.current.delta.ReadValue();
 
-        // =================================================
-        // HORIZONTAL
-        // =================================================
-        //
-        // Dedo a la derecha
-        // → mirar a la derecha
-        //
-        // Dedo a la izquierda
-        // → mirar a la izquierda
-        //
+        if (mouseDelta.sqrMagnitude <= 0.000001f)
+            return;
 
         float horizontalRotation =
-            look.x *
-            mobileSensitivity;
-
-
-        transform.Rotate(
-            Vector3.up *
-            horizontalRotation
-        );
-
-
-        // =================================================
-        // VERTICAL
-        // =================================================
-        //
-        // Dedo hacia arriba
-        // → mirar hacia arriba
-        //
-        // Dedo hacia abajo
-        // → mirar hacia abajo
-        //
+            mouseDelta.x * mouseSensitivity;
 
         float verticalMovement =
-            look.y *
-            mobileSensitivity;
+            mouseDelta.y * mouseSensitivity;
 
+        // Gira el cuerpo sobre su propio eje.
+        transform.Rotate(
+            Vector3.up,
+            horizontalRotation,
+            Space.Self
+        );
 
-        verticalRotation +=
-            verticalMovement;
+        verticalRotation -= verticalMovement;
 
+        verticalRotation = Mathf.Clamp(
+            verticalRotation,
+            minVerticalRotation,
+            maxVerticalRotation
+        );
 
-        verticalRotation =
-            Mathf.Clamp(
-                verticalRotation,
-                minVerticalRotation,
-                maxVerticalRotation
-            );
+        cameraHolder.localRotation = Quaternion.Euler(
+            verticalRotation,
+            0f,
+            0f
+        );
+    }
 
+    private void HandleMobileLook(Vector2 lookInput)
+    {
+        /*
+         * El multiplicador se aplica directamente al valor recibido
+         * por MobileInputManager.
+         *
+         * Si GetLook devuelve valores muy pequeños, por ejemplo:
+         * (0.001, 0.002), este multiplicador los hace perceptibles.
+         */
 
-        cameraHolder.localRotation =
-            Quaternion.Euler(
-                verticalRotation,
-                0f,
-                0f
-            );
+        float sensitivity =
+            mobileSensitivity * mobileLookMultiplier;
+
+        float horizontalRotation =
+            lookInput.x * sensitivity;
+
+        float verticalMovement =
+            lookInput.y * sensitivity;
+
+        if (invertMobileY)
+        {
+            verticalMovement = -verticalMovement;
+        }
+
+        // Rotación horizontal del cuerpo.
+        transform.Rotate(
+            Vector3.up,
+            horizontalRotation,
+            Space.Self
+        );
+
+        // Rotación vertical únicamente de la cámara.
+        verticalRotation += verticalMovement;
+
+        verticalRotation = Mathf.Clamp(
+            verticalRotation,
+            minVerticalRotation,
+            maxVerticalRotation
+        );
+
+        cameraHolder.localRotation = Quaternion.Euler(
+            verticalRotation,
+            0f,
+            0f
+        );
+    }
+
+    private float NormalizeAngle(float angle)
+    {
+        if (angle > 180f)
+            angle -= 360f;
+
+        return angle;
+    }
+
+    private void OnValidate()
+    {
+        mobileSensitivity = Mathf.Max(
+            0.01f,
+            mobileSensitivity
+        );
+
+        mobileLookMultiplier = Mathf.Max(
+            0.01f,
+            mobileLookMultiplier
+        );
+
+        minVerticalRotation = Mathf.Clamp(
+            minVerticalRotation,
+            -89f,
+            0f
+        );
+
+        maxVerticalRotation = Mathf.Clamp(
+            maxVerticalRotation,
+            0f,
+            89f
+        );
     }
 }
