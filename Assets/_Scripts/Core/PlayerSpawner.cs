@@ -18,7 +18,8 @@ public class PlayerSpawner : MonoBehaviour
 
     private void SpawnPlayers()
     {
-        int amountToSpawn = Mathf.Min(playerCount, spawnPoints.Length);
+        int amountToSpawn =
+            Mathf.Min(playerCount, spawnPoints.Length);
 
         for (int i = 0; i < amountToSpawn; i++)
         {
@@ -28,7 +29,12 @@ public class PlayerSpawner : MonoBehaviour
                 spawnPoints[i].rotation
             );
 
-            // Asignar ID
+            newPlayer.name = "Player_" + (i + 1);
+
+            // -------------------------
+            // ASIGNAR PLAYER ID
+            // -------------------------
+
             PlayerIdentity identity =
                 newPlayer.GetComponent<PlayerIdentity>();
 
@@ -37,27 +43,39 @@ public class PlayerSpawner : MonoBehaviour
                 identity.SetPlayerId(i + 1);
             }
 
-            // Buscar cámara del jugador
-Camera playerCamera =
-    newPlayer.GetComponentInChildren<Camera>();
+            // -------------------------
+            // CONFIGURAR CÁMARA
+            // -------------------------
 
-if (playerCamera != null)
-{
-    ConfigureCamera(
-        playerCamera,
-        i,
-        amountToSpawn
-    );
-}
+            Camera playerCamera =
+                newPlayer.GetComponentInChildren<Camera>();
 
-AudioListener listener =
-    newPlayer.GetComponentInChildren<AudioListener>();
+            if (playerCamera != null)
+            {
+                ConfigureCamera(
+                    playerCamera,
+                    i,
+                    amountToSpawn
+                );
 
-if (listener != null)
-{
-    // Solo Player 1 tendrá AudioListener.
-    listener.enabled = (i == 0);
-}
+                ConfigureHighlightLayer(
+                    playerCamera,
+                    i + 1
+                );
+            }
+
+            // -------------------------
+            // AUDIO LISTENER
+            // -------------------------
+
+            AudioListener listener =
+                newPlayer.GetComponentInChildren<AudioListener>();
+
+            if (listener != null)
+            {
+                // Solo Player 1 tendrá AudioListener.
+                listener.enabled = (i == 0);
+            }
         }
     }
 
@@ -141,6 +159,58 @@ if (listener != null)
                     );
                     break;
             }
+        }
+    }
+
+    private void ConfigureHighlightLayer(
+        Camera cam,
+        int playerId)
+    {
+        int layerP1 = LayerMask.NameToLayer("HighlightP1");
+        int layerP2 = LayerMask.NameToLayer("HighlightP2");
+        int layerP3 = LayerMask.NameToLayer("HighlightP3");
+        int layerP4 = LayerMask.NameToLayer("HighlightP4");
+
+        if (
+            layerP1 == -1 ||
+            layerP2 == -1 ||
+            layerP3 == -1 ||
+            layerP4 == -1
+        )
+        {
+            Debug.LogWarning(
+                "Faltan una o más layers HighlightP1-P4."
+            );
+
+            return;
+        }
+
+        // Primero quitar todas las capas de highlight
+        // de esta cámara.
+        cam.cullingMask &= ~(1 << layerP1);
+        cam.cullingMask &= ~(1 << layerP2);
+        cam.cullingMask &= ~(1 << layerP3);
+        cam.cullingMask &= ~(1 << layerP4);
+
+        // Después activar solamente la correspondiente
+        // a este jugador.
+        switch (playerId)
+        {
+            case 1:
+                cam.cullingMask |= (1 << layerP1);
+                break;
+
+            case 2:
+                cam.cullingMask |= (1 << layerP2);
+                break;
+
+            case 3:
+                cam.cullingMask |= (1 << layerP3);
+                break;
+
+            case 4:
+                cam.cullingMask |= (1 << layerP4);
+                break;
         }
     }
 }

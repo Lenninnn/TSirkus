@@ -20,6 +20,7 @@ public class PlayerInteractor : MonoBehaviour
 
     private IInteractable currentInteractable;
     private IHighlightable currentHighlightable;
+    private ICameraHighlightable currentCameraHighlightable;
     private Collider currentCollider;
 
     private bool previousActionPressed;
@@ -38,7 +39,8 @@ public class PlayerInteractor : MonoBehaviour
 
         if (mobileInputManager == null)
         {
-            mobileInputManager = FindObjectOfType<MobileInputManager>();
+            mobileInputManager =
+                FindObjectOfType<MobileInputManager>();
         }
     }
 
@@ -75,6 +77,7 @@ public class PlayerInteractor : MonoBehaviour
 
         IInteractable detectedInteractable = null;
         IHighlightable detectedHighlightable = null;
+        ICameraHighlightable detectedCameraHighlightable = null;
         Collider detectedCollider = null;
 
         if (hitSomething)
@@ -86,26 +89,24 @@ public class PlayerInteractor : MonoBehaviour
 
             detectedHighlightable =
                 hit.collider.GetComponentInParent<IHighlightable>();
+
+            detectedCameraHighlightable =
+                hit.collider.GetComponentInParent<ICameraHighlightable>();
         }
 
-        // Si cambió el objeto detectado.
+        // Cambió el objeto que estamos mirando.
         if (detectedInteractable != currentInteractable)
         {
-            // Quitar resaltado del objeto anterior.
-            if (currentHighlightable != null)
-            {
-                currentHighlightable.SetHighlight(false);
-            }
+            RemoveCurrentHighlight();
 
             currentInteractable = detectedInteractable;
             currentHighlightable = detectedHighlightable;
+            currentCameraHighlightable =
+                detectedCameraHighlightable;
+
             currentCollider = detectedCollider;
 
-            // Aplicar resaltado al objeto nuevo.
-            if (currentHighlightable != null)
-            {
-                currentHighlightable.SetHighlight(true);
-            }
+            ApplyCurrentHighlight();
 
             if (currentInteractable != null)
             {
@@ -124,6 +125,45 @@ public class PlayerInteractor : MonoBehaviour
         else
         {
             currentCollider = detectedCollider;
+        }
+    }
+
+    private void ApplyCurrentHighlight()
+    {
+        // PRIORIDAD:
+        // highlight independiente por cámara.
+        if (currentCameraHighlightable != null)
+        {
+            currentCameraHighlightable.SetHighlightForCamera(
+                playerCamera,
+                true
+            );
+
+            return;
+        }
+
+        // Sistema antiguo como fallback.
+        if (currentHighlightable != null)
+        {
+            currentHighlightable.SetHighlight(true);
+        }
+    }
+
+    private void RemoveCurrentHighlight()
+    {
+        if (currentCameraHighlightable != null)
+        {
+            currentCameraHighlightable.SetHighlightForCamera(
+                playerCamera,
+                false
+            );
+
+            return;
+        }
+
+        if (currentHighlightable != null)
+        {
+            currentHighlightable.SetHighlight(false);
         }
     }
 
@@ -161,13 +201,19 @@ public class PlayerInteractor : MonoBehaviour
     {
         if (currentInteractable == null)
         {
-            Debug.Log("No hay objeto interactuable seleccionado.");
+            Debug.Log(
+                "No hay objeto interactuable seleccionado."
+            );
+
             return;
         }
 
         if (currentCollider == null)
         {
-            Debug.Log("No hay collider seleccionado.");
+            Debug.Log(
+                "No hay collider seleccionado."
+            );
+
             return;
         }
 
@@ -236,13 +282,11 @@ public class PlayerInteractor : MonoBehaviour
 
     private void OnDisable()
     {
-        if (currentHighlightable != null)
-        {
-            currentHighlightable.SetHighlight(false);
-        }
+        RemoveCurrentHighlight();
 
         currentInteractable = null;
         currentHighlightable = null;
+        currentCameraHighlightable = null;
         currentCollider = null;
     }
 }

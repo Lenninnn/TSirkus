@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: c85f22a9500d2ea4d89f01bc1be23b73
+timeCreated: 1486344361
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 79082
+  packageName: Activation Station
+  packageVersion: 1.0
+  assetPath: Assets/Activation Station/Materials/Pitch Black.mat
+  uploadId: 165214
