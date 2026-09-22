@@ -82,6 +82,12 @@ public class ClownEncounterManager : MonoBehaviour
         }
 
         // -----------------------------------------------------
+        // LIMPIAR CUALQUIER RESTO DEL ENCUENTRO ANTERIOR
+        // -----------------------------------------------------
+
+        ResetEncounterState();
+
+        // -----------------------------------------------------
         // BUSCAR JUGADORES ACTUALES
         // -----------------------------------------------------
 
@@ -97,9 +103,6 @@ public class ClownEncounterManager : MonoBehaviour
         }
 
         currentClown = clown;
-
-        playersWhoLooked.Clear();
-        lookTimers.Clear();
 
         encounterActive = true;
 
@@ -127,6 +130,8 @@ public class ClownEncounterManager : MonoBehaviour
             StopCoroutine(
                 encounterCoroutine
             );
+
+            encounterCoroutine = null;
         }
 
         encounterCoroutine =
@@ -162,13 +167,16 @@ public class ClownEncounterManager : MonoBehaviour
                 continue;
             }
 
+            if (!player.isActiveAndEnabled)
+            {
+                continue;
+            }
+
             players.Add(
                 player
             );
         }
 
-        // Ordenar por PlayerId para que los mensajes
-        // de depuración sean fáciles de leer.
         players.Sort(
             (a, b) =>
                 a.PlayerId.CompareTo(
@@ -213,6 +221,8 @@ public class ClownEncounterManager : MonoBehaviour
         {
             yield break;
         }
+
+        encounterCoroutine = null;
 
         FinishLookWindow();
     }
@@ -347,8 +357,56 @@ public class ClownEncounterManager : MonoBehaviour
         }
 
         DebugLog(
-            "Terminó la ventana de reacción."
+            "========================================"
         );
+
+        DebugLog(
+            "TERMINÓ LA VENTANA DE REACCIÓN."
+        );
+
+        DebugLog(
+            $"Jugadores registrados: {players.Count}"
+        );
+
+        DebugLog(
+            $"Jugadores que miraron registrados: {playersWhoLooked.Count}"
+        );
+
+        // -----------------------------------------------------
+        // MOSTRAR ESTADO DE CADA JUGADOR
+        // -----------------------------------------------------
+
+        foreach (
+            PlayerIdentity player
+            in players
+        )
+        {
+            if (player == null)
+            {
+                continue;
+            }
+
+            int playerId =
+                player.PlayerId;
+
+            bool looked =
+                playersWhoLooked.Contains(
+                    playerId
+                );
+
+            DebugLog(
+                $"Player_{playerId} -> " +
+                (looked ? "SÍ MIRÓ" : "NO MIRÓ")
+            );
+        }
+
+        DebugLog(
+            "========================================"
+        );
+
+        // -----------------------------------------------------
+        // SELECCIONAR OBJETIVO
+        // -----------------------------------------------------
 
         PlayerIdentity target =
             SelectCaptureTarget();
@@ -502,6 +560,18 @@ public class ClownEncounterManager : MonoBehaviour
         bool despawnClown = true
     )
     {
+        DebugLog(
+            "========================================"
+        );
+
+        DebugLog(
+            "FINALIZANDO ENCUENTRO."
+        );
+
+        // -----------------------------------------------------
+        // DETENER COROUTINE
+        // -----------------------------------------------------
+
         if (encounterCoroutine != null)
         {
             StopCoroutine(
@@ -511,13 +581,15 @@ public class ClownEncounterManager : MonoBehaviour
             encounterCoroutine = null;
         }
 
+        // -----------------------------------------------------
+        // DESACTIVAR ENCUENTRO
+        // -----------------------------------------------------
+
         encounterActive = false;
 
-        playersWhoLooked.Clear();
-        lookTimers.Clear();
-        players.Clear();
-
-        currentClown = null;
+        // -----------------------------------------------------
+        // AVISAR AL SPAWNER ANTES DE LIMPIAR
+        // -----------------------------------------------------
 
         if (clownSpawner != null)
         {
@@ -526,9 +598,36 @@ public class ClownEncounterManager : MonoBehaviour
             );
         }
 
+        // -----------------------------------------------------
+        // LIMPIAR ESTADO
+        // -----------------------------------------------------
+
+        ResetEncounterState();
+
         DebugLog(
-            "Encuentro finalizado."
+            "ENCUENTRO FINALIZADO Y ESTADO LIMPIADO."
         );
+
+        DebugLog(
+            "========================================"
+        );
+    }
+
+    // =========================================================
+    // LIMPIAR ESTADO
+    // =========================================================
+
+    private void ResetEncounterState()
+    {
+        encounterActive = false;
+
+        playersWhoLooked.Clear();
+
+        lookTimers.Clear();
+
+        players.Clear();
+
+        currentClown = null;
     }
 
     // =========================================================

@@ -13,13 +13,22 @@ public class ClownSpawnPoint : MonoBehaviour
     [SerializeField] private float gizmoRadius = 0.5f;
 
     public bool CanBeUsed => canBeUsed;
-    public Vector3 SpawnPosition => transform.position;
-    public Quaternion SpawnRotation => transform.rotation;
-    public bool FaceForward => faceForward;
+
+    public Vector3 SpawnPosition =>
+        transform.position;
+
+    public Quaternion SpawnRotation =>
+        transform.rotation;
+
+    public bool FaceForward =>
+        faceForward;
 
     private void OnDrawGizmos()
     {
-        Gizmos.color = canBeUsed ? Color.magenta : Color.gray;
+        Gizmos.color =
+            canBeUsed
+                ? Color.magenta
+                : Color.gray;
 
         Gizmos.DrawWireSphere(
             transform.position,
@@ -28,7 +37,8 @@ public class ClownSpawnPoint : MonoBehaviour
 
         Gizmos.DrawLine(
             transform.position,
-            transform.position + transform.forward * 1.5f
+            transform.position +
+            transform.forward * 1.5f
         );
     }
 }

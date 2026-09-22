@@ -19,6 +19,12 @@ public class ClownSpawner : MonoBehaviour
     )]
     [SerializeField] private float maxSpawnDistanceFromPlayers = 15f;
 
+    [Tooltip(
+        "Permite cierta variedad entre SpawnPoints que están prácticamente " +
+        "a la misma distancia de los jugadores."
+    )]
+    [SerializeField] private float nearestPointTolerance = 3f;
+
     [Header("Primera aparición")]
     [Tooltip("Punto específico donde aparecerá el payaso la primera vez.")]
     [SerializeField] private ClownSpawnPoint firstAppearanceSpawnPoint;
@@ -46,7 +52,7 @@ public class ClownSpawner : MonoBehaviour
     [SerializeField] private bool useSpawnPointRotation = true;
 
     [Header("Encuentro")]
-    [Tooltip("Manager que controla el encuentro de mirar/no mirar al payaso.")]
+    [Tooltip("Manager que controla las apariciones y el encuentro de mirar/no mirar al payaso.")]
     [SerializeField] private ClownEncounterManager clownEncounterManager;
 
     [Header("Depuración")]
@@ -132,7 +138,27 @@ public class ClownSpawner : MonoBehaviour
             appearanceCoroutine = null;
         }
 
-        DespawnClown();
+        // -----------------------------------------------------
+        // Si había un encuentro activo, finalizarlo.
+        // -----------------------------------------------------
+
+        if (encounterActive)
+        {
+            if (clownEncounterManager != null)
+            {
+                clownEncounterManager.FinishEncounter(
+                    true
+                );
+            }
+            else
+            {
+                DespawnClown();
+            }
+        }
+        else
+        {
+            DespawnClown();
+        }
 
         DebugLog(
             "Sistema de apariciones DESACTIVADO."
@@ -261,7 +287,27 @@ public class ClownSpawner : MonoBehaviour
             "La primera aparición terminó."
         );
 
-        DespawnClown();
+        // -----------------------------------------------------
+        // Si existiera un encuentro, terminarlo correctamente.
+        // -----------------------------------------------------
+
+        if (encounterActive)
+        {
+            if (clownEncounterManager != null)
+            {
+                clownEncounterManager.FinishEncounter(
+                    true
+                );
+            }
+            else
+            {
+                DespawnClown();
+            }
+        }
+        else
+        {
+            DespawnClown();
+        }
 
         if (appearanceCoroutine != null)
         {
@@ -348,6 +394,24 @@ public class ClownSpawner : MonoBehaviour
             if (!appearancesEnabled)
             {
                 yield break;
+            }
+
+            // -------------------------------------------------
+            // IMPORTANTE
+            //
+            // Si existe un encuentro activo, no destruimos
+            // directamente al payaso desde aquí.
+            // El Manager controla el final del encuentro.
+            // -------------------------------------------------
+
+            if (encounterActive)
+            {
+                DebugLog(
+                    "Terminó el tiempo visible, pero el encuentro sigue activo. " +
+                    "El payaso NO será eliminado automáticamente."
+                );
+
+                continue;
             }
 
             DespawnClown();
@@ -481,9 +545,6 @@ public class ClownSpawner : MonoBehaviour
 
     private ClownSpawnPoint SelectRandomSpawnPoint()
     {
-        List<ClownSpawnPoint> validPoints =
-            new List<ClownSpawnPoint>();
-
         if (
             spawnPoints == null ||
             spawnPoints.Length == 0
@@ -525,7 +586,8 @@ public class ClownSpawner : MonoBehaviour
         if (activePlayers.Count == 0)
         {
             DebugLog(
-                "No se encontraron PlayerIdentity activos. No se puede seleccionar un SpawnPoint cercano."
+                "No se encontraron PlayerIdentity activos. " +
+                "No se puede seleccionar un SpawnPoint cercano."
             );
 
             return null;
@@ -536,7 +598,7 @@ public class ClownSpawner : MonoBehaviour
         );
 
         // -----------------------------------------------------
-        // COMPROBAR CADA SPAWNPOINT
+        // VARIABLES
         // -----------------------------------------------------
 
         float maxDistance =
@@ -547,6 +609,16 @@ public class ClownSpawner : MonoBehaviour
 
         float maxDistanceSqr =
             maxDistance * maxDistance;
+
+        float nearestDistanceSqr =
+            float.MaxValue;
+
+        List<ClownSpawnPoint> validPoints =
+            new List<ClownSpawnPoint>();
+
+        // -----------------------------------------------------
+        // PRIMER RECORRIDO
+        // -----------------------------------------------------
 
         foreach (
             ClownSpawnPoint point
@@ -563,14 +635,11 @@ public class ClownSpawner : MonoBehaviour
                 continue;
             }
 
-            bool pointIsCloseToPlayer =
-                false;
+            float pointClosestDistanceSqr =
+                float.MaxValue;
 
             PlayerIdentity closestPlayer =
                 null;
-
-            float closestDistanceSqr =
-                float.MaxValue;
 
             foreach (
                 PlayerIdentity player
@@ -578,63 +647,51 @@ public class ClownSpawner : MonoBehaviour
             )
             {
                 float distanceSqr =
-                    (point.SpawnPosition - player.transform.position)
-                    .sqrMagnitude;
+                    (
+                        point.SpawnPosition -
+                        player.transform.position
+                    ).sqrMagnitude;
 
-                if (distanceSqr < closestDistanceSqr)
+                if (distanceSqr < pointClosestDistanceSqr)
                 {
-                    closestDistanceSqr =
+                    pointClosestDistanceSqr =
                         distanceSqr;
 
                     closestPlayer =
                         player;
                 }
-
-                if (distanceSqr <= maxDistanceSqr)
-                {
-                    pointIsCloseToPlayer =
-                        true;
-
-                    break;
-                }
             }
 
-            if (pointIsCloseToPlayer)
+            if (pointClosestDistanceSqr > maxDistanceSqr)
             {
-                validPoints.Add(
-                    point
-                );
-
-                float distance =
-                    Mathf.Sqrt(
-                        closestDistanceSqr
-                    );
-
-                DebugLog(
-                    $"SpawnPoint VÁLIDO: {point.gameObject.name}. " +
-                    $"Jugador más cercano: " +
-                    $"{(closestPlayer != null ? closestPlayer.gameObject.name : "desconocido")}."
-                );
-            }
-            else
-            {
-                float distance =
-                    Mathf.Sqrt(
-                        closestDistanceSqr
-                    );
-
                 DebugLog(
                     $"SpawnPoint DESCARTADO: {point.gameObject.name}. " +
-                    $"Está fuera de {maxDistance:F1}m de los jugadores."
+                    $"Distancia mínima: " +
+                    $"{Mathf.Sqrt(pointClosestDistanceSqr):F1}m."
                 );
+
+                continue;
             }
+
+            if (pointClosestDistanceSqr < nearestDistanceSqr)
+            {
+                nearestDistanceSqr =
+                    pointClosestDistanceSqr;
+            }
+
+            DebugLog(
+                $"SpawnPoint CANDIDATO: {point.gameObject.name}. " +
+                $"Jugador más cercano: " +
+                $"{(closestPlayer != null ? closestPlayer.gameObject.name : "desconocido")}. " +
+                $"Distancia: {Mathf.Sqrt(pointClosestDistanceSqr):F1}m."
+            );
         }
 
         // -----------------------------------------------------
-        // NO HAY PUNTOS CERCANOS
+        // NO HAY PUNTOS
         // -----------------------------------------------------
 
-        if (validPoints.Count == 0)
+        if (nearestDistanceSqr == float.MaxValue)
         {
             DebugLog(
                 $"No hay SpawnPoints dentro de {maxDistance:F1}m de ningún jugador activo."
@@ -644,7 +701,88 @@ public class ClownSpawner : MonoBehaviour
         }
 
         // -----------------------------------------------------
-        // ELEGIR UNO ALEATORIO
+        // SEGUNDO RECORRIDO
+        // -----------------------------------------------------
+
+        float tolerance =
+            Mathf.Max(
+                0f,
+                nearestPointTolerance
+            );
+
+        float maximumAllowedDistance =
+            Mathf.Sqrt(
+                nearestDistanceSqr
+            ) + tolerance;
+
+        float maximumAllowedDistanceSqr =
+            maximumAllowedDistance *
+            maximumAllowedDistance;
+
+        foreach (
+            ClownSpawnPoint point
+            in spawnPoints
+        )
+        {
+            if (point == null)
+            {
+                continue;
+            }
+
+            if (!point.CanBeUsed)
+            {
+                continue;
+            }
+
+            float pointClosestDistanceSqr =
+                float.MaxValue;
+
+            foreach (
+                PlayerIdentity player
+                in activePlayers
+            )
+            {
+                float distanceSqr =
+                    (
+                        point.SpawnPosition -
+                        player.transform.position
+                    ).sqrMagnitude;
+
+                if (distanceSqr < pointClosestDistanceSqr)
+                {
+                    pointClosestDistanceSqr =
+                        distanceSqr;
+                }
+            }
+
+            if (
+                pointClosestDistanceSqr <=
+                maximumAllowedDistanceSqr
+            )
+            {
+                validPoints.Add(
+                    point
+                );
+
+                DebugLog(
+                    $"SpawnPoint SELECCIONABLE: {point.gameObject.name}. " +
+                    $"Distancia mínima: " +
+                    $"{Mathf.Sqrt(pointClosestDistanceSqr):F1}m."
+                );
+            }
+        }
+
+        if (validPoints.Count == 0)
+        {
+            DebugLog(
+                "No se encontraron SpawnPoints dentro del margen de tolerancia."
+            );
+
+            return null;
+        }
+
+        // -----------------------------------------------------
+        // ELEGIR ENTRE LOS MÁS CERCANOS
         // -----------------------------------------------------
 
         int randomIndex =
@@ -659,8 +797,12 @@ public class ClownSpawner : MonoBehaviour
             ];
 
         DebugLog(
-            $"SpawnPoint seleccionado: {selectedPoint.gameObject.name}. " +
-            $"Puntos válidos encontrados: {validPoints.Count}."
+            $"SpawnPoint seleccionado: " +
+            $"{selectedPoint.gameObject.name}. " +
+            $"Distancia mínima global: " +
+            $"{Mathf.Sqrt(nearestDistanceSqr):F1}m. " +
+            $"Puntos cercanos disponibles: " +
+            $"{validPoints.Count}."
         );
 
         return selectedPoint;
@@ -797,6 +939,15 @@ public class ClownSpawner : MonoBehaviour
         {
             Debug.LogError(
                 $"{gameObject.name}: La distancia máxima respecto a los jugadores no puede ser negativa."
+            );
+
+            return false;
+        }
+
+        if (nearestPointTolerance < 0f)
+        {
+            Debug.LogError(
+                $"{gameObject.name}: La tolerancia de SpawnPoint no puede ser negativa."
             );
 
             return false;
