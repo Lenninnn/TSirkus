@@ -24,6 +24,13 @@ public class PlayerInteractor : MonoBehaviour
 
     private bool previousActionPressed;
 
+    // ==========================================
+    // PAYASO
+    // ==========================================
+
+    private ClownAI detectedClown;
+    private ClownEncounterManager clownEncounterManager;
+
     private void Awake()
     {
         if (playerCamera == null)
@@ -40,6 +47,8 @@ public class PlayerInteractor : MonoBehaviour
         {
             mobileInputManager = FindObjectOfType<MobileInputManager>();
         }
+
+        clownEncounterManager = FindObjectOfType<ClownEncounterManager>();
     }
 
     private void Update()
@@ -77,6 +86,12 @@ public class PlayerInteractor : MonoBehaviour
         IHighlightable detectedHighlightable = null;
         Collider detectedCollider = null;
 
+        // ==========================================
+        // DETECTAR PAYASO
+        // ==========================================
+
+        ClownAI newDetectedClown = null;
+
         if (hitSomething)
         {
             detectedCollider = hit.collider;
@@ -86,12 +101,21 @@ public class PlayerInteractor : MonoBehaviour
 
             detectedHighlightable =
                 hit.collider.GetComponentInParent<IHighlightable>();
+
+            newDetectedClown =
+                hit.collider.GetComponentInParent<ClownAI>();
         }
 
-        // Si cambió el objeto detectado.
+        detectedClown = newDetectedClown;
+
+        ReportClownLooking();
+
+        // ==========================================
+        // INTERACCIÓN NORMAL
+        // ==========================================
+
         if (detectedInteractable != currentInteractable)
         {
-            // Quitar resaltado del objeto anterior.
             if (currentHighlightable != null)
             {
                 currentHighlightable.SetHighlight(false);
@@ -101,7 +125,6 @@ public class PlayerInteractor : MonoBehaviour
             currentHighlightable = detectedHighlightable;
             currentCollider = detectedCollider;
 
-            // Aplicar resaltado al objeto nuevo.
             if (currentHighlightable != null)
             {
                 currentHighlightable.SetHighlight(true);
@@ -127,6 +150,35 @@ public class PlayerInteractor : MonoBehaviour
         }
     }
 
+    // ==========================================
+    // AVISAR AL MANAGER SI ESTÁ MIRANDO AL PAYASO
+    // ==========================================
+
+    private void ReportClownLooking()
+    {
+        if (clownEncounterManager == null)
+            return;
+
+        if (playerIdentity == null)
+            return;
+
+        if (!clownEncounterManager.IsEncounterActive)
+            return;
+
+        bool isLookingAtClown =
+            detectedClown != null &&
+            clownEncounterManager.CurrentClown == detectedClown.gameObject;
+
+        clownEncounterManager.ReportPlayerLooking(
+            playerIdentity,
+            isLookingAtClown
+        );
+    }
+
+    // ==========================================
+    // INPUT MÓVIL
+    // ==========================================
+
     private void CheckMobileAction()
     {
         if (mobileInputManager == null)
@@ -146,6 +198,10 @@ public class PlayerInteractor : MonoBehaviour
         previousActionPressed = actionPressed;
     }
 
+    // ==========================================
+    // INPUT TECLADO
+    // ==========================================
+
     private void CheckKeyboardAction()
     {
         if (Keyboard.current == null)
@@ -157,17 +213,27 @@ public class PlayerInteractor : MonoBehaviour
         }
     }
 
+    // ==========================================
+    // INTERACCIÓN
+    // ==========================================
+
     private void TryInteract()
     {
         if (currentInteractable == null)
         {
-            Debug.Log("No hay objeto interactuable seleccionado.");
+            Debug.Log(
+                "No hay objeto interactuable seleccionado."
+            );
+
             return;
         }
 
         if (currentCollider == null)
         {
-            Debug.Log("No hay collider seleccionado.");
+            Debug.Log(
+                "No hay collider seleccionado."
+            );
+
             return;
         }
 
@@ -205,6 +271,10 @@ public class PlayerInteractor : MonoBehaviour
         currentInteractable.Interact(playerIdentity);
     }
 
+    // ==========================================
+    // MÉTODOS PÚBLICOS
+    // ==========================================
+
     public bool HasTarget()
     {
         return currentInteractable != null;
@@ -234,12 +304,28 @@ public class PlayerInteractor : MonoBehaviour
         return distance <= interactionDistance;
     }
 
+    // ==========================================
+    // DESACTIVAR
+    // ==========================================
+
     private void OnDisable()
     {
         if (currentHighlightable != null)
         {
             currentHighlightable.SetHighlight(false);
         }
+
+        if (clownEncounterManager != null &&
+            playerIdentity != null &&
+            clownEncounterManager.IsEncounterActive)
+        {
+            clownEncounterManager.ReportPlayerLooking(
+                playerIdentity,
+                false
+            );
+        }
+
+        detectedClown = null;
 
         currentInteractable = null;
         currentHighlightable = null;
