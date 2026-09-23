@@ -20,6 +20,7 @@ public class PlayerInteractor : MonoBehaviour
 
     private IInteractable currentInteractable;
     private IHighlightable currentHighlightable;
+    private ICameraHighlightable currentCameraHighlightable;
     private Collider currentCollider;
 
     private bool previousActionPressed;
@@ -45,10 +46,12 @@ public class PlayerInteractor : MonoBehaviour
 
         if (mobileInputManager == null)
         {
-            mobileInputManager = FindObjectOfType<MobileInputManager>();
+            mobileInputManager =
+                FindObjectOfType<MobileInputManager>();
         }
 
-        clownEncounterManager = FindObjectOfType<ClownEncounterManager>();
+        clownEncounterManager =
+            FindObjectOfType<ClownEncounterManager>();
     }
 
     private void Update()
@@ -84,6 +87,7 @@ public class PlayerInteractor : MonoBehaviour
 
         IInteractable detectedInteractable = null;
         IHighlightable detectedHighlightable = null;
+        ICameraHighlightable detectedCameraHighlightable = null;
         Collider detectedCollider = null;
 
         // ==========================================
@@ -102,12 +106,16 @@ public class PlayerInteractor : MonoBehaviour
             detectedHighlightable =
                 hit.collider.GetComponentInParent<IHighlightable>();
 
+            detectedCameraHighlightable =
+                hit.collider.GetComponentInParent<ICameraHighlightable>();
+
             newDetectedClown =
                 hit.collider.GetComponentInParent<ClownAI>();
         }
 
         detectedClown = newDetectedClown;
 
+        // Avisar al sistema del payaso si corresponde.
         ReportClownLooking();
 
         // ==========================================
@@ -116,19 +124,19 @@ public class PlayerInteractor : MonoBehaviour
 
         if (detectedInteractable != currentInteractable)
         {
-            if (currentHighlightable != null)
-            {
-                currentHighlightable.SetHighlight(false);
-            }
+            // Quitar resaltado del objeto anterior.
+            RemoveCurrentHighlight();
 
+            // Guardar nuevo objeto.
             currentInteractable = detectedInteractable;
             currentHighlightable = detectedHighlightable;
+            currentCameraHighlightable =
+                detectedCameraHighlightable;
+
             currentCollider = detectedCollider;
 
-            if (currentHighlightable != null)
-            {
-                currentHighlightable.SetHighlight(true);
-            }
+            // Aplicar resaltado al objeto nuevo.
+            ApplyCurrentHighlight();
 
             if (currentInteractable != null)
             {
@@ -173,6 +181,49 @@ public class PlayerInteractor : MonoBehaviour
             playerIdentity,
             isLookingAtClown
         );
+    }
+
+    // ==========================================
+    // HIGHLIGHT
+    // ==========================================
+
+    private void ApplyCurrentHighlight()
+    {
+        // PRIORIDAD:
+        // Highlight independiente por cámara.
+        if (currentCameraHighlightable != null)
+        {
+            currentCameraHighlightable.SetHighlightForCamera(
+                playerCamera,
+                true
+            );
+
+            return;
+        }
+
+        // Sistema antiguo como fallback.
+        if (currentHighlightable != null)
+        {
+            currentHighlightable.SetHighlight(true);
+        }
+    }
+
+    private void RemoveCurrentHighlight()
+    {
+        if (currentCameraHighlightable != null)
+        {
+            currentCameraHighlightable.SetHighlightForCamera(
+                playerCamera,
+                false
+            );
+
+            return;
+        }
+
+        if (currentHighlightable != null)
+        {
+            currentHighlightable.SetHighlight(false);
+        }
     }
 
     // ==========================================
@@ -310,11 +361,11 @@ public class PlayerInteractor : MonoBehaviour
 
     private void OnDisable()
     {
-        if (currentHighlightable != null)
-        {
-            currentHighlightable.SetHighlight(false);
-        }
+        // Quitar highlight correctamente.
+        RemoveCurrentHighlight();
 
+        // Avisar al sistema del payaso que este jugador
+        // ya no está mirando al payaso.
         if (clownEncounterManager != null &&
             playerIdentity != null &&
             clownEncounterManager.IsEncounterActive)
@@ -329,6 +380,7 @@ public class PlayerInteractor : MonoBehaviour
 
         currentInteractable = null;
         currentHighlightable = null;
+        currentCameraHighlightable = null;
         currentCollider = null;
     }
 }

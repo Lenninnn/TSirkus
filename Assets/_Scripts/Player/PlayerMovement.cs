@@ -1,18 +1,15 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-
 [RequireComponent(typeof(CharacterController))]
 [RequireComponent(typeof(PlayerIdentity))]
 public class PlayerMovement : MonoBehaviour
 {
-
     // =====================================================
     // MOVIMIENTO
     // =====================================================
 
     [Header("Movimiento")]
-
     [SerializeField]
     private float moveSpeed = 4f;
 
@@ -25,7 +22,6 @@ public class PlayerMovement : MonoBehaviour
     // =====================================================
 
     [Header("Salto")]
-
     [SerializeField]
     private float jumpHeight = 1.5f;
 
@@ -35,7 +31,6 @@ public class PlayerMovement : MonoBehaviour
     // =====================================================
 
     [Header("Teclado")]
-
     [SerializeField]
     private bool useKeyboardInput = true;
 
@@ -45,7 +40,6 @@ public class PlayerMovement : MonoBehaviour
     // =====================================================
 
     [Header("Celular")]
-
     [SerializeField]
     private bool useMobileInput = true;
 
@@ -58,7 +52,6 @@ public class PlayerMovement : MonoBehaviour
     // =====================================================
 
     private CharacterController controller;
-
     private PlayerIdentity identity;
 
 
@@ -77,6 +70,25 @@ public class PlayerMovement : MonoBehaviour
 
 
     // =====================================================
+    // BLOQUEO POR ESTADO
+    // =====================================================
+
+    private bool movementLocked = false;
+
+    public bool MovementLocked => movementLocked;
+
+    public void SetMovementLocked(bool locked)
+    {
+        movementLocked = locked;
+
+        Debug.LogWarning(
+            $"🔒 Player {identity.PlayerId} | " +
+            $"Movimiento bloqueado: {movementLocked}"
+        );
+    }
+
+
+    // =====================================================
     // AWAKE
     // =====================================================
 
@@ -88,26 +100,26 @@ public class PlayerMovement : MonoBehaviour
         identity =
             GetComponent<PlayerIdentity>();
 
-        mobileInput =
-            FindFirstObjectByType<MobileInputManager>();
-
-        Debug.Log(
-            $"🎮 PlayerMovement iniciado → Player {identity.PlayerId}"
-        );
+        if (mobileInput == null)
+        {
+            mobileInput =
+                FindFirstObjectByType<MobileInputManager>();
+        }
 
         if (mobileInput != null)
         {
             Debug.Log(
-                $"✅ Player {identity.PlayerId} encontró MobileInputManager"
+                "✅ PlayerMovement encontró MobileInputManager"
             );
         }
         else
         {
             Debug.LogError(
-                $"❌ Player {identity.PlayerId} NO encontró MobileInputManager"
+                "❌ PlayerMovement NO encontró MobileInputManager"
             );
         }
     }
+
 
     // =====================================================
     // UPDATE
@@ -115,11 +127,8 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
-
         HandleMovement();
-
         HandleJump();
-
     }
 
 
@@ -129,63 +138,52 @@ public class PlayerMovement : MonoBehaviour
 
     private void HandleMovement()
     {
+        Vector2 input = Vector2.zero;
 
-        Vector2 input =
-            Vector2.zero;
+        // -------------------------------------------------
+        // Si está capturado, no recibe input horizontal.
+        // La gravedad sigue funcionando normalmente.
+        // -------------------------------------------------
 
-
-        // =================================================
-        // TECLADO
-        // =================================================
-
-        if (
-            useKeyboardInput
-        )
+        if (!movementLocked)
         {
-
-            input +=
-                GetKeyboardInput();
-
-        }
-
-
-        // =================================================
-        // CELULAR
-        // =================================================
-
-        if (
-            useMobileInput &&
-            mobileInput != null
-        )
-        {
-
-            Vector2 mobileMovement =
-                mobileInput.GetMovement(
-                    identity.PlayerId
-                );
-
-
             // =============================================
-            // DEBUG DEL CELULAR
+            // TECLADO
             // =============================================
 
-            if (
-                mobileMovement.magnitude > 0.05f
-            )
+            if (useKeyboardInput)
             {
-
-                Debug.Log(
-                    $"📱 Player {identity.PlayerId} → " +
-                    $"Joystick X: {mobileMovement.x:F2} | " +
-                    $"Y: {mobileMovement.y:F2}"
-                );
-
+                input += GetKeyboardInput();
             }
 
 
-            input +=
-                mobileMovement;
+            // =============================================
+            // CELULAR
+            // =============================================
 
+            if (
+                useMobileInput &&
+                mobileInput != null
+            )
+            {
+                Vector2 mobileMovement =
+                    mobileInput.GetMovement(
+                        identity.PlayerId
+                    );
+
+                if (
+                    mobileMovement.magnitude > 0.05f
+                )
+                {
+                    Debug.Log(
+                        $"📱 Player {identity.PlayerId} → " +
+                        $"Joystick X: {mobileMovement.x:F2} | " +
+                        $"Y: {mobileMovement.y:F2}"
+                    );
+                }
+
+                input += mobileMovement;
+            }
         }
 
 
@@ -205,11 +203,8 @@ public class PlayerMovement : MonoBehaviour
         // =================================================
 
         Vector3 move =
-            transform.right *
-            input.x
-            +
-            transform.forward *
-            input.y;
+            transform.right * input.x +
+            transform.forward * input.y;
 
 
         // =================================================
@@ -221,12 +216,8 @@ public class PlayerMovement : MonoBehaviour
             verticalVelocity < 0f
         )
         {
-
-            verticalVelocity =
-                -2f;
-
+            verticalVelocity = -2f;
         }
-
 
         verticalVelocity +=
             gravity *
@@ -237,9 +228,7 @@ public class PlayerMovement : MonoBehaviour
         // VELOCIDAD
         // =================================================
 
-        move *=
-            moveSpeed;
-
+        move *= moveSpeed;
 
         move.y =
             verticalVelocity;
@@ -253,7 +242,6 @@ public class PlayerMovement : MonoBehaviour
             move *
             Time.deltaTime
         );
-
     }
 
 
@@ -263,9 +251,14 @@ public class PlayerMovement : MonoBehaviour
 
     private void HandleJump()
     {
+        // Capturado no puede saltar.
+        if (movementLocked)
+        {
+            previousJumpState = false;
+            return;
+        }
 
-        bool jumpPressed =
-            false;
+        bool jumpPressed = false;
 
 
         // =================================================
@@ -277,29 +270,20 @@ public class PlayerMovement : MonoBehaviour
             mobileInput != null
         )
         {
-
             jumpPressed =
                 mobileInput.IsJumpPressed(
                     identity.PlayerId
                 );
 
-
-            // =============================================
-            // DEBUG DEL BOTÓN
-            // =============================================
-
             if (
                 jumpPressed != previousJumpState
             )
             {
-
                 Debug.Log(
                     $"🦘 Player {identity.PlayerId} → " +
                     $"Botón SALTAR: {jumpPressed}"
                 );
-
             }
-
         }
 
 
@@ -321,7 +305,6 @@ public class PlayerMovement : MonoBehaviour
             controller.isGrounded
         )
         {
-
             verticalVelocity =
                 Mathf.Sqrt(
                     jumpHeight *
@@ -329,12 +312,10 @@ public class PlayerMovement : MonoBehaviour
                     gravity
                 );
 
-
             Debug.Log(
                 $"🦘 Player {identity.PlayerId} SALTÓ | " +
                 $"Fuerza: {verticalVelocity:F2}"
             );
-
         }
 
 
@@ -344,7 +325,6 @@ public class PlayerMovement : MonoBehaviour
 
         previousJumpState =
             jumpPressed;
-
     }
 
 
@@ -354,66 +334,37 @@ public class PlayerMovement : MonoBehaviour
 
     private Vector2 GetKeyboardInput()
     {
-
-        if (
-            Keyboard.current == null
-        )
+        if (Keyboard.current == null)
         {
-
             return Vector2.zero;
-
         }
-
 
         Vector2 input =
             Vector2.zero;
 
-
-        if (
-            Keyboard.current.wKey.isPressed
-        )
+        if (Keyboard.current.wKey.isPressed)
         {
-
             input.y += 1f;
-
         }
 
-
-        if (
-            Keyboard.current.sKey.isPressed
-        )
+        if (Keyboard.current.sKey.isPressed)
         {
-
             input.y -= 1f;
-
         }
 
-
-        if (
-            Keyboard.current.dKey.isPressed
-        )
+        if (Keyboard.current.dKey.isPressed)
         {
-
             input.x += 1f;
-
         }
 
-
-        if (
-            Keyboard.current.aKey.isPressed
-        )
+        if (Keyboard.current.aKey.isPressed)
         {
-
             input.x -= 1f;
-
         }
-
 
         return Vector2.ClampMagnitude(
             input,
             1f
         );
-
     }
-
 }

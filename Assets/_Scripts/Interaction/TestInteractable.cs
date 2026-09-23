@@ -9,10 +9,11 @@ public class TestInteractable : MonoBehaviour, IInteractable, IHighlightable
     [Header("Highlight")]
     [SerializeField] private Material highlightMaterial;
 
-    private Renderer objectRenderer;
+    //private Renderer objectRenderer;
+    [SerializeField] private Renderer objectRenderer;
     private Material originalMaterial;
 
-    private void Awake()
+    /*private void Awake()
     {
         objectRenderer = GetComponentInChildren<Renderer>();
 
@@ -20,7 +21,21 @@ public class TestInteractable : MonoBehaviour, IInteractable, IHighlightable
         {
             originalMaterial = objectRenderer.material;
         }
+    }*/
+
+    private void Awake()
+{
+    // Si no se asignó manualmente, buscar uno automáticamente.
+    if (objectRenderer == null)
+    {
+        objectRenderer = GetComponentInChildren<Renderer>();
     }
+
+    if (objectRenderer != null)
+    {
+        originalMaterial = objectRenderer.material;
+    }
+}
 
     public void Interact(PlayerIdentity player)
     {
