@@ -1,15 +1,26 @@
 using UnityEngine;
 
 
+[RequireComponent(typeof(Collider))]
 public class FlashlightPuzzleRoomTrigger : MonoBehaviour
 {
 
     // =========================================================
-    // PUZZLE
+    // PUZZLE GENERAL
     // =========================================================
 
-    [Header("Puzzle")]
+    [Header("Puzzle General")]
     [SerializeField] private PuzzleController puzzleController;
+
+
+    // =========================================================
+    // PUZZLE ESPECÍFICO
+    // =========================================================
+
+    [Header("Specific Puzzle")]
+    [SerializeField] private SkrytyeSlovaController skrytyeSlovaController;
+
+    [SerializeField] private bool activateSpecificPuzzle = true;
 
 
     // =========================================================
@@ -34,12 +45,22 @@ public class FlashlightPuzzleRoomTrigger : MonoBehaviour
 
 
     // =========================================================
+    // DEBUG
+    // =========================================================
+
+    [Header("Debug")]
+    [SerializeField] private bool debugLogs = true;
+
+
+    // =========================================================
     // ESTADO
     // =========================================================
 
-    private bool[] playersPassed = new bool[5];
+    private bool[] playersPassed =
+        new bool[5];
 
-    private bool puzzleActivated = false;
+    private bool puzzleActivated =
+        false;
 
 
     // =========================================================
@@ -48,15 +69,126 @@ public class FlashlightPuzzleRoomTrigger : MonoBehaviour
 
     private void Awake()
     {
+
         ResetPassedPlayers();
+
+
+        // -------------------------------------------------
+        // Comprobar Collider
+        // -------------------------------------------------
+
+        Collider triggerCollider =
+            GetComponent<Collider>();
+
+
+        if (triggerCollider == null)
+        {
+            Debug.LogError(
+                $"🔦 [FLASHLIGHT PUZZLE] " +
+                $"El objeto {gameObject.name} no tiene Collider."
+            );
+
+            return;
+        }
+
+
+        if (!triggerCollider.isTrigger)
+        {
+            Debug.LogError(
+                $"🔦 [FLASHLIGHT PUZZLE] ERROR: " +
+                $"{gameObject.name} tiene Collider pero " +
+                $"IS TRIGGER está desactivado."
+            );
+        }
+        else
+        {
+            DebugLog(
+                $"🔦 [FLASHLIGHT PUZZLE] Trigger preparado correctamente -> " +
+                $"{gameObject.name}"
+            );
+        }
+
+
+        // -------------------------------------------------
+        // Validar cantidad de jugadores
+        // -------------------------------------------------
+
+        requiredPlayers =
+            Mathf.Clamp(
+                requiredPlayers,
+                1,
+                4
+            );
+
+
+        DebugLog(
+            $"🔦 [FLASHLIGHT PUZZLE] " +
+            $"Jugadores requeridos: {requiredPlayers}"
+        );
+
+
+        // -------------------------------------------------
+        // Referencias principales
+        // -------------------------------------------------
+
+        if (puzzleController == null)
+        {
+            Debug.LogWarning(
+                $"🔦 [FLASHLIGHT PUZZLE] " +
+                $"No hay PuzzleController asignado."
+            );
+        }
+        else
+        {
+            DebugLog(
+                $"🔦 [FLASHLIGHT PUZZLE] " +
+                $"PuzzleController asignado -> " +
+                $"{puzzleController.gameObject.name}"
+            );
+        }
+
+
+        if (
+            activateSpecificPuzzle &&
+            skrytyeSlovaController == null
+        )
+        {
+            Debug.LogWarning(
+                $"🔦 [FLASHLIGHT PUZZLE] " +
+                $"Activate Specific Puzzle está activo, " +
+                $"pero SkrytyeSlovaController no está asignado."
+            );
+        }
+        else if (
+            skrytyeSlovaController != null
+        )
+        {
+            DebugLog(
+                $"🔦 [FLASHLIGHT PUZZLE] " +
+                $"SkrytyeSlovaController asignado -> " +
+                $"{skrytyeSlovaController.gameObject.name}"
+            );
+        }
     }
 
+
+    // =========================================================
+    // TRIGGER ENTER
+    // =========================================================
 
     private void OnTriggerEnter(Collider other)
     {
 
+        DebugLog(
+            $"🔦 [FLASHLIGHT PUZZLE] " +
+            $"COLLIDER ENTRÓ AL TRIGGER -> " +
+            $"Objeto: {other.name} | " +
+            $"Root: {other.transform.root.name}"
+        );
+
+
         // -------------------------------------------------
-        // No volver a activar si este trigger ya terminó.
+        // No volver a activar si ya terminó
         // -------------------------------------------------
 
         if (
@@ -64,18 +196,26 @@ public class FlashlightPuzzleRoomTrigger : MonoBehaviour
             puzzleActivated
         )
         {
+            DebugLog(
+                "🔦 [FLASHLIGHT PUZZLE] " +
+                "El puzzle ya fue activado. Ignorando entrada."
+            );
+
             return;
         }
 
 
         // -------------------------------------------------
-        // Buscar la identidad del jugador.
-        // Funciona aunque el collider esté en un hijo.
+        // Buscar PlayerIdentity
         // -------------------------------------------------
 
         PlayerIdentity identity =
             other.GetComponentInParent<PlayerIdentity>();
 
+
+        // -------------------------------------------------
+        // Segundo intento
+        // -------------------------------------------------
 
         if (identity == null)
         {
@@ -84,18 +224,51 @@ public class FlashlightPuzzleRoomTrigger : MonoBehaviour
         }
 
 
+        // -------------------------------------------------
+        // Tercer intento:
+        // mirar en el root del objeto que entró.
+        // -------------------------------------------------
+
         if (identity == null)
         {
+            identity =
+                other.transform.root
+                    .GetComponent<PlayerIdentity>();
+        }
+
+
+        // -------------------------------------------------
+        // Si no encontramos identidad
+        // -------------------------------------------------
+
+        if (identity == null)
+        {
+            Debug.LogWarning(
+                $"🔦 [FLASHLIGHT PUZZLE] " +
+                $"El objeto {other.name} entró al trigger, " +
+                $"pero NO se encontró PlayerIdentity."
+            );
+
             return;
         }
 
+
+        // -------------------------------------------------
+        // Obtener Player ID
+        // -------------------------------------------------
 
         int playerId =
             identity.PlayerId;
 
 
+        DebugLog(
+            $"🔦 [FLASHLIGHT PUZZLE] " +
+            $"PlayerIdentity detectado -> PLAYER {playerId}"
+        );
+
+
         // -------------------------------------------------
-        // Solo aceptamos Players 1-4.
+        // Validar Player ID
         // -------------------------------------------------
 
         if (
@@ -103,19 +276,35 @@ public class FlashlightPuzzleRoomTrigger : MonoBehaviour
             playerId > 4
         )
         {
+            Debug.LogWarning(
+                $"🔦 [FLASHLIGHT PUZZLE] " +
+                $"Player ID inválido: {playerId}"
+            );
+
             return;
         }
 
 
         // -------------------------------------------------
-        // Ese jugador ya había pasado la puerta.
+        // Evitar contar dos veces
         // -------------------------------------------------
 
-        if (playersPassed[playerId])
+        if (
+            playersPassed[playerId]
+        )
         {
+            DebugLog(
+                $"🔦 [FLASHLIGHT PUZZLE] " +
+                $"PLAYER {playerId} ya había pasado."
+            );
+
             return;
         }
 
+
+        // -------------------------------------------------
+        // Registrar jugador
+        // -------------------------------------------------
 
         playersPassed[playerId] =
             true;
@@ -126,16 +315,19 @@ public class FlashlightPuzzleRoomTrigger : MonoBehaviour
 
 
         Debug.Log(
-            $"🔦 [FLASHLIGHT PUZZLE] PLAYER {playerId} " +
-            $"pasó la puerta -> {passedCount}/{requiredPlayers}"
+            $"🔦 [FLASHLIGHT PUZZLE] " +
+            $"PLAYER {playerId} PASÓ EL TRIGGER -> " +
+            $"{passedCount}/{requiredPlayers}"
         );
 
 
         // -------------------------------------------------
-        // Cuando pasan los cuatro, activar el puzzle.
+        // Comprobar si ya pasaron suficientes jugadores
         // -------------------------------------------------
 
-        if (passedCount >= requiredPlayers)
+        if (
+            passedCount >= requiredPlayers
+        )
         {
             ActivatePuzzle();
         }
@@ -160,51 +352,102 @@ public class FlashlightPuzzleRoomTrigger : MonoBehaviour
 
 
         Debug.Log(
-            "🔦🔦🔦 [FLASHLIGHT PUZZLE] LOS 4 JUGADORES " +
-            "PASARON LA PUERTA -> ACTIVANDO PUZZLE 🔦🔦🔦"
+            "🔦🔦🔦 [FLASHLIGHT PUZZLE] " +
+            "REQUISITO DE JUGADORES CUMPLIDO -> " +
+            "ACTIVANDO PUZZLE 🔦🔦🔦"
         );
 
 
-        // -------------------------------------------------
-        // Cambiar el estado del PuzzleController.
-        // Esto reemplaza el Activate Puzzle manual.
-        // -------------------------------------------------
+        // =====================================================
+        // PUZZLE CONTROLLER GENERAL
+        // =====================================================
 
         if (puzzleController != null)
         {
+
+            DebugLog(
+                $"🔦 [FLASHLIGHT PUZZLE] " +
+                $"Estado actual PuzzleController: " +
+                $"{puzzleController.CurrentState}"
+            );
+
+
             puzzleController.ActivatePuzzle();
+
+
+            DebugLog(
+                $"🔦 [FLASHLIGHT PUZZLE] " +
+                $"Estado después de ActivatePuzzle(): " +
+                $"{puzzleController.CurrentState}"
+            );
         }
         else
         {
             Debug.LogError(
-                "🔦 [FLASHLIGHT PUZZLE] Falta asignar " +
-                "PuzzleController en el Inspector."
+                "🔦 [FLASHLIGHT PUZZLE] " +
+                "Falta asignar PuzzleController."
             );
         }
 
 
-        // -------------------------------------------------
-        // Encender las cuatro linternas.
-        // -------------------------------------------------
+        // =====================================================
+        // PUZZLE ESPECÍFICO: SKRYTYE SLOVA
+        // =====================================================
+
+        if (
+            activateSpecificPuzzle &&
+            skrytyeSlovaController != null
+        )
+        {
+
+            Debug.Log(
+                "🔤🔦 [FLASHLIGHT PUZZLE] " +
+                "Activando SkrytyeSlovaController..."
+            );
+
+
+            skrytyeSlovaController.ActivatePuzzle();
+
+
+            Debug.Log(
+                "🔤🔦 [FLASHLIGHT PUZZLE] " +
+                "SkrytyeSlovaController ACTIVADO."
+            );
+        }
+
+
+        // =====================================================
+        // LINTERNA
+        // =====================================================
 
         ActivateAllFlashlights();
 
 
-        // -------------------------------------------------
-        // Opcional: apagar el trigger después de activar.
-        // -------------------------------------------------
+        // =====================================================
+        // DESACTIVAR TRIGGER
+        // =====================================================
 
-        if (disableTriggerAfterActivation)
+        if (
+            disableTriggerAfterActivation
+        )
         {
 
             Collider triggerCollider =
                 GetComponent<Collider>();
 
 
-            if (triggerCollider != null)
+            if (
+                triggerCollider != null
+            )
             {
                 triggerCollider.enabled =
                     false;
+
+
+                DebugLog(
+                    "🔦 [FLASHLIGHT PUZZLE] " +
+                    "Trigger desactivado después de activar el puzzle."
+                );
             }
         }
     }
@@ -223,8 +466,8 @@ public class FlashlightPuzzleRoomTrigger : MonoBehaviour
         )
         {
             Debug.LogError(
-                "🔦 [FLASHLIGHT PUZZLE] No hay FlashlightControllers " +
-                "asignados en el Inspector."
+                "🔦 [FLASHLIGHT PUZZLE] " +
+                "No hay FlashlightControllers configurados."
             );
 
             return;
@@ -235,16 +478,24 @@ public class FlashlightPuzzleRoomTrigger : MonoBehaviour
             0;
 
 
-        foreach (
-            FlashlightController flashlight in flashlights
+        for (
+            int i = 0;
+            i < flashlights.Length;
+            i++
         )
         {
 
-            if (flashlight == null)
+            FlashlightController flashlight =
+                flashlights[i];
+
+
+            if (
+                flashlight == null
+            )
             {
                 Debug.LogWarning(
-                    "🔦 [FLASHLIGHT PUZZLE] Hay un slot de " +
-                    "FlashlightController vacío."
+                    $"🔦 [FLASHLIGHT PUZZLE] " +
+                    $"Slot {i + 1} de FlashlightController vacío."
                 );
 
                 continue;
@@ -258,14 +509,16 @@ public class FlashlightPuzzleRoomTrigger : MonoBehaviour
 
 
             Debug.Log(
-                $"🔦 [FLASHLIGHT PUZZLE] Linterna activada -> " +
+                $"🔦 [FLASHLIGHT PUZZLE] " +
+                $"Linterna activada -> " +
                 $"Player {flashlight.GetPlayerId()}"
             );
         }
 
 
         Debug.Log(
-            $"🔦 [FLASHLIGHT PUZZLE] Linternas activadas: " +
+            $"🔦 [FLASHLIGHT PUZZLE] " +
+            $"Linternas activadas: " +
             $"{activatedCount}/{flashlights.Length}"
         );
     }
@@ -288,7 +541,10 @@ public class FlashlightPuzzleRoomTrigger : MonoBehaviour
             i++
         )
         {
-            if (playersPassed[i])
+
+            if (
+                playersPassed[i]
+            )
             {
                 count++;
             }
@@ -315,13 +571,28 @@ public class FlashlightPuzzleRoomTrigger : MonoBehaviour
 
 
         Debug.Log(
-            "🔦 [FLASHLIGHT PUZZLE] Trigger reiniciado."
+            "🔦 [FLASHLIGHT PUZZLE] " +
+            "Trigger reiniciado."
         );
     }
 
 
+    // =========================================================
+    // RESET JUGADORES
+    // =========================================================
+
     private void ResetPassedPlayers()
     {
+
+        if (
+            playersPassed == null ||
+            playersPassed.Length != 5
+        )
+        {
+            playersPassed =
+                new bool[5];
+        }
+
 
         for (
             int i = 0;
@@ -332,5 +603,23 @@ public class FlashlightPuzzleRoomTrigger : MonoBehaviour
             playersPassed[i] =
                 false;
         }
+    }
+
+
+    // =========================================================
+    // DEBUG
+    // =========================================================
+
+    private void DebugLog(
+        string message
+    )
+    {
+        if (!debugLogs)
+        {
+            return;
+        }
+
+
+        Debug.Log(message);
     }
 }

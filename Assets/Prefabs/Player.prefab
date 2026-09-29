@@ -51,14 +51,14 @@ MonoBehaviour:
   flashlightPivot: {fileID: 574021856510952066}
   flashlightLight: {fileID: 7645241797943257901}
   flashlightActive: 1
-  horizontalSensitivity: 1.5
-  verticalSensitivity: 1.5
-  maxHorizontalAngle: 120
-  minVerticalAngle: -90
-  maxVerticalAngle: 90
+  horizontalSensitivity: 3
+  verticalSensitivity: 3
+  maxHorizontalAngle: 270
+  minVerticalAngle: -180
+  maxVerticalAngle: 180
   rotationSmoothSpeed: 10
   autoCalibrate: 1
-  accelerometerDeadZone: 0.1
+  accelerometerDeadZone: 0.4
   debugLogs: 1
   debugInterval: 0.5
 --- !u!114 &2758230484663718426
