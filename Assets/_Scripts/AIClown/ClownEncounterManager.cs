@@ -4,151 +4,170 @@ using UnityEngine;
 
 public class ClownEncounterManager : MonoBehaviour
 {
-    [Header("Referencias")]
-    [Tooltip("Spawner que controla las apariciones del payaso.")]
-    [SerializeField] private ClownSpawner clownSpawner;
-
-    [Header("Ventana de reacción")]
-    [Tooltip("Tiempo que tienen los jugadores para mirar al payaso.")]
+    [Header("Configuración del encuentro")]
+    [Tooltip("Tiempo total que tienen los jugadores para reaccionar.")]
     [SerializeField] private float reactionWindow = 3f;
 
-    [Tooltip(
-        "Tiempo continuo que un jugador debe mantener el raycast " +
-        "sobre el payaso para considerarse que realmente lo miró."
-    )]
-    [SerializeField] private float requiredLookDuration = 0.4f;
+    [Header("Referencias")]
+    [SerializeField] private ClownSpawner clownSpawner;
 
-    [Header("Depuración")]
+    [Header("Debug")]
     [SerializeField] private bool showDebugMessages = true;
 
-    // =========================================================
-    // ESTADO
-    // =========================================================
-
-    private Coroutine encounterCoroutine;
+    private GameObject currentClown;
 
     private bool encounterActive;
 
-    private GameObject currentClown;
+    private Coroutine encounterCoroutine;
 
     private readonly List<PlayerIdentity> players =
         new List<PlayerIdentity>();
 
-    private readonly HashSet<int> playersWhoLooked =
-        new HashSet<int>();
+    private readonly HashSet<PlayerIdentity> playersWhoLooked =
+        new HashSet<PlayerIdentity>();
 
-    private readonly Dictionary<int, float> lookTimers =
-        new Dictionary<int, float>();
+    // ============================================================
+    // PUBLIC
+    // ============================================================
 
-    // =========================================================
-    // PROPIEDADES
-    // =========================================================
+    public bool IsEncounterActive =>
+        encounterActive;
 
-    public bool IsEncounterActive => encounterActive;
+    public GameObject CurrentClown =>
+        currentClown;
 
-    public GameObject CurrentClown => currentClown;
+    // ============================================================
+    // AWAKE
+    // ============================================================
 
-    // =========================================================
-    // INICIAR ENCUENTRO
-    // =========================================================
+    private void Awake()
+    {
+        if (clownSpawner == null)
+        {
+            clownSpawner =
+                FindObjectOfType<ClownSpawner>();
+        }
+    }
 
-    public void StartEncounter(GameObject clown)
+    // ============================================================
+    // START ENCOUNTER
+    // ============================================================
+
+    public bool StartEncounter(GameObject clown)
     {
         if (clown == null)
         {
             Debug.LogWarning(
-                $"{gameObject.name}: No se puede iniciar el encuentro porque el payaso es NULL."
+                "[CLOWN ENCOUNTER] " +
+                "Se intentó iniciar un encuentro con Clown NULL."
             );
 
-            return;
+            return false;
         }
 
         if (encounterActive)
         {
-            DebugLog(
+            Debug.LogWarning(
+                "[CLOWN ENCOUNTER] " +
                 "Ya existe un encuentro activo."
             );
 
-            return;
+            return false;
         }
 
-        if (clownSpawner == null)
-        {
-            Debug.LogError(
-                $"{gameObject.name}: No hay ClownSpawner asignado."
-            );
-
-            return;
-        }
-
-        // -----------------------------------------------------
-        // LIMPIAR CUALQUIER RESTO DEL ENCUENTRO ANTERIOR
-        // -----------------------------------------------------
+        // --------------------------------------------------------
+        // LIMPIAR ENCUENTRO ANTERIOR
+        // --------------------------------------------------------
 
         ResetEncounterState();
 
-        // -----------------------------------------------------
-        // BUSCAR JUGADORES ACTUALES
-        // -----------------------------------------------------
+        // --------------------------------------------------------
+        // BUSCAR JUGADORES
+        // --------------------------------------------------------
 
         FindCurrentPlayers();
 
         if (players.Count == 0)
         {
             Debug.LogWarning(
-                $"{gameObject.name}: No se encontraron jugadores."
+                "[CLOWN ENCOUNTER] " +
+                "No se encontraron jugadores vivos."
             );
 
-            return;
+            return false;
         }
+
+        // --------------------------------------------------------
+        // GUARDAR CLOWN
+        // --------------------------------------------------------
 
         currentClown = clown;
 
         encounterActive = true;
 
-        // -----------------------------------------------------
+        // --------------------------------------------------------
         // AVISAR AL SPAWNER
-        // -----------------------------------------------------
+        // --------------------------------------------------------
 
-        bool spawnerAccepted =
+        if (clownSpawner != null)
+        {
             clownSpawner.NotifyEncounterStarted();
-
-        if (!spawnerAccepted)
-        {
-            encounterActive = false;
-            currentClown = null;
-
-            return;
         }
 
-        // -----------------------------------------------------
-        // INICIAR COROUTINE
-        // -----------------------------------------------------
+        // --------------------------------------------------------
+        // DEBUG
+        // --------------------------------------------------------
 
-        if (encounterCoroutine != null)
+        Debug.Log(
+            "=========================================="
+        );
+
+        Debug.Log(
+            "[CLOWN ENCOUNTER] ENCUENTRO INICIADO"
+        );
+
+        Debug.Log(
+            $"[CLOWN ENCOUNTER] Payaso: " +
+            $"{currentClown.name}"
+        );
+
+        Debug.Log(
+            $"[CLOWN ENCOUNTER] Jugadores: " +
+            $"{players.Count}"
+        );
+
+        foreach (PlayerIdentity player in players)
         {
-            StopCoroutine(
-                encounterCoroutine
+            Debug.Log(
+                $"[CLOWN ENCOUNTER] " +
+                $"Jugador registrado: Player {player.PlayerId}"
             );
-
-            encounterCoroutine = null;
         }
+
+        Debug.Log(
+            $"[CLOWN ENCOUNTER] " +
+            $"Ventana de reacción: {reactionWindow:F2}s"
+        );
+
+        Debug.Log(
+            "=========================================="
+        );
+
+        // --------------------------------------------------------
+        // INICIAR CORRUTINA
+        // --------------------------------------------------------
 
         encounterCoroutine =
             StartCoroutine(
                 EncounterRoutine()
             );
 
-        DebugLog(
-            $"ENCUENTRO INICIADO. " +
-            $"Jugadores encontrados: {players.Count}. " +
-            $"Ventana: {reactionWindow:F1}s."
-        );
+        return true;
     }
 
-    // =========================================================
+    // ============================================================
     // BUSCAR JUGADORES
-    // =========================================================
+    // ============================================================
 
     private void FindCurrentPlayers()
     {
@@ -157,256 +176,167 @@ public class ClownEncounterManager : MonoBehaviour
         PlayerIdentity[] foundPlayers =
             FindObjectsOfType<PlayerIdentity>();
 
-        foreach (
-            PlayerIdentity player
-            in foundPlayers
-        )
+        foreach (PlayerIdentity player in foundPlayers)
         {
             if (player == null)
+                continue;
+
+            PlayerStateController stateController =
+                player.GetComponent<PlayerStateController>();
+
+            // Si tiene PlayerStateController,
+            // solo los Alive participan.
+            if (stateController != null &&
+                !stateController.IsAlive)
             {
                 continue;
             }
 
-            if (!player.isActiveAndEnabled)
-            {
-                continue;
-            }
-
-            players.Add(
-                player
-            );
-        }
-
-        players.Sort(
-            (a, b) =>
-                a.PlayerId.CompareTo(
-                    b.PlayerId
-                )
-        );
-
-        DebugLog(
-            $"Se encontraron {players.Count} PlayerIdentity."
-        );
-
-        foreach (
-            PlayerIdentity player
-            in players
-        )
-        {
-            DebugLog(
-                $"Jugador encontrado: Player_{player.PlayerId}"
-            );
+            players.Add(player);
         }
     }
 
-    // =========================================================
-    // RUTINA DEL ENCUENTRO
-    // =========================================================
+    // ============================================================
+    // REACTION WINDOW
+    // ============================================================
 
     private IEnumerator EncounterRoutine()
     {
         float elapsed = 0f;
 
-        while (
-            elapsed < reactionWindow &&
-            encounterActive
-        )
+        while (elapsed < reactionWindow)
         {
             elapsed += Time.deltaTime;
 
             yield return null;
         }
 
-        if (!encounterActive)
-        {
-            yield break;
-        }
-
-        encounterCoroutine = null;
-
         FinishLookWindow();
     }
 
-    // =========================================================
-    // REPORTAR MIRADA
-    // =========================================================
+    // ============================================================
+    // RECIBIR REPORTE DE MIRADA
+    // ============================================================
 
     public void ReportPlayerLooking(
         PlayerIdentity player,
-        bool isLooking
-    )
+        bool isLooking)
     {
         if (!encounterActive)
-        {
             return;
-        }
 
         if (player == null)
-        {
             return;
-        }
 
         if (currentClown == null)
+            return;
+
+        // --------------------------------------------------------
+        // COMPROBAR QUE EL JUGADOR PERTENECE AL ENCUENTRO
+        // --------------------------------------------------------
+
+        if (!players.Contains(player))
+        {
+            Debug.LogWarning(
+                $"[CLOWN ENCOUNTER] " +
+                $"Player {player.PlayerId} " +
+                $"NO está registrado en este encuentro."
+            );
+
+            return;
+        }
+
+        // --------------------------------------------------------
+        // YA ESTÁ REGISTRADO
+        // --------------------------------------------------------
+
+        if (playersWhoLooked.Contains(player))
         {
             return;
         }
 
-        // -----------------------------------------------------
-        // COMPROBAR QUE ESTE PLAYER PERTENECE AL ENCUENTRO
-        // -----------------------------------------------------
-
-        bool playerExists = false;
-
-        foreach (
-            PlayerIdentity registeredPlayer
-            in players
-        )
-        {
-            if (
-                registeredPlayer == player
-            )
-            {
-                playerExists = true;
-                break;
-            }
-        }
-
-        if (!playerExists)
-        {
-            return;
-        }
-
-        int playerId =
-            player.PlayerId;
-
-        // -----------------------------------------------------
-        // SI YA COMPLETÓ LA MIRADA
-        // -----------------------------------------------------
-
-        if (
-            playersWhoLooked.Contains(
-                playerId
-            )
-        )
-        {
-            return;
-        }
-
-        // -----------------------------------------------------
-        // ESTÁ MIRANDO
-        // -----------------------------------------------------
+        // --------------------------------------------------------
+        // EL DETECTOR CONFIRMÓ QUE VIO AL PAYASO
+        // --------------------------------------------------------
 
         if (isLooking)
         {
-            if (
-                !lookTimers.ContainsKey(
-                    playerId
-                )
-            )
-            {
-                lookTimers[playerId] = 0f;
-            }
+            playersWhoLooked.Add(player);
 
-            lookTimers[playerId] +=
-                Time.deltaTime;
+            Debug.Log(
+                "------------------------------------------"
+            );
 
-            // -------------------------------------------------
-            // MIRADA CONFIRMADA
-            // -------------------------------------------------
+            Debug.Log(
+                $"[CLOWN ENCOUNTER] " +
+                $"PLAYER {player.PlayerId} " +
+                $"CONFIRMÓ QUE VIO AL PAYASO."
+            );
 
-            if (
-                lookTimers[playerId] >=
-                requiredLookDuration
-            )
-            {
-                playersWhoLooked.Add(
-                    playerId
-                );
+            Debug.Log(
+                $"[CLOWN ENCOUNTER] " +
+                $"Jugadores que ya MIRARON: " +
+                $"{playersWhoLooked.Count}/{players.Count}"
+            );
 
-                DebugLog(
-                    $"Player_{playerId} MIRÓ al payaso."
-                );
-            }
-
-            return;
-        }
-
-        // -----------------------------------------------------
-        // DEJÓ DE MIRAR
-        // -----------------------------------------------------
-
-        if (
-            lookTimers.ContainsKey(
-                playerId
-            )
-        )
-        {
-            lookTimers[playerId] = 0f;
+            Debug.Log(
+                "------------------------------------------"
+            );
         }
     }
 
-    // =========================================================
+    // ============================================================
     // TERMINAR VENTANA DE MIRADA
-    // =========================================================
+    // ============================================================
 
     private void FinishLookWindow()
     {
         if (!encounterActive)
-        {
             return;
-        }
 
-        DebugLog(
-            "========================================"
+        Debug.Log(
+            "=========================================="
         );
 
-        DebugLog(
-            "TERMINÓ LA VENTANA DE REACCIÓN."
+        Debug.Log(
+            "[CLOWN ENCOUNTER] " +
+            "VENTANA DE REACCIÓN TERMINADA."
         );
 
-        DebugLog(
-            $"Jugadores registrados: {players.Count}"
+        Debug.Log(
+            $"[CLOWN ENCOUNTER] " +
+            $"Jugadores totales: {players.Count}"
         );
 
-        DebugLog(
-            $"Jugadores que miraron registrados: {playersWhoLooked.Count}"
+        Debug.Log(
+            $"[CLOWN ENCOUNTER] " +
+            $"Jugadores que MIRARON: " +
+            $"{playersWhoLooked.Count}"
         );
 
-        // -----------------------------------------------------
+        // --------------------------------------------------------
         // MOSTRAR ESTADO DE CADA JUGADOR
-        // -----------------------------------------------------
+        // --------------------------------------------------------
 
-        foreach (
-            PlayerIdentity player
-            in players
-        )
+        foreach (PlayerIdentity player in players)
         {
-            if (player == null)
-            {
-                continue;
-            }
-
-            int playerId =
-                player.PlayerId;
-
             bool looked =
-                playersWhoLooked.Contains(
-                    playerId
-                );
+                playersWhoLooked.Contains(player);
 
-            DebugLog(
-                $"Player_{playerId} -> " +
-                (looked ? "SÍ MIRÓ" : "NO MIRÓ")
+            Debug.Log(
+                $"[CLOWN ENCOUNTER] " +
+                $"Player {player.PlayerId} | " +
+                $"Miró: {looked}"
             );
         }
 
-        DebugLog(
-            "========================================"
+        Debug.Log(
+            "=========================================="
         );
 
-        // -----------------------------------------------------
-        // SELECCIONAR OBJETIVO
-        // -----------------------------------------------------
+        // --------------------------------------------------------
+        // SELECCIONAR VÍCTIMA
+        // --------------------------------------------------------
 
         PlayerIdentity target =
             SelectCaptureTarget();
@@ -414,96 +344,100 @@ public class ClownEncounterManager : MonoBehaviour
         if (target == null)
         {
             Debug.LogWarning(
-                $"{gameObject.name}: No se pudo seleccionar un objetivo."
+                "[CLOWN ENCOUNTER] " +
+                "No se pudo seleccionar objetivo."
             );
 
-            FinishEncounter(
-                true
-            );
+            FinishLookPhase();
 
             return;
         }
 
-        DebugLog(
-            $"OBJETIVO SELECCIONADO: Player_{target.PlayerId}"
-        );
-
-        // -----------------------------------------------------
-        // BUSCAR ClownAI
-        // -----------------------------------------------------
+        // --------------------------------------------------------
+        // BUSCAR CLOWNAI
+        // --------------------------------------------------------
 
         ClownAI clownAI =
-            currentClown.GetComponent<ClownAI>();
+            currentClown.GetComponentInParent<ClownAI>();
 
         if (clownAI == null)
         {
             Debug.LogError(
-                $"{gameObject.name}: El payaso no tiene ClownAI."
+                "[CLOWN ENCOUNTER] " +
+                "No se encontró ClownAI en el payaso."
             );
 
-            FinishEncounter(
-                true
-            );
+            FinishLookPhase();
 
             return;
         }
 
-        // -----------------------------------------------------
-        // ENVIAR OBJETIVO AL PAYASO
-        // -----------------------------------------------------
+        // --------------------------------------------------------
+        // OBJETIVO FINAL
+        // --------------------------------------------------------
+
+        Debug.Log(
+            "=========================================="
+        );
+
+        Debug.Log(
+            $"[CLOWN ENCOUNTER] " +
+            $"OBJETIVO FINAL: Player {target.PlayerId}"
+        );
+
+        Debug.Log(
+            $"[CLOWN ENCOUNTER] " +
+            $"El clown comenzará a perseguirlo."
+        );
+
+        Debug.Log(
+            "=========================================="
+        );
+
+        // --------------------------------------------------------
+        // DAR OBJETIVO AL CLOWN
+        // --------------------------------------------------------
 
         clownAI.SetTarget(
             target.transform
         );
 
-        DebugLog(
-            $"ClownAI recibió como objetivo a Player_{target.PlayerId}."
-        );
+        // --------------------------------------------------------
+        // TERMINAR FASE DE MIRADA
+        // --------------------------------------------------------
+
+        FinishLookPhase();
     }
 
-    // =========================================================
+    // ============================================================
     // SELECCIONAR OBJETIVO
-    // =========================================================
+    // ============================================================
 
     private PlayerIdentity SelectCaptureTarget()
     {
         List<PlayerIdentity> playersWhoDidNotLook =
             new List<PlayerIdentity>();
 
-        // -----------------------------------------------------
-        // BUSCAR QUIÉNES NO MIRARON
-        // -----------------------------------------------------
+        // --------------------------------------------------------
+        // BUSCAR LOS QUE NO MIRARON
+        // --------------------------------------------------------
 
-        foreach (
-            PlayerIdentity player
-            in players
-        )
+        foreach (PlayerIdentity player in players)
         {
             if (player == null)
-            {
                 continue;
-            }
 
-            if (
-                !playersWhoLooked.Contains(
-                    player.PlayerId
-                )
-            )
+            if (!playersWhoLooked.Contains(player))
             {
-                playersWhoDidNotLook.Add(
-                    player
-                );
+                playersWhoDidNotLook.Add(player);
             }
         }
 
-        // -----------------------------------------------------
-        // PRIORIDAD:
-        // QUIENES NO MIRARON
-        // -----------------------------------------------------
+        // --------------------------------------------------------
+        // HAY JUGADORES QUE NO MIRARON
+        // --------------------------------------------------------
 
-        if (
-            playersWhoDidNotLook.Count > 0
-        )
+        if (playersWhoDidNotLook.Count > 0)
         {
             int randomIndex =
                 Random.Range(
@@ -511,22 +445,32 @@ public class ClownEncounterManager : MonoBehaviour
                     playersWhoDidNotLook.Count
                 );
 
-            PlayerIdentity target =
-                playersWhoDidNotLook[
-                    randomIndex
-                ];
+            PlayerIdentity selectedPlayer =
+                playersWhoDidNotLook[randomIndex];
 
-            DebugLog(
-                $"Hay {playersWhoDidNotLook.Count} jugador(es) que NO miraron."
+            Debug.Log(
+                "[CLOWN ENCOUNTER] " +
+                "NO TODOS MIRARON AL PAYASO."
             );
 
-            return target;
+            Debug.Log(
+                $"[CLOWN ENCOUNTER] " +
+                $"Jugadores que NO MIRARON: " +
+                $"{playersWhoDidNotLook.Count}"
+            );
+
+            Debug.Log(
+                $"[CLOWN ENCOUNTER] " +
+                $"Víctima seleccionada entre ellos: " +
+                $"Player {selectedPlayer.PlayerId}"
+            );
+
+            return selectedPlayer;
         }
 
-        // -----------------------------------------------------
-        // FALLBACK:
+        // --------------------------------------------------------
         // TODOS MIRARON
-        // -----------------------------------------------------
+        // --------------------------------------------------------
 
         if (players.Count > 0)
         {
@@ -536,42 +480,38 @@ public class ClownEncounterManager : MonoBehaviour
                     players.Count
                 );
 
-            PlayerIdentity target =
-                players[
-                    randomIndex
-                ];
+            PlayerIdentity selectedPlayer =
+                players[randomIndex];
 
-            DebugLog(
-                "Todos los jugadores miraron. " +
-                "Se seleccionará un jugador aleatorio."
+            Debug.Log(
+                "[CLOWN ENCOUNTER] " +
+                "TODOS MIRARON AL PAYASO."
             );
 
-            return target;
+            Debug.Log(
+                $"[CLOWN ENCOUNTER] " +
+                $"Se seleccionará una víctima aleatoria " +
+                $"entre TODOS."
+            );
+
+            Debug.Log(
+                $"[CLOWN ENCOUNTER] " +
+                $"Víctima seleccionada: " +
+                $"Player {selectedPlayer.PlayerId}"
+            );
+
+            return selectedPlayer;
         }
 
         return null;
     }
 
-    // =========================================================
-    // FINALIZAR ENCUENTRO
-    // =========================================================
+    // ============================================================
+    // TERMINAR FASE DE MIRADA
+    // ============================================================
 
-    public void FinishEncounter(
-        bool despawnClown = true
-    )
+    private void FinishLookPhase()
     {
-        DebugLog(
-            "========================================"
-        );
-
-        DebugLog(
-            "FINALIZANDO ENCUENTRO."
-        );
-
-        // -----------------------------------------------------
-        // DETENER COROUTINE
-        // -----------------------------------------------------
-
         if (encounterCoroutine != null)
         {
             StopCoroutine(
@@ -581,15 +521,37 @@ public class ClownEncounterManager : MonoBehaviour
             encounterCoroutine = null;
         }
 
-        // -----------------------------------------------------
-        // DESACTIVAR ENCUENTRO
-        // -----------------------------------------------------
-
+        // IMPORTANTE:
+        // Aquí dejamos de aceptar reportes de mirada.
+        // El ClownAI ya tiene su objetivo.
         encounterActive = false;
 
-        // -----------------------------------------------------
-        // AVISAR AL SPAWNER ANTES DE LIMPIAR
-        // -----------------------------------------------------
+        playersWhoLooked.Clear();
+
+        // NO hacemos:
+        // currentClown = null;
+        //
+        // porque el ClownAI todavía está utilizando
+        // el clown actual.
+    }
+
+    // ============================================================
+    // TERMINAR ENCUENTRO COMPLETO
+    // ============================================================
+
+    public void FinishEncounter(
+        bool despawnClown = true)
+    {
+        if (encounterCoroutine != null)
+        {
+            StopCoroutine(
+                encounterCoroutine
+            );
+
+            encounterCoroutine = null;
+        }
+
+        encounterActive = false;
 
         if (clownSpawner != null)
         {
@@ -598,53 +560,23 @@ public class ClownEncounterManager : MonoBehaviour
             );
         }
 
-        // -----------------------------------------------------
-        // LIMPIAR ESTADO
-        // -----------------------------------------------------
-
         ResetEncounterState();
-
-        DebugLog(
-            "ENCUENTRO FINALIZADO Y ESTADO LIMPIADO."
-        );
-
-        DebugLog(
-            "========================================"
-        );
     }
 
-    // =========================================================
-    // LIMPIAR ESTADO
-    // =========================================================
+    // ============================================================
+    // RESET
+    // ============================================================
 
     private void ResetEncounterState()
     {
         encounterActive = false;
 
-        playersWhoLooked.Clear();
-
-        lookTimers.Clear();
+        currentClown = null;
 
         players.Clear();
 
-        currentClown = null;
-    }
+        playersWhoLooked.Clear();
 
-    // =========================================================
-    // DEBUG
-    // =========================================================
-
-    private void DebugLog(
-        string message
-    )
-    {
-        if (!showDebugMessages)
-        {
-            return;
-        }
-
-        Debug.Log(
-            $"{gameObject.name}: {message}"
-        );
+        encounterCoroutine = null;
     }
 }

@@ -11,78 +11,33 @@ public class ClownLookDetector : MonoBehaviour
     [Tooltip("Distancia máxima a la que el jugador puede detectar al payaso.")]
     [SerializeField] private float lookDistance = 15f;
 
-    [Tooltip("Capas que puede detectar el Raycast.")]
-    [SerializeField] private LayerMask clownLayers = ~0;
-
     [Header("Debug")]
     [SerializeField] private bool showDebugRay = true;
     [SerializeField] private bool showDebugMessages = true;
 
-    [Tooltip("Muestra información del estado cada cierto tiempo.")]
-    [SerializeField] private bool showStatusMessages = true;
-
-    [Tooltip("Cada cuántos segundos se muestra el estado general.")]
-    [SerializeField] private float statusInterval = 1f;
-
     private ClownAI detectedClown;
 
-    private float statusTimer;
+    private bool lastLookingState;
 
-    private bool lastLookingState = false;
+    private float lookTimer;
+
+    // ============================================================
+    // AWAKE
+    // ============================================================
 
     private void Awake()
     {
-        Debug.Log(
-            $"[CLOWN LOOK] {gameObject.name} -> Awake()"
-        );
-
-        // -----------------------------------------------------
-        // CÁMARA
-        // -----------------------------------------------------
-
         if (playerCamera == null)
         {
-            playerCamera = GetComponentInChildren<Camera>();
+            playerCamera =
+                GetComponentInChildren<Camera>();
         }
-
-        if (playerCamera != null)
-        {
-            Debug.Log(
-                $"[CLOWN LOOK] {gameObject.name} -> Cámara encontrada: {playerCamera.name}"
-            );
-        }
-        else
-        {
-            Debug.LogError(
-                $"[CLOWN LOOK] {gameObject.name} -> NO SE ENCONTRÓ LA CÁMARA."
-            );
-        }
-
-        // -----------------------------------------------------
-        // PLAYER IDENTITY
-        // -----------------------------------------------------
 
         if (playerIdentity == null)
         {
-            playerIdentity = GetComponent<PlayerIdentity>();
+            playerIdentity =
+                GetComponent<PlayerIdentity>();
         }
-
-        if (playerIdentity != null)
-        {
-            Debug.Log(
-                $"[CLOWN LOOK] {gameObject.name} -> PlayerIdentity encontrado."
-            );
-        }
-        else
-        {
-            Debug.LogError(
-                $"[CLOWN LOOK] {gameObject.name} -> NO SE ENCONTRÓ PlayerIdentity."
-            );
-        }
-
-        // -----------------------------------------------------
-        // MANAGER
-        // -----------------------------------------------------
 
         if (clownEncounterManager == null)
         {
@@ -90,385 +45,375 @@ public class ClownLookDetector : MonoBehaviour
                 FindObjectOfType<ClownEncounterManager>();
         }
 
-        if (clownEncounterManager != null)
-        {
-            Debug.Log(
-                $"[CLOWN LOOK] {gameObject.name} -> ClownEncounterManager encontrado."
-            );
-        }
-        else
-        {
-            Debug.LogError(
-                $"[CLOWN LOOK] {gameObject.name} -> NO SE ENCONTRÓ ClownEncounterManager."
-            );
-        }
-
-        // -----------------------------------------------------
-        // CONFIGURACIÓN
-        // -----------------------------------------------------
-
         Debug.Log(
-            $"[CLOWN LOOK] {gameObject.name} -> " +
-            $"Look Distance: {lookDistance} | " +
-            $"LayerMask: {clownLayers.value}"
+            $"[CLOWN TEST] {gameObject.name} inicializado | " +
+            $"Player: {GetPlayerId()} | " +
+            $"Camera: {(playerCamera != null ? playerCamera.name : "NULL")} | " +
+            $"Manager: {(clownEncounterManager != null ? "OK" : "NULL")}"
         );
     }
+
+    // ============================================================
+    // UPDATE
+    // ============================================================
 
     private void Update()
     {
         DetectClown();
-
-        ShowStatus();
     }
 
-    // =========================================================
-    // DETECTAR PAYASO
-    // =========================================================
+    // ============================================================
+    // DETECCIÓN
+    // ============================================================
 
     private void DetectClown()
     {
-        // -----------------------------------------------------
-        // COMPROBAR CÁMARA
-        // -----------------------------------------------------
+        // --------------------------------------------------------
+        // CAMERA
+        // --------------------------------------------------------
 
         if (playerCamera == null)
         {
-            ReportLooking(false);
+            Debug.LogError(
+                $"[CLOWN TEST] Player {GetPlayerId()} → " +
+                $"CAMERA NULL"
+            );
+
+            ResetDetection();
+
             return;
         }
 
-        // -----------------------------------------------------
-        // COMPROBAR PLAYER IDENTITY
-        // -----------------------------------------------------
+        // --------------------------------------------------------
+        // PLAYER IDENTITY
+        // --------------------------------------------------------
 
         if (playerIdentity == null)
         {
-            ReportLooking(false);
-            return;
-        }
+            Debug.LogError(
+                $"[CLOWN TEST] {gameObject.name} → " +
+                $"PLAYER IDENTITY NULL"
+            );
 
-        // -----------------------------------------------------
-        // COMPROBAR MANAGER
-        // -----------------------------------------------------
-
-        if (clownEncounterManager == null)
-        {
-            ReportLooking(false);
-            return;
-        }
-
-        // -----------------------------------------------------
-        // COMPROBAR ENCUENTRO
-        // -----------------------------------------------------
-
-        if (!clownEncounterManager.IsEncounterActive)
-        {
-            if (detectedClown != null)
-            {
-                Debug.Log(
-                    $"[CLOWN LOOK] {gameObject.name} -> " +
-                    $"El encuentro terminó. Dejando de detectar."
-                );
-            }
-
-            detectedClown = null;
-
-            DrawDebugRay(false);
+            ResetDetection();
 
             return;
         }
 
-        // -----------------------------------------------------
-        // CREAR RAYO
-        // -----------------------------------------------------
+        // --------------------------------------------------------
+        // RAYCAST
+        //
+        // IMPORTANTE:
+        // Usamos ~0 temporalmente.
+        //
+        // Esto significa:
+        // TODAS LAS CAPAS.
+        //
+        // Así descartamos que el problema sea el LayerMask.
+        // --------------------------------------------------------
 
         Ray ray = new Ray(
             playerCamera.transform.position,
             playerCamera.transform.forward
         );
 
-        // -----------------------------------------------------
-        // RAYCAST
-        // -----------------------------------------------------
-
         bool hitSomething = Physics.Raycast(
             ray,
             out RaycastHit hit,
             lookDistance,
-            clownLayers,
+            ~0,
             QueryTriggerInteraction.Ignore
         );
 
-        // -----------------------------------------------------
+        // --------------------------------------------------------
         // DEBUG RAY
-        // -----------------------------------------------------
+        // --------------------------------------------------------
 
-        DrawDebugRay(hitSomething);
+        if (showDebugRay)
+        {
+            Debug.DrawRay(
+                ray.origin,
+                ray.direction * lookDistance,
+                hitSomething
+                    ? Color.green
+                    : Color.red
+            );
+        }
 
-        // -----------------------------------------------------
+        // --------------------------------------------------------
         // NO GOLPEÓ NADA
-        // -----------------------------------------------------
+        // --------------------------------------------------------
 
         if (!hitSomething)
         {
-            if (lastLookingState)
+            if (showDebugMessages)
             {
                 Debug.Log(
-                    $"[CLOWN LOOK] {gameObject.name} -> " +
-                    $"DEJÓ DE MIRAR AL PAYASO: el Raycast no golpeó nada."
+                    $"[CLOWN TEST] Player {GetPlayerId()} → " +
+                    $"NO está golpeando ningún collider."
                 );
             }
 
-            detectedClown = null;
-
-            ReportLooking(false);
-
-            lastLookingState = false;
+            ResetDetection();
 
             return;
         }
 
-        // -----------------------------------------------------
+        // --------------------------------------------------------
         // GOLPEÓ ALGO
-        // -----------------------------------------------------
+        // --------------------------------------------------------
 
         if (showDebugMessages)
         {
             Debug.Log(
-                $"[CLOWN LOOK] {gameObject.name} -> " +
-                $"Raycast golpeó: {hit.collider.name} " +
-                $"| Distancia: {hit.distance:F2}m"
+                $"[CLOWN TEST] Player {GetPlayerId()} → " +
+                $"GOLPEÓ: {hit.collider.gameObject.name}"
+            );
+
+            Debug.Log(
+                $"[CLOWN TEST] Player {GetPlayerId()} → " +
+                $"ROOT: {hit.collider.transform.root.gameObject.name}"
+            );
+
+            Debug.Log(
+                $"[CLOWN TEST] Player {GetPlayerId()} → " +
+                $"DISTANCIA: {hit.distance:F2}m"
+            );
+
+            Debug.Log(
+                $"[CLOWN TEST] Player {GetPlayerId()} → " +
+                $"LAYER: {LayerMask.LayerToName(hit.collider.gameObject.layer)}"
             );
         }
 
-        // -----------------------------------------------------
+        // --------------------------------------------------------
         // BUSCAR CLOWNAI
-        // -----------------------------------------------------
+        // --------------------------------------------------------
 
         ClownAI clown =
             hit.collider.GetComponentInParent<ClownAI>();
 
-        // -----------------------------------------------------
-        // NO ES EL PAYASO
-        // -----------------------------------------------------
+        // --------------------------------------------------------
+        // NO ENCONTRÓ CLOWNAI
+        // --------------------------------------------------------
 
         if (clown == null)
         {
             if (showDebugMessages)
             {
                 Debug.Log(
-                    $"[CLOWN LOOK] {gameObject.name} -> " +
-                    $"El objeto golpeado NO tiene ClownAI."
+                    $"[CLOWN TEST] Player {GetPlayerId()} → " +
+                    $"EL OBJETO GOLPEADO NO TIENE CLOWNAI."
                 );
             }
 
-            detectedClown = null;
-
-            ReportLooking(false);
-
-            lastLookingState = false;
+            ResetDetection();
 
             return;
         }
 
-        // -----------------------------------------------------
-        // ENCONTRÓ UN CLOWNAI
-        // -----------------------------------------------------
+        // --------------------------------------------------------
+        // ENCONTRÓ CLOWNAI
+        // --------------------------------------------------------
 
         if (showDebugMessages)
         {
             Debug.Log(
-                $"[CLOWN LOOK] {gameObject.name} -> " +
-                $"ENCONTRÓ ClownAI: {clown.gameObject.name}"
+                $"[CLOWN TEST] ======================================"
+            );
+
+            Debug.Log(
+                $"[CLOWN TEST] PLAYER {GetPlayerId()} → " +
+                $"¡¡¡ENCONTRÓ AL CLOWN!!!"
+            );
+
+            Debug.Log(
+                $"[CLOWN TEST] ClownAI: " +
+                $"{clown.gameObject.name}"
+            );
+
+            Debug.Log(
+                $"[CLOWN TEST] Clown Root: " +
+                $"{clown.transform.root.gameObject.name}"
+            );
+
+            Debug.Log(
+                $"[CLOWN TEST] ======================================"
             );
         }
 
-        // -----------------------------------------------------
-        // COMPROBAR QUE SEA EL PAYASO ACTUAL
-        // -----------------------------------------------------
-
-        if (
-            clownEncounterManager.CurrentClown !=
-            clown.gameObject
-        )
-        {
-            if (showDebugMessages)
-            {
-                Debug.LogWarning(
-                    $"[CLOWN LOOK] {gameObject.name} -> " +
-                    $"Encontró un ClownAI, PERO NO ES EL PAYASO DEL ENCUENTRO ACTUAL."
-                );
-            }
-
-            detectedClown = null;
-
-            ReportLooking(false);
-
-            lastLookingState = false;
-
-            return;
-        }
-
-        // -----------------------------------------------------
-        // PAYASO CORRECTO DETECTADO
-        // -----------------------------------------------------
+        // --------------------------------------------------------
+        // GUARDAR CLOWN
+        // --------------------------------------------------------
 
         detectedClown = clown;
 
-        ReportLooking(true);
+        // --------------------------------------------------------
+        // ACUMULAR TIEMPO DE MIRADA
+        // --------------------------------------------------------
 
-        // -----------------------------------------------------
-        // SOLO MOSTRAR MENSAJE CUANDO CAMBIA A TRUE
-        // -----------------------------------------------------
+        lookTimer += Time.deltaTime;
+
+        // --------------------------------------------------------
+        // PRIMER MOMENTO MIRANDO
+        // --------------------------------------------------------
 
         if (!lastLookingState)
         {
-            Debug.Log(
-                $"[CLOWN LOOK] {gameObject.name} -> " +
-                $"======================================"
-            );
-
-            Debug.Log(
-                $"[CLOWN LOOK] {gameObject.name} -> " +
-                $"¡ESTÁ MIRANDO AL PAYASO!"
-            );
-
-            Debug.Log(
-                $"[CLOWN LOOK] {gameObject.name} -> " +
-                $"Payaso: {clown.gameObject.name}"
-            );
-
-            Debug.Log(
-                $"[CLOWN LOOK] {gameObject.name} -> " +
-                $"Distancia: {hit.distance:F2}m"
-            );
-
-            Debug.Log(
-                $"[CLOWN LOOK] {gameObject.name} -> " +
-                $"REPORTANDO TRUE AL MANAGER"
-            );
-
-            Debug.Log(
-                $"[CLOWN LOOK] {gameObject.name} -> " +
-                $"======================================"
-            );
+            if (showDebugMessages)
+            {
+                Debug.Log(
+                    $"[CLOWN LOOK] PLAYER {GetPlayerId()} " +
+                    $"ESTÁ MIRANDO AL PAYASO."
+                );
+            }
         }
 
         lastLookingState = true;
+
+        // --------------------------------------------------------
+        // MOSTRAR TIEMPO
+        // --------------------------------------------------------
+
+        if (showDebugMessages)
+        {
+            Debug.Log(
+                $"[CLOWN LOOK] Player {GetPlayerId()} → " +
+                $"Tiempo mirando: {lookTimer:F2}s"
+            );
+        }
+
+        // --------------------------------------------------------
+        // CONFIRMAR AL MANAGER
+        //
+        // Después de 0.4 segundos continuos.
+        // --------------------------------------------------------
+
+        if (lookTimer >= 0.4f)
+        {
+            ReportLooking(true);
+        }
     }
 
-    // =========================================================
+    // ============================================================
     // REPORTAR AL MANAGER
-    // =========================================================
+    // ============================================================
 
-    private void ReportLooking(
-        bool isLookingAtClown
-    )
+    private void ReportLooking(bool isLookingAtClown)
     {
         if (clownEncounterManager == null)
         {
+            Debug.LogError(
+                $"[CLOWN TEST] Player {GetPlayerId()} → " +
+                $"NO HAY ClownEncounterManager."
+            );
+
             return;
         }
 
         if (playerIdentity == null)
         {
+            Debug.LogError(
+                $"[CLOWN TEST] Player → " +
+                $"NO HAY PlayerIdentity."
+            );
+
             return;
         }
 
+        // --------------------------------------------------------
+        // COMPROBAR ENCUENTRO
+        // --------------------------------------------------------
+
         if (!clownEncounterManager.IsEncounterActive)
         {
+            if (showDebugMessages)
+            {
+                Debug.Log(
+                    $"[CLOWN TEST] Player {GetPlayerId()} → " +
+                    $"EL ENCUENTRO NO ESTÁ ACTIVO."
+                );
+            }
+
             return;
         }
+
+        // --------------------------------------------------------
+        // ENVIAR AL MANAGER
+        // --------------------------------------------------------
 
         clownEncounterManager.ReportPlayerLooking(
             playerIdentity,
             isLookingAtClown
         );
+
+        if (isLookingAtClown && showDebugMessages)
+        {
+            Debug.Log(
+                $"[CLOWN LOOK] ======================================"
+            );
+
+            Debug.Log(
+                $"[CLOWN LOOK] Player {GetPlayerId()} → " +
+                $"VIO AL PAYASO"
+            );
+
+            Debug.Log(
+                $"[CLOWN LOOK] ENVIADO AL " +
+                $"ClownEncounterManager"
+            );
+
+            Debug.Log(
+                $"[CLOWN LOOK] ======================================"
+            );
+        }
     }
 
-    // =========================================================
-    // DEBUG STATUS
-    // =========================================================
+    // ============================================================
+    // RESET
+    // ============================================================
 
-    private void ShowStatus()
+    private void ResetDetection()
     {
-        if (!showStatusMessages)
+        if (lastLookingState && showDebugMessages)
         {
-            return;
+            Debug.Log(
+                $"[CLOWN LOOK] Player {GetPlayerId()} → " +
+                $"DEJÓ DE MIRAR AL PAYASO."
+            );
         }
 
-        statusTimer += Time.deltaTime;
-
-        if (statusTimer < statusInterval)
+        // Si estaba mirando y deja de mirar,
+        // avisamos al manager.
+        if (lastLookingState)
         {
-            return;
+            ReportLooking(false);
         }
 
-        statusTimer = 0f;
+        detectedClown = null;
 
-        string cameraStatus =
-            playerCamera != null
-                ? playerCamera.name
-                : "NULL";
+        lastLookingState = false;
 
-        string identityStatus =
-            playerIdentity != null
-                ? "OK"
-                : "NULL";
-
-        string managerStatus =
-            clownEncounterManager != null
-                ? "OK"
-                : "NULL";
-
-        string encounterStatus =
-            clownEncounterManager != null
-                ? clownEncounterManager.IsEncounterActive.ToString()
-                : "UNKNOWN";
-
-        string clownStatus =
-            detectedClown != null
-                ? detectedClown.gameObject.name
-                : "NINGUNO";
-
-        Debug.Log(
-            $"[CLOWN STATUS] {gameObject.name} | " +
-            $"Camera: {cameraStatus} | " +
-            $"Identity: {identityStatus} | " +
-            $"Manager: {managerStatus} | " +
-            $"Encounter: {encounterStatus} | " +
-            $"Clown detectado: {clownStatus}"
-        );
+        lookTimer = 0f;
     }
 
-    // =========================================================
-    // DEBUG RAY
-    // =========================================================
+    // ============================================================
+    // PLAYER ID
+    // ============================================================
 
-    private void DrawDebugRay(
-        bool hitSomething
-    )
+    private int GetPlayerId()
     {
-        if (!showDebugRay)
+        if (playerIdentity != null)
         {
-            return;
+            return playerIdentity.PlayerId;
         }
 
-        if (playerCamera == null)
-        {
-            return;
-        }
-
-        Debug.DrawRay(
-            playerCamera.transform.position,
-            playerCamera.transform.forward * lookDistance,
-            hitSomething ? Color.green : Color.red
-        );
+        return -1;
     }
 
-    // =========================================================
+    // ============================================================
     // GETTERS
-    // =========================================================
+    // ============================================================
 
     public bool IsLookingAtClown()
     {
@@ -480,17 +425,15 @@ public class ClownLookDetector : MonoBehaviour
         return detectedClown;
     }
 
-    // =========================================================
-    // DESACTIVAR
-    // =========================================================
+    // ============================================================
+    // DISABLE
+    // ============================================================
 
     private void OnDisable()
     {
-        if (
-            clownEncounterManager != null &&
+        if (clownEncounterManager != null &&
             playerIdentity != null &&
-            clownEncounterManager.IsEncounterActive
-        )
+            clownEncounterManager.IsEncounterActive)
         {
             clownEncounterManager.ReportPlayerLooking(
                 playerIdentity,
@@ -500,7 +443,6 @@ public class ClownLookDetector : MonoBehaviour
 
         detectedClown = null;
         lastLookingState = false;
+        lookTimer = 0f;
     }
 }
-
-

@@ -25,23 +25,18 @@ public class PlayerInteractor : MonoBehaviour
 
     private bool previousActionPressed;
 
-    // ==========================================
-    // PAYASO
-    // ==========================================
-
-    private ClownAI detectedClown;
-    private ClownEncounterManager clownEncounterManager;
-
     private void Awake()
     {
         if (playerCamera == null)
         {
-            playerCamera = GetComponentInChildren<Camera>();
+            playerCamera =
+                GetComponentInChildren<Camera>();
         }
 
         if (playerIdentity == null)
         {
-            playerIdentity = GetComponent<PlayerIdentity>();
+            playerIdentity =
+                GetComponent<PlayerIdentity>();
         }
 
         if (mobileInputManager == null)
@@ -49,17 +44,19 @@ public class PlayerInteractor : MonoBehaviour
             mobileInputManager =
                 FindObjectOfType<MobileInputManager>();
         }
-
-        clownEncounterManager =
-            FindObjectOfType<ClownEncounterManager>();
     }
 
     private void Update()
     {
         UpdateRaycast();
+
         CheckMobileAction();
         CheckKeyboardAction();
     }
+
+    // ============================================================
+    // RAYCAST DE INTERACCIÓN
+    // ============================================================
 
     private void UpdateRaycast()
     {
@@ -82,7 +79,9 @@ public class PlayerInteractor : MonoBehaviour
         Debug.DrawRay(
             ray.origin,
             ray.direction * highlightDistance,
-            hitSomething ? Color.green : Color.red
+            hitSomething
+                ? Color.green
+                : Color.red
         );
 
         IInteractable detectedInteractable = null;
@@ -90,15 +89,10 @@ public class PlayerInteractor : MonoBehaviour
         ICameraHighlightable detectedCameraHighlightable = null;
         Collider detectedCollider = null;
 
-        // ==========================================
-        // DETECTAR PAYASO
-        // ==========================================
-
-        ClownAI newDetectedClown = null;
-
         if (hitSomething)
         {
-            detectedCollider = hit.collider;
+            detectedCollider =
+                hit.collider;
 
             detectedInteractable =
                 hit.collider.GetComponentInParent<IInteractable>();
@@ -108,34 +102,28 @@ public class PlayerInteractor : MonoBehaviour
 
             detectedCameraHighlightable =
                 hit.collider.GetComponentInParent<ICameraHighlightable>();
-
-            newDetectedClown =
-                hit.collider.GetComponentInParent<ClownAI>();
         }
 
-        detectedClown = newDetectedClown;
-
-        // Avisar al sistema del payaso si corresponde.
-        ReportClownLooking();
-
-        // ==========================================
-        // INTERACCIÓN NORMAL
-        // ==========================================
+        // ========================================================
+        // CAMBIÓ EL OBJETO MIRADO
+        // ========================================================
 
         if (detectedInteractable != currentInteractable)
         {
-            // Quitar resaltado del objeto anterior.
             RemoveCurrentHighlight();
 
-            // Guardar nuevo objeto.
-            currentInteractable = detectedInteractable;
-            currentHighlightable = detectedHighlightable;
+            currentInteractable =
+                detectedInteractable;
+
+            currentHighlightable =
+                detectedHighlightable;
+
             currentCameraHighlightable =
                 detectedCameraHighlightable;
 
-            currentCollider = detectedCollider;
+            currentCollider =
+                detectedCollider;
 
-            // Aplicar resaltado al objeto nuevo.
             ApplyCurrentHighlight();
 
             if (currentInteractable != null)
@@ -154,43 +142,20 @@ public class PlayerInteractor : MonoBehaviour
         }
         else
         {
-            currentCollider = detectedCollider;
+            currentCollider =
+                detectedCollider;
         }
     }
 
-    // ==========================================
-    // AVISAR AL MANAGER SI ESTÁ MIRANDO AL PAYASO
-    // ==========================================
-
-    private void ReportClownLooking()
-    {
-        if (clownEncounterManager == null)
-            return;
-
-        if (playerIdentity == null)
-            return;
-
-        if (!clownEncounterManager.IsEncounterActive)
-            return;
-
-        bool isLookingAtClown =
-            detectedClown != null &&
-            clownEncounterManager.CurrentClown == detectedClown.gameObject;
-
-        clownEncounterManager.ReportPlayerLooking(
-            playerIdentity,
-            isLookingAtClown
-        );
-    }
-
-    // ==========================================
+    // ============================================================
     // HIGHLIGHT
-    // ==========================================
+    // ============================================================
 
     private void ApplyCurrentHighlight()
     {
-        // PRIORIDAD:
+        // Prioridad:
         // Highlight independiente por cámara.
+
         if (currentCameraHighlightable != null)
         {
             currentCameraHighlightable.SetHighlightForCamera(
@@ -202,6 +167,7 @@ public class PlayerInteractor : MonoBehaviour
         }
 
         // Sistema antiguo como fallback.
+
         if (currentHighlightable != null)
         {
             currentHighlightable.SetHighlight(true);
@@ -226,9 +192,9 @@ public class PlayerInteractor : MonoBehaviour
         }
     }
 
-    // ==========================================
+    // ============================================================
     // INPUT MÓVIL
-    // ==========================================
+    // ============================================================
 
     private void CheckMobileAction()
     {
@@ -236,22 +202,26 @@ public class PlayerInteractor : MonoBehaviour
             return;
 
         bool actionPressed =
-            mobileInputManager.IsActionPressed(playerId);
+            mobileInputManager.IsActionPressed(
+                playerId
+            );
 
         bool actionJustPressed =
-            actionPressed && !previousActionPressed;
+            actionPressed &&
+            !previousActionPressed;
 
         if (actionJustPressed)
         {
             TryInteract();
         }
 
-        previousActionPressed = actionPressed;
+        previousActionPressed =
+            actionPressed;
     }
 
-    // ==========================================
+    // ============================================================
     // INPUT TECLADO
-    // ==========================================
+    // ============================================================
 
     private void CheckKeyboardAction()
     {
@@ -264,9 +234,9 @@ public class PlayerInteractor : MonoBehaviour
         }
     }
 
-    // ==========================================
+    // ============================================================
     // INTERACCIÓN
-    // ==========================================
+    // ============================================================
 
     private void TryInteract()
     {
@@ -291,7 +261,8 @@ public class PlayerInteractor : MonoBehaviour
         if (playerIdentity == null)
         {
             Debug.LogWarning(
-                "PlayerInteractor no tiene PlayerIdentity asignado."
+                "PlayerInteractor no tiene " +
+                "PlayerIdentity asignado."
             );
 
             return;
@@ -305,26 +276,30 @@ public class PlayerInteractor : MonoBehaviour
                 playerCamera.transform.position
             );
 
-        float distance = Vector3.Distance(
-            playerCamera.transform.position,
-            closestPoint
-        );
+        float distance =
+            Vector3.Distance(
+                playerCamera.transform.position,
+                closestPoint
+            );
 
         if (distance > interactionDistance)
         {
             Debug.Log(
-                "El objeto está demasiado lejos para interactuar."
+                "El objeto está demasiado lejos " +
+                "para interactuar."
             );
 
             return;
         }
 
-        currentInteractable.Interact(playerIdentity);
+        currentInteractable.Interact(
+            playerIdentity
+        );
     }
 
-    // ==========================================
+    // ============================================================
     // MÉTODOS PÚBLICOS
-    // ==========================================
+    // ============================================================
 
     public bool HasTarget()
     {
@@ -347,36 +322,22 @@ public class PlayerInteractor : MonoBehaviour
                 playerCamera.transform.position
             );
 
-        float distance = Vector3.Distance(
-            playerCamera.transform.position,
-            closestPoint
-        );
+        float distance =
+            Vector3.Distance(
+                playerCamera.transform.position,
+                closestPoint
+            );
 
         return distance <= interactionDistance;
     }
 
-    // ==========================================
+    // ============================================================
     // DESACTIVAR
-    // ==========================================
+    // ============================================================
 
     private void OnDisable()
     {
-        // Quitar highlight correctamente.
         RemoveCurrentHighlight();
-
-        // Avisar al sistema del payaso que este jugador
-        // ya no está mirando al payaso.
-        if (clownEncounterManager != null &&
-            playerIdentity != null &&
-            clownEncounterManager.IsEncounterActive)
-        {
-            clownEncounterManager.ReportPlayerLooking(
-                playerIdentity,
-                false
-            );
-        }
-
-        detectedClown = null;
 
         currentInteractable = null;
         currentHighlightable = null;
