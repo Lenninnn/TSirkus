@@ -3,92 +3,321 @@ using TMPro;
 
 public class HiddenWord : MonoBehaviour
 {
+    // =============================================================
+    // WORD
+    // =============================================================
+
     [Header("Word")]
     [SerializeField] private string word = "SKRYTYE";
+
+
+    // =============================================================
+    // VISUAL
+    // =============================================================
 
     [Header("Visual")]
     [SerializeField] private TMP_Text wordText;
 
+
+    // =============================================================
+    // STATE
+    // =============================================================
+
     [Header("State")]
     [SerializeField] private bool revealed = false;
 
+
+    // =============================================================
+    // ASSIGNMENT
+    // =============================================================
+
+    [Header("Player Assignment")]
+    [SerializeField] private int assignedPlayerId = 0;
+
+
+    // =============================================================
+    // REFERENCES
+    // =============================================================
+
     private SkrytyeSlovaController puzzleController;
 
-    public string Word => word;
-    public bool IsRevealed => revealed;
+
+    // =============================================================
+    // PUBLIC PROPERTIES
+    // =============================================================
+
+    public string Word =>
+        word;
+
+    public bool IsRevealed =>
+        revealed;
+
+    public int AssignedPlayerId =>
+        assignedPlayerId;
+
+
+    // =============================================================
+    // UNITY
+    // =============================================================
 
     private void Awake()
     {
         // ---------------------------------------------------------
-        // BUSCAR TEXTO AUTOMÁTICAMENTE
+        // BUSCAR TEXTO
         // ---------------------------------------------------------
 
         if (wordText == null)
         {
-            wordText = GetComponentInChildren<TMP_Text>();
+            wordText =
+                GetComponentInChildren<TMP_Text>();
+
 
             if (wordText == null)
             {
                 Debug.LogError(
-                    $"🔤 [HIDDEN WORD] No se encontró un componente " +
-                    $"TextMeshPro en {gameObject.name}."
+                    $"🔤 [HIDDEN WORD] " +
+                    $"No se encontró TMP_Text en " +
+                    $"{gameObject.name}."
                 );
             }
         }
 
+
         // ---------------------------------------------------------
-        // BUSCAR CONTROLADOR DEL PUZZLE
+        // BUSCAR CONTROLLER
         // ---------------------------------------------------------
 
         puzzleController =
             FindObjectOfType<SkrytyeSlovaController>();
 
+
         // ---------------------------------------------------------
         // ESTADO INICIAL
         // ---------------------------------------------------------
 
-        revealed = false;
+        revealed =
+            false;
+
 
         HideWord();
 
+
         Debug.Log(
-            $"🔤 [HIDDEN WORD] {gameObject.name} " +
-            $"preparada. Palabra: {word}"
+            $"🔤 [HIDDEN WORD] " +
+            $"{gameObject.name} preparada. " +
+            $"Palabra: {word}"
         );
     }
 
+
     // =============================================================
-    // REVEAL
+    // ASSIGN PLAYER
+    // =============================================================
+
+    public void AssignToPlayer(
+        int playerId
+    )
+    {
+        if (
+            playerId < 1 ||
+            playerId > 4
+        )
+        {
+            Debug.LogWarning(
+                $"🔤 [HIDDEN WORD] " +
+                $"Player ID inválido para " +
+                $"{gameObject.name}: {playerId}"
+            );
+
+
+            return;
+        }
+
+
+        assignedPlayerId =
+            playerId;
+
+
+        Debug.Log(
+            $"🔤👤 [HIDDEN WORD] " +
+            $"{gameObject.name} -> " +
+            $"\"{word}\" asignada a " +
+            $"PLAYER {playerId}"
+        );
+    }
+
+
+    // =============================================================
+    // CLEAR PLAYER ASSIGNMENT
+    // =============================================================
+
+    public void ClearPlayerAssignment()
+    {
+        assignedPlayerId =
+            0;
+
+
+        DebugLog(
+            $"🔤 [HIDDEN WORD] " +
+            $"{gameObject.name} -> " +
+            $"sin Player asignado."
+        );
+    }
+
+
+    // =============================================================
+    // REVEAL FOR PLAYER
+    // =============================================================
+
+    public bool TryRevealForPlayer(
+        int playerId
+    )
+    {
+        // ---------------------------------------------------------
+        // YA REVELADA
+        // ---------------------------------------------------------
+
+        if (revealed)
+        {
+            return false;
+        }
+
+
+        // ---------------------------------------------------------
+        // PLAYER ID
+        // ---------------------------------------------------------
+
+        if (
+            playerId < 1 ||
+            playerId > 4
+        )
+        {
+            Debug.LogWarning(
+                $"🔤 [HIDDEN WORD] " +
+                $"Player ID inválido intentando " +
+                $"revelar {word}: {playerId}"
+            );
+
+
+            return false;
+        }
+
+
+        // ---------------------------------------------------------
+        // BUSCAR CONTROLLER
+        // ---------------------------------------------------------
+
+        if (puzzleController == null)
+        {
+            puzzleController =
+                FindObjectOfType<SkrytyeSlovaController>();
+        }
+
+
+        if (puzzleController == null)
+        {
+            Debug.LogWarning(
+                $"🔤 [HIDDEN WORD] " +
+                $"{gameObject.name} no encontró " +
+                $"SkrytyeSlovaController."
+            );
+
+
+            return false;
+        }
+
+
+        // ---------------------------------------------------------
+        // VALIDAR
+        // ---------------------------------------------------------
+
+        if (
+            !puzzleController.CanPlayerRevealWord(
+                this,
+                playerId
+            )
+        )
+        {
+            return false;
+        }
+
+
+        // ---------------------------------------------------------
+        // REVELAR
+        // ---------------------------------------------------------
+
+        revealed =
+            true;
+
+
+        ShowWord();
+
+
+        Debug.Log(
+            $"🔤✨ [HIDDEN WORD] " +
+            $"PALABRA ENCONTRADA -> " +
+            $"{word} | PLAYER {playerId}"
+        );
+
+
+        // ---------------------------------------------------------
+        // AVISAR CONTROLLER
+        // ---------------------------------------------------------
+
+        puzzleController.WordFound(
+            this,
+            playerId
+        );
+
+
+        return true;
+    }
+
+
+    // =============================================================
+    // REVEAL LEGACY / DEBUG
     // =============================================================
 
     public void Reveal()
     {
-        // Si ya fue encontrada, no hacemos nada.
         if (revealed)
+        {
             return;
+        }
 
-        revealed = true;
+
+        if (
+            assignedPlayerId >= 1 &&
+            assignedPlayerId <= 4
+        )
+        {
+            TryRevealForPlayer(
+                assignedPlayerId
+            );
+
+
+            return;
+        }
+
+
+        // ---------------------------------------------------------
+        // REVELACIÓN MANUAL
+        // ---------------------------------------------------------
+
+        revealed =
+            true;
+
 
         ShowWord();
 
+
         Debug.Log(
-            $"🔤✨ [HIDDEN WORD] PALABRA ENCONTRADA -> " +
+            $"🔤✨ [HIDDEN WORD] " +
+            $"PALABRA REVELADA MANUALMENTE -> " +
             $"{word}"
         );
-
-        // Avisar al controlador general del puzzle.
-        if (puzzleController != null)
-        {
-            puzzleController.WordFound(this);
-        }
-        else
-        {
-            Debug.LogWarning(
-                $"🔤 [HIDDEN WORD] {gameObject.name} " +
-                $"no encontró un SkrytyeSlovaController."
-            );
-        }
     }
+
 
     // =============================================================
     // HIDE
@@ -97,8 +326,12 @@ public class HiddenWord : MonoBehaviour
     private void HideWord()
     {
         if (wordText != null)
-            wordText.enabled = false;
+        {
+            wordText.enabled =
+                false;
+        }
     }
+
 
     // =============================================================
     // SHOW
@@ -107,8 +340,12 @@ public class HiddenWord : MonoBehaviour
     private void ShowWord()
     {
         if (wordText != null)
-            wordText.enabled = true;
+        {
+            wordText.enabled =
+                true;
+        }
     }
+
 
     // =============================================================
     // RESET
@@ -116,42 +353,73 @@ public class HiddenWord : MonoBehaviour
 
     public void ResetWord()
     {
-        revealed = false;
+        revealed =
+            false;
+
 
         HideWord();
 
+
         Debug.Log(
-            $"🔤 [HIDDEN WORD] {gameObject.name} " +
-            $"reiniciada."
+            $"🔤 [HIDDEN WORD] " +
+            $"{gameObject.name} reiniciada."
         );
     }
+
 
     // =============================================================
     // CONFIGURACIÓN
     // =============================================================
 
-    public void SetWord(string newWord)
+    public void SetWord(
+        string newWord
+    )
     {
-        if (string.IsNullOrWhiteSpace(newWord))
+        if (
+            string.IsNullOrWhiteSpace(
+                newWord
+            )
+        )
         {
             Debug.LogWarning(
-                $"🔤 [HIDDEN WORD] Se intentó asignar " +
-                $"una palabra vacía a {gameObject.name}."
+                $"🔤 [HIDDEN WORD] " +
+                $"Se intentó asignar una palabra " +
+                $"vacía a {gameObject.name}."
             );
+
 
             return;
         }
 
-        word = newWord;
+
+        word =
+            newWord.Trim();
+
 
         Debug.Log(
-            $"🔤 [HIDDEN WORD] {gameObject.name} -> " +
+            $"🔤 [HIDDEN WORD] " +
+            $"{gameObject.name} -> " +
             $"Palabra configurada: {word}"
         );
     }
 
+
     // =============================================================
-    // DEBUG MANUAL
+    // DEBUG
+    // =============================================================
+
+    private void DebugLog(
+        string message
+    )
+    {
+        Debug.Log(
+            message
+        );
+    }
+
+
+    // =============================================================
+    // CONTEXT MENU
     // =============================================================
 
     [ContextMenu("Reveal Word")]
@@ -159,6 +427,7 @@ public class HiddenWord : MonoBehaviour
     {
         Reveal();
     }
+
 
     [ContextMenu("Reset Word")]
     private void DebugReset()

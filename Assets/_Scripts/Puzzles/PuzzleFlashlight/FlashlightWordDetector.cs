@@ -114,8 +114,10 @@ public class FlashlightWordDetector : MonoBehaviour
         // SI TENEMOS UNA LIGHT Y ESTÁ APAGADA
         // ---------------------------------------------------------
 
-        if (flashlightLight != null &&
-            !flashlightLight.enabled)
+        if (
+            flashlightLight != null &&
+            !flashlightLight.enabled
+        )
         {
             return;
         }
@@ -129,20 +131,24 @@ public class FlashlightWordDetector : MonoBehaviour
 
     private void DetectWord()
     {
-        Vector3 origin = transform.position;
-        Vector3 direction = transform.forward;
+        Vector3 origin =
+            transform.position;
+
+        Vector3 direction =
+            transform.forward;
 
         RaycastHit hit;
 
-        bool detected = Physics.SphereCast(
-            origin,
-            detectionRadius,
-            direction,
-            out hit,
-            detectionDistance,
-            detectionLayers,
-            QueryTriggerInteraction.Collide
-        );
+        bool detected =
+            Physics.SphereCast(
+                origin,
+                detectionRadius,
+                direction,
+                out hit,
+                detectionDistance,
+                detectionLayers,
+                QueryTriggerInteraction.Collide
+            );
 
         // ---------------------------------------------------------
         // DEBUG RAY
@@ -204,25 +210,57 @@ public class FlashlightWordDetector : MonoBehaviour
         }
 
         // ---------------------------------------------------------
-        // NEW WORD
+        // PLAYER ID
         // ---------------------------------------------------------
 
-        if (currentWord != hiddenWord)
-        {
-            currentWord = hiddenWord;
+        int playerId =
+            flashlightController.GetPlayerId();
 
-            Debug.Log(
-                $"🔦🔤 [WORD DETECTOR] " +
-                $"PALABRA ENCONTRADA CON LA LINTERNA: " +
-                $"{hiddenWord.Word}"
+        if (playerId < 1 || playerId > 4)
+        {
+            Debug.LogWarning(
+                $"🔎 [WORD DETECTOR] " +
+                $"Player ID inválido: {playerId}"
             );
+
+            return;
         }
 
         // ---------------------------------------------------------
-        // REVEAL
+        // INTENTAR REVELAR
         // ---------------------------------------------------------
 
-        hiddenWord.Reveal();
+        bool revealed =
+            hiddenWord.TryRevealForPlayer(
+                playerId
+            );
+
+        // ---------------------------------------------------------
+        // RESULTADO
+        // ---------------------------------------------------------
+
+        if (revealed)
+        {
+            if (currentWord != hiddenWord)
+            {
+                currentWord =
+                    hiddenWord;
+
+                Debug.Log(
+                    $"🔦🔤 [WORD DETECTOR] " +
+                    $"PLAYER {playerId} ENCONTRÓ: " +
+                    $"{hiddenWord.Word}"
+                );
+            }
+        }
+        else
+        {
+            DebugLog(
+                $"🔎 [WORD DETECTOR] " +
+                $"PLAYER {playerId} apuntó a " +
+                $"\"{hiddenWord.Word}\" pero no puede reclamarla."
+            );
+        }
     }
 
     // =============================================================
@@ -234,7 +272,8 @@ public class FlashlightWordDetector : MonoBehaviour
         if (!debugLogs)
             return;
 
-        debugTimer += Time.deltaTime;
+        debugTimer +=
+            Time.deltaTime;
 
         if (debugTimer >= debugInterval)
         {
@@ -252,14 +291,16 @@ public class FlashlightWordDetector : MonoBehaviour
         FlashlightController controller
     )
     {
-        flashlightController = controller;
+        flashlightController =
+            controller;
     }
 
     public void SetFlashlightLight(
         Light lightSource
     )
     {
-        flashlightLight = lightSource;
+        flashlightLight =
+            lightSource;
     }
 
     public void SetDetectionDistance(
@@ -276,7 +317,8 @@ public class FlashlightWordDetector : MonoBehaviour
             return;
         }
 
-        detectionDistance = distance;
+        detectionDistance =
+            distance;
     }
 
     public void SetDetectionRadius(
@@ -293,7 +335,8 @@ public class FlashlightWordDetector : MonoBehaviour
             return;
         }
 
-        detectionRadius = radius;
+        detectionRadius =
+            radius;
     }
 
     // =============================================================

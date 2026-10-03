@@ -134,6 +134,10 @@ public class FlashlightController : MonoBehaviour
         );
 
 
+        // ---------------------------------------------------------
+        // PIVOT
+        // ---------------------------------------------------------
+
         if (flashlightPivot == null)
         {
             flashlightPivot =
@@ -146,24 +150,30 @@ public class FlashlightController : MonoBehaviour
         }
 
 
-        if (playerIdentity == null)
-        {
-            playerIdentity =
-                GetComponent<PlayerIdentity>();
-        }
+        // ---------------------------------------------------------
+        // PLAYER IDENTITY
+        // ---------------------------------------------------------
 
+        FindPlayerIdentity();
+
+
+        // ---------------------------------------------------------
+        // LINTERNA APAGADA AL INICIO
+        // ---------------------------------------------------------
 
         flashlightActive =
             false;
-
 
         SetLightEnabled(
             false
         );
 
-
         ResetRotation();
 
+
+        // ---------------------------------------------------------
+        // INTENTAR ASIGNAR PLAYER ID
+        // ---------------------------------------------------------
 
         TrySyncPlayerId();
     }
@@ -175,6 +185,10 @@ public class FlashlightController : MonoBehaviour
             $"🔦 [FLASHLIGHT] Start -> {gameObject.name}"
         );
 
+
+        // ---------------------------------------------------------
+        // MOBILE INPUT
+        // ---------------------------------------------------------
 
         mobileInput =
             FindObjectOfType<MobileInputManager>();
@@ -196,20 +210,27 @@ public class FlashlightController : MonoBehaviour
         );
 
 
+        // ---------------------------------------------------------
+        // PLAYER ID
+        // ---------------------------------------------------------
+
+        FindPlayerIdentity();
+
         TrySyncPlayerId();
 
 
         if (!playerIdAssigned)
         {
-            Debug.LogWarning(
-                $"🔦 [FLASHLIGHT] {gameObject.name} " +
-                "todavía NO tiene Player ID."
+            Debug.LogError(
+                $"🔦❌ [FLASHLIGHT] {gameObject.name} " +
+                "NO TIENE PLAYER ID."
             );
         }
         else
         {
             Debug.Log(
-                $"🔦 [FLASHLIGHT] Player ID asignado: {playerId}"
+                $"🔦✅ [FLASHLIGHT] {gameObject.name} " +
+                $"-> PLAYER {playerId}"
             );
         }
 
@@ -223,11 +244,19 @@ public class FlashlightController : MonoBehaviour
 
     private void Update()
     {
+        // =========================================================
+        // ACTUALIZAR PLAYER ID
+        // =========================================================
+
+        FindPlayerIdentity();
+
         TrySyncPlayerId();
 
 
         if (mobileInput == null)
+        {
             return;
+        }
 
 
         if (!playerIdAssigned)
@@ -241,9 +270,19 @@ public class FlashlightController : MonoBehaviour
         }
 
 
-        if (!flashlightActive)
-            return;
+        // =========================================================
+        // SI ESTÁ APAGADA
+        // =========================================================
 
+        if (!flashlightActive)
+        {
+            return;
+        }
+
+
+        // =========================================================
+        // PLAYER CONECTADO
+        // =========================================================
 
         if (!mobileInput.IsPlayerConnected(playerId))
         {
@@ -256,9 +295,9 @@ public class FlashlightController : MonoBehaviour
         }
 
 
-        // =====================================================
-        // LEER ACELERÓMETRO FÍSICO DEL CELULAR
-        // =====================================================
+        // =========================================================
+        // LEER ACELERÓMETRO
+        // =========================================================
 
         Vector3 accelerometer =
             mobileInput.GetAccelerometer(
@@ -274,9 +313,9 @@ public class FlashlightController : MonoBehaviour
         );
 
 
-        // =====================================================
+        // =========================================================
         // CALIBRACIÓN
-        // =====================================================
+        // =========================================================
 
         if (
             autoCalibrate &&
@@ -290,29 +329,30 @@ public class FlashlightController : MonoBehaviour
 
 
         if (!calibrated)
+        {
             return;
+        }
 
 
-        // =====================================================
-        // DELTA
-        // =====================================================
+        // =========================================================
+        // DELTA DEL ACELERÓMETRO
+        // =========================================================
 
         Vector3 delta =
             accelerometer -
             initialAccelerometer;
 
 
-        // =====================================================
+        // =========================================================
         // DEAD ZONE
-        // =====================================================
+        // =========================================================
 
         if (
             Mathf.Abs(delta.x) <
             accelerometerDeadZone
         )
         {
-            delta.x =
-                0f;
+            delta.x = 0f;
         }
 
 
@@ -321,14 +361,13 @@ public class FlashlightController : MonoBehaviour
             accelerometerDeadZone
         )
         {
-            delta.y =
-                0f;
+            delta.y = 0f;
         }
 
 
-        // =====================================================
+        // =========================================================
         // HORIZONTAL
-        // =====================================================
+        // =========================================================
 
         targetHorizontal =
             delta.x *
@@ -343,9 +382,9 @@ public class FlashlightController : MonoBehaviour
             );
 
 
-        // =====================================================
+        // =========================================================
         // VERTICAL
-        // =====================================================
+        // =========================================================
 
         targetVertical =
             -delta.y *
@@ -360,9 +399,9 @@ public class FlashlightController : MonoBehaviour
             );
 
 
-        // =====================================================
+        // =========================================================
         // SUAVIZADO
-        // =====================================================
+        // =========================================================
 
         currentHorizontal =
             Mathf.Lerp(
@@ -382,9 +421,9 @@ public class FlashlightController : MonoBehaviour
             );
 
 
-        // =====================================================
+        // =========================================================
         // APLICAR ROTACIÓN
-        // =====================================================
+        // =========================================================
 
         flashlightPivot.localRotation =
             Quaternion.Euler(
@@ -403,20 +442,74 @@ public class FlashlightController : MonoBehaviour
 
 
     // =========================================================
-    // PLAYER IDENTITY
+    // BUSCAR PLAYER IDENTITY
+    // =========================================================
+
+    private void FindPlayerIdentity()
+    {
+        if (playerIdentity != null)
+        {
+            return;
+        }
+
+
+        // ---------------------------------------------------------
+        // MISMO OBJETO
+        // ---------------------------------------------------------
+
+        playerIdentity =
+            GetComponent<PlayerIdentity>();
+
+
+        if (playerIdentity != null)
+        {
+            return;
+        }
+
+
+        // ---------------------------------------------------------
+        // PADRE
+        // ---------------------------------------------------------
+
+        playerIdentity =
+            GetComponentInParent<PlayerIdentity>();
+
+
+        if (playerIdentity != null)
+        {
+            return;
+        }
+
+
+        // ---------------------------------------------------------
+        // ROOT
+        // ---------------------------------------------------------
+
+        Transform root =
+            transform.root;
+
+
+        if (root != null)
+        {
+            playerIdentity =
+                root.GetComponent<PlayerIdentity>();
+        }
+    }
+
+
+    // =========================================================
+    // SINCRONIZAR PLAYER ID
     // =========================================================
 
     private void TrySyncPlayerId()
     {
+        FindPlayerIdentity();
+
+
         if (playerIdentity == null)
         {
-            playerIdentity =
-                GetComponent<PlayerIdentity>();
-        }
-
-
-        if (playerIdentity == null)
             return;
+        }
 
 
         int identityId =
@@ -428,6 +521,12 @@ public class FlashlightController : MonoBehaviour
             identityId > 4
         )
         {
+            DebugLog(
+                $"🔦 [FLASHLIGHT] " +
+                $"{gameObject.name} encontró PlayerIdentity " +
+                $"pero el ID es inválido: {identityId}"
+            );
+
             return;
         }
 
@@ -469,8 +568,8 @@ public class FlashlightController : MonoBehaviour
 
 
             Debug.Log(
-                $"🔦 [FLASHLIGHT] PlayerIdentity detectado -> " +
-                $"PLAYER {playerId}"
+                $"🔦✅ [FLASHLIGHT] PlayerIdentity detectado -> " +
+                $"{gameObject.name} = PLAYER {playerId}"
             );
         }
     }
@@ -584,7 +683,7 @@ public class FlashlightController : MonoBehaviour
 
 
     // =========================================================
-    // PLAYER ID
+    // PLAYER ID MANUAL
     // =========================================================
 
     public void SetPlayerId(
@@ -800,7 +899,9 @@ public class FlashlightController : MonoBehaviour
     )
     {
         if (!debugLogs)
+        {
             return;
+        }
 
 
         debugTimer +=
