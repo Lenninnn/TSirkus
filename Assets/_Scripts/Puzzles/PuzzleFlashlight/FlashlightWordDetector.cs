@@ -13,14 +13,24 @@ public class FlashlightWordDetector : MonoBehaviour
 
     [SerializeField] private LayerMask detectionLayers = ~0;
 
+
     // =============================================================
-    // REQUIRE FLASHLIGHT
+    // FLASHLIGHT
     // =============================================================
 
     [Header("Flashlight")]
     [SerializeField] private FlashlightController flashlightController;
 
     [SerializeField] private Light flashlightLight;
+
+
+    // =============================================================
+    // PLAYER CAMERA
+    // =============================================================
+
+    [Header("Player Camera")]
+    [SerializeField] private Camera playerCamera;
+
 
     // =============================================================
     // DEBUG
@@ -33,9 +43,15 @@ public class FlashlightWordDetector : MonoBehaviour
 
     [SerializeField] private float debugInterval = 0.5f;
 
+
+    // =============================================================
+    // STATE
+    // =============================================================
+
     private float debugTimer;
 
     private HiddenWord currentWord;
+
 
     // =============================================================
     // UNITY
@@ -43,12 +59,8 @@ public class FlashlightWordDetector : MonoBehaviour
 
     private void Awake()
     {
-        Debug.Log(
-            $"🔎 [WORD DETECTOR] Awake -> {gameObject.name}"
-        );
-
         // ---------------------------------------------------------
-        // BUSCAR FLASHLIGHT CONTROLLER
+        // FLASHLIGHT CONTROLLER
         // ---------------------------------------------------------
 
         if (flashlightController == null)
@@ -57,14 +69,16 @@ public class FlashlightWordDetector : MonoBehaviour
                 GetComponent<FlashlightController>();
         }
 
+
         if (flashlightController == null)
         {
             flashlightController =
                 GetComponentInParent<FlashlightController>();
         }
 
+
         // ---------------------------------------------------------
-        // BUSCAR LIGHT
+        // LIGHT
         // ---------------------------------------------------------
 
         if (flashlightLight == null)
@@ -73,46 +87,157 @@ public class FlashlightWordDetector : MonoBehaviour
                 GetComponentInChildren<Light>();
         }
 
+
         // ---------------------------------------------------------
-        // DEBUG
+        // PLAYER CAMERA
+        // ---------------------------------------------------------
+
+        FindPlayerCamera();
+
+
+        // ---------------------------------------------------------
+        // VALIDATION
         // ---------------------------------------------------------
 
         if (flashlightController == null)
         {
-            Debug.LogWarning(
-                $"🔎 [WORD DETECTOR] No se encontró " +
-                $"FlashlightController en {gameObject.name}."
-            );
-        }
-
-        if (flashlightLight == null)
-        {
-            Debug.LogWarning(
-                $"🔎 [WORD DETECTOR] No se encontró Light " +
-                $"en {gameObject.name}."
+            Debug.LogError(
+                $"🔤🔦❌ [WORD DETECTOR] " +
+                $"{gameObject.name} no encontró FlashlightController."
             );
         }
     }
 
+
+    // =============================================================
+    // FIND PLAYER CAMERA
+    // =============================================================
+
+    private void FindPlayerCamera()
+    {
+        if (playerCamera != null)
+        {
+            return;
+        }
+
+
+        Transform playerRoot =
+            transform.root;
+
+        if (playerRoot != null)
+        {
+            Camera[] cameras =
+                playerRoot.GetComponentsInChildren<Camera>(true);
+
+            if (cameras != null && cameras.Length > 0)
+            {
+                for (int i = 0; i < cameras.Length; i++)
+                {
+                    Camera candidate =
+                        cameras[i];
+
+                    if (candidate == null)
+                    {
+                        continue;
+                    }
+
+                    if (candidate.gameObject == gameObject)
+                    {
+                        continue;
+                    }
+
+                    playerCamera =
+                        candidate;
+
+                    break;
+                }
+            }
+        }
+
+
+        if (playerCamera == null)
+        {
+            PlayerIdentity identity =
+                GetComponentInParent<PlayerIdentity>();
+
+            if (identity != null)
+            {
+                Camera[] allCameras =
+                    FindObjectsOfType<Camera>(true);
+
+                for (int i = 0; i < allCameras.Length; i++)
+                {
+                    Camera candidate =
+                        allCameras[i];
+
+                    if (candidate == null)
+                    {
+                        continue;
+                    }
+
+                    PlayerIdentity cameraIdentity =
+                        candidate.GetComponentInParent<PlayerIdentity>();
+
+                    if (cameraIdentity == null)
+                    {
+                        continue;
+                    }
+
+                    if (
+                        cameraIdentity.PlayerId ==
+                        identity.PlayerId
+                    )
+                    {
+                        playerCamera =
+                            candidate;
+
+                        break;
+                    }
+                }
+            }
+        }
+
+
+        if (playerCamera == null)
+        {
+            Debug.LogWarning(
+                $"🔤🔦⚠️ [WORD DETECTOR] " +
+                $"{gameObject.name} no encontró una cámara " +
+                $"perteneciente al jugador. " +
+                $"Puedes asignarla manualmente en Player Camera."
+            );
+        }
+        else
+        {
+            Debug.Log(
+                $"🔤🔦📷 [WORD DETECTOR] " +
+                $"{gameObject.name} -> cámara privada: " +
+                $"{playerCamera.name}"
+            );
+        }
+    }
+
+
+    // =============================================================
+    // UPDATE
+    // =============================================================
+
     private void Update()
     {
-        // ---------------------------------------------------------
-        // SI LA LINTERNA NO EXISTE
-        // ---------------------------------------------------------
-
         if (flashlightController == null)
+        {
             return;
+        }
 
-        // ---------------------------------------------------------
-        // SI LA LINTERNA ESTÁ APAGADA
-        // ---------------------------------------------------------
 
-        if (!flashlightController.IsFlashlightActive())
+        if (
+            !flashlightController
+                .IsFlashlightActive()
+        )
+        {
             return;
+        }
 
-        // ---------------------------------------------------------
-        // SI TENEMOS UNA LIGHT Y ESTÁ APAGADA
-        // ---------------------------------------------------------
 
         if (
             flashlightLight != null &&
@@ -122,8 +247,10 @@ public class FlashlightWordDetector : MonoBehaviour
             return;
         }
 
+
         DetectWord();
     }
+
 
     // =============================================================
     // DETECT WORD
@@ -134,10 +261,31 @@ public class FlashlightWordDetector : MonoBehaviour
         Vector3 origin =
             transform.position;
 
+
         Vector3 direction =
             transform.forward;
 
+
+        // ---------------------------------------------------------
+        // DEBUG RAY
+        // ---------------------------------------------------------
+
+        if (drawDebugRay)
+        {
+            Debug.DrawRay(
+                origin,
+                direction * detectionDistance,
+                Color.red
+            );
+        }
+
+
+        // ---------------------------------------------------------
+        // SPHERE CAST
+        // ---------------------------------------------------------
+
         RaycastHit hit;
+
 
         bool detected =
             Physics.SphereCast(
@@ -150,64 +298,37 @@ public class FlashlightWordDetector : MonoBehaviour
                 QueryTriggerInteraction.Collide
             );
 
-        // ---------------------------------------------------------
-        // DEBUG RAY
-        // ---------------------------------------------------------
-
-        if (drawDebugRay)
-        {
-            Debug.DrawRay(
-                origin,
-                direction * detectionDistance,
-                detected ? Color.green : Color.red
-            );
-        }
-
-        // ---------------------------------------------------------
-        // NOTHING DETECTED
-        // ---------------------------------------------------------
 
         if (!detected)
         {
-            DebugLog(
-                $"🔎 [WORD DETECTOR] " +
-                $"Nada detectado."
-            );
-
             return;
         }
 
+
         // ---------------------------------------------------------
-        // CHECK HIDDEN WORD
+        // BUSCAR HIDDEN WORD
         // ---------------------------------------------------------
 
         HiddenWord hiddenWord =
-            hit.collider.GetComponentInParent<HiddenWord>();
+            hit.collider
+                .GetComponentInParent<HiddenWord>();
+
 
         if (hiddenWord == null)
         {
-            DebugLog(
-                $"🔎 [WORD DETECTOR] Detectado: " +
-                $"{hit.collider.gameObject.name} " +
-                $"pero NO es HiddenWord."
-            );
-
             return;
         }
 
+
         // ---------------------------------------------------------
-        // WORD ALREADY REVEALED
+        // YA REVELADA
         // ---------------------------------------------------------
 
         if (hiddenWord.IsRevealed)
         {
-            DebugLog(
-                $"🔎 [WORD DETECTOR] " +
-                $"Palabra ya revelada: {hiddenWord.Word}"
-            );
-
             return;
         }
+
 
         // ---------------------------------------------------------
         // PLAYER ID
@@ -216,15 +337,45 @@ public class FlashlightWordDetector : MonoBehaviour
         int playerId =
             flashlightController.GetPlayerId();
 
-        if (playerId < 1 || playerId > 4)
+
+        if (
+            playerId < 1 ||
+            playerId > 4
+        )
         {
-            Debug.LogWarning(
-                $"🔎 [WORD DETECTOR] " +
-                $"Player ID inválido: {playerId}"
+            DebugLog(
+                $"🔤🔦🚫 [WORD DETECTOR] " +
+                $"La linterna no tiene Player ID válido."
             );
 
             return;
         }
+
+
+        // ---------------------------------------------------------
+        // DEBUG
+        // ---------------------------------------------------------
+
+        currentWord =
+            hiddenWord;
+
+
+        DebugLog(
+            $"🔤🔦 [P{playerId}] " +
+            $"Apuntando a '{hiddenWord.Word}' " +
+            $"| pertenece a P{hiddenWord.AssignedPlayerId}"
+        );
+
+
+        // ---------------------------------------------------------
+        // ASEGURAR CÁMARA
+        // ---------------------------------------------------------
+
+        if (playerCamera == null)
+        {
+            FindPlayerCamera();
+        }
+
 
         // ---------------------------------------------------------
         // INTENTAR REVELAR
@@ -232,120 +383,77 @@ public class FlashlightWordDetector : MonoBehaviour
 
         bool revealed =
             hiddenWord.TryRevealForPlayer(
-                playerId
+                playerId,
+                playerCamera
             );
 
-        // ---------------------------------------------------------
-        // RESULTADO
-        // ---------------------------------------------------------
 
         if (revealed)
         {
-            if (currentWord != hiddenWord)
-            {
-                currentWord =
-                    hiddenWord;
-
-                Debug.Log(
-                    $"🔦🔤 [WORD DETECTOR] " +
-                    $"PLAYER {playerId} ENCONTRÓ: " +
-                    $"{hiddenWord.Word}"
-                );
-            }
+            Debug.Log(
+                $"🔤✨ [WORD DETECTOR] " +
+                $"PLAYER {playerId} reveló " +
+                $"'{hiddenWord.Word}'"
+            );
         }
         else
         {
             DebugLog(
-                $"🔎 [WORD DETECTOR] " +
-                $"PLAYER {playerId} apuntó a " +
-                $"\"{hiddenWord.Word}\" pero no puede reclamarla."
+                $"🔤🚫 [WORD DETECTOR] " +
+                $"PLAYER {playerId} NO puede revelar " +
+                $"'{hiddenWord.Word}' " +
+                $"| pertenece a P{hiddenWord.AssignedPlayerId}"
             );
         }
     }
 
+
     // =============================================================
-    // DEBUG
+    // DEBUG LOG
     // =============================================================
 
-    private void DebugLog(string message)
+    private void DebugLog(
+        string message
+    )
     {
         if (!debugLogs)
+        {
             return;
+        }
+
 
         debugTimer +=
             Time.deltaTime;
 
-        if (debugTimer >= debugInterval)
+
+        if (
+            debugTimer >=
+            debugInterval
+        )
         {
-            Debug.Log(message);
-
-            debugTimer = 0f;
-        }
-    }
-
-    // =============================================================
-    // PUBLIC CONFIGURATION
-    // =============================================================
-
-    public void SetFlashlightController(
-        FlashlightController controller
-    )
-    {
-        flashlightController =
-            controller;
-    }
-
-    public void SetFlashlightLight(
-        Light lightSource
-    )
-    {
-        flashlightLight =
-            lightSource;
-    }
-
-    public void SetDetectionDistance(
-        float distance
-    )
-    {
-        if (distance <= 0f)
-        {
-            Debug.LogWarning(
-                "🔎 [WORD DETECTOR] " +
-                "Detection Distance debe ser mayor que 0."
+            Debug.Log(
+                message
             );
 
-            return;
-        }
 
-        detectionDistance =
-            distance;
+            debugTimer =
+                0f;
+        }
     }
 
-    public void SetDetectionRadius(
-        float radius
-    )
-    {
-        if (radius < 0f)
-        {
-            Debug.LogWarning(
-                "🔎 [WORD DETECTOR] " +
-                "Detection Radius no puede ser negativo."
-            );
-
-            return;
-        }
-
-        detectionRadius =
-            radius;
-    }
 
     // =============================================================
     // CONTEXT MENU
     // =============================================================
 
-    [ContextMenu("Test Detection")]
-    private void TestDetection()
+    [ContextMenu("Detect Word")]
+    private void DebugDetectWord()
     {
+        if (flashlightController == null)
+        {
+            Awake();
+        }
+
         DetectWord();
     }
 }

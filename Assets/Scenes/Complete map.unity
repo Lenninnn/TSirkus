@@ -12187,13 +12187,17 @@ PrefabInstance:
       propertyPath: m_Name
       value: Hiddenword (4)
       objectReference: {fileID: 0}
+    - target: {fileID: 3226620095809284596, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7112407323857313648, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8105223376521074900, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
       propertyPath: word
-      value: 'CUANDO '
+      value: 'APAGUEN '
       objectReference: {fileID: 0}
     - target: {fileID: 8105223376521074900, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
       propertyPath: revealed
@@ -13458,6 +13462,7 @@ GameObject:
   m_Component:
   - component: {fileID: 815854684}
   - component: {fileID: 815854685}
+  - component: {fileID: 815854686}
   m_Layer: 0
   m_Name: PuzzleLinterna
   m_TagString: Untagged
@@ -13497,23 +13502,21 @@ MonoBehaviour:
   puzzleController: {fileID: 165011990}
   hiddenWords:
   - {fileID: 7770309804217682312}
+  - {fileID: 1194722367}
+  - {fileID: 1132117487}
   - {fileID: 961818814}
+  - {fileID: 1250585081}
+  - {fileID: 997593603}
   - {fileID: 1115532886}
+  - {fileID: 1362451685}
+  - {fileID: 1948198352}
   - {fileID: 891114280}
   - {fileID: 750863002}
-  - {fileID: 1362451685}
-  - {fileID: 1194722367}
-  - {fileID: 1250585081}
   - {fileID: 1097309634}
-  - {fileID: 1132117487}
-  - {fileID: 1948198352}
-  - {fileID: 997593603}
   flashlights: []
   autoFindFlashlights: 1
-  requiredPlayers: 4
-  expectedTotalWords: 12
-  wordsPerPlayer: 3
-  currentPhase: 0
+  phraseNetworkBridge: {fileID: 0}
+  phraseTimeLimit: 120
   searchPhaseActive: 1
   wordsCompleted: 0
   wordsFound: 0
@@ -13521,12 +13524,27 @@ MonoBehaviour:
   player2WordsFound: 0
   player3WordsFound: 0
   player4WordsFound: 0
-  onSearchPhaseCompleted:
-    m_PersistentCalls:
-      m_Calls: []
-  onCommunicationPhaseStarted:
-    m_PersistentCalls:
-      m_Calls: []
+  phrasePhaseActive: 0
+  phraseCompleted: 0
+  player1PhraseCorrect: 0
+  player2PhraseCorrect: 0
+  player3PhraseCorrect: 0
+  player4PhraseCorrect: 1
+  debugLogs: 1
+--- !u!114 &815854686
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 815854682}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3fb4aec6751c9724d9a0332f026cc3b3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PhraseNetworkBridge
+  serverIP: 10.33.52.220
+  serverPort: 9001
   debugLogs: 1
 --- !u!1 &819348494
 GameObject:
@@ -14932,13 +14950,17 @@ PrefabInstance:
       propertyPath: m_Name
       value: Hiddenword (3)
       objectReference: {fileID: 0}
+    - target: {fileID: 3226620095809284596, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7112407323857313648, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8105223376521074900, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
       propertyPath: word
-      value: 'CUANDO '
+      value: 'SE '
       objectReference: {fileID: 0}
     - target: {fileID: 8105223376521074900, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
       propertyPath: revealed
@@ -16415,13 +16437,17 @@ PrefabInstance:
       propertyPath: m_Name
       value: Hiddenword (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 3226620095809284596, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7112407323857313648, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8105223376521074900, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
       propertyPath: word
-      value: 'CUANDO '
+      value: 'LAS '
       objectReference: {fileID: 0}
     - target: {fileID: 8105223376521074900, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
       propertyPath: revealed
@@ -17001,13 +17027,17 @@ PrefabInstance:
       propertyPath: m_Name
       value: Hiddenword (11)
       objectReference: {fileID: 0}
+    - target: {fileID: 3226620095809284596, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7112407323857313648, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8105223376521074900, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
       propertyPath: word
-      value: 'CUANDO '
+      value: 'TI '
       objectReference: {fileID: 0}
     - target: {fileID: 8105223376521074900, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
       propertyPath: revealed
@@ -18868,13 +18898,17 @@ PrefabInstance:
       propertyPath: m_Name
       value: Hiddenword (8)
       objectReference: {fileID: 0}
+    - target: {fileID: 3226620095809284596, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7112407323857313648, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8105223376521074900, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
       propertyPath: word
-      value: 'CUANDO '
+      value: 'PAYASO '
       objectReference: {fileID: 0}
     - target: {fileID: 8105223376521074900, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
       propertyPath: revealed
@@ -19378,13 +19412,17 @@ PrefabInstance:
       propertyPath: m_Name
       value: Hiddenword (2)
       objectReference: {fileID: 0}
+    - target: {fileID: 3226620095809284596, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7112407323857313648, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8105223376521074900, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
       propertyPath: word
-      value: 'CUANDO '
+      value: 'LUCES '
       objectReference: {fileID: 0}
     - target: {fileID: 8105223376521074900, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
       propertyPath: revealed
@@ -19783,13 +19821,17 @@ PrefabInstance:
       propertyPath: m_Name
       value: Hiddenword (9)
       objectReference: {fileID: 0}
+    - target: {fileID: 3226620095809284596, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7112407323857313648, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8105223376521074900, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
       propertyPath: word
-      value: 'CUANDO '
+      value: "DETR\xC1S "
       objectReference: {fileID: 0}
     - target: {fileID: 8105223376521074900, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
       propertyPath: revealed
@@ -20774,13 +20816,17 @@ PrefabInstance:
       propertyPath: m_Name
       value: Hiddenword (6)
       objectReference: {fileID: 0}
+    - target: {fileID: 3226620095809284596, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7112407323857313648, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8105223376521074900, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
       propertyPath: word
-      value: 'CUANDO '
+      value: 'OLVIDES '
       objectReference: {fileID: 0}
     - target: {fileID: 8105223376521074900, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
       propertyPath: revealed
@@ -21501,13 +21547,17 @@ PrefabInstance:
       propertyPath: m_Name
       value: Hiddenword (7)
       objectReference: {fileID: 0}
+    - target: {fileID: 3226620095809284596, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7112407323857313648, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8105223376521074900, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
       propertyPath: word
-      value: 'CUANDO '
+      value: 'AL  '
       objectReference: {fileID: 0}
     - target: {fileID: 8105223376521074900, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
       propertyPath: revealed
@@ -23242,13 +23292,17 @@ PrefabInstance:
       propertyPath: m_Name
       value: Hiddenword (5)
       objectReference: {fileID: 0}
+    - target: {fileID: 3226620095809284596, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7112407323857313648, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8105223376521074900, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
       propertyPath: word
-      value: 'CUANDO '
+      value: 'NO '
       objectReference: {fileID: 0}
     - target: {fileID: 8105223376521074900, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
       propertyPath: revealed
@@ -30387,7 +30441,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 42376faee44a8b74186705d886373c8c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MobileInputManager
-  serverIP: 10.33.54.193
+  serverIP: 10.33.52.220
   serverPort: 9000
 --- !u!4 &1846949560
 Transform:
@@ -31684,13 +31738,17 @@ PrefabInstance:
       propertyPath: m_Name
       value: Hiddenword (10)
       objectReference: {fileID: 0}
+    - target: {fileID: 3226620095809284596, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7112407323857313648, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
       propertyPath: m_Enabled
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8105223376521074900, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
       propertyPath: word
-      value: 'CUANDO '
+      value: 'DE '
       objectReference: {fileID: 0}
     - target: {fileID: 8105223376521074900, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
       propertyPath: revealed
@@ -34893,6 +34951,10 @@ PrefabInstance:
     - target: {fileID: 3226620095809284596, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
       propertyPath: m_Name
       value: Hiddenword
+      objectReference: {fileID: 0}
+    - target: {fileID: 3226620095809284596, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7112407323857313648, guid: 8c8f29aaaf32f824fb3006493a72acff, type: 3}
       propertyPath: m_Enabled
