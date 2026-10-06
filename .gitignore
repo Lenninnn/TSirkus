@@ -105,3 +105,11 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+Assets/URP_WasteOvergrowth_SA/HDRP_WasteOvergrowth_SA.unitypackage
+.DS_Store
+**/.DS_Store
+Assets/Abandoned_Asylum/
+Assets/URP_WasteOvergrowth_SA/
+Assets/OlegWER/
+Assets/Cody Dreams/
+Assets/Blink/
