@@ -2986,7 +2986,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca75b142d8e55c35b5084a13cb775414, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameScenePath: Assets/Scenes/Complete map.unity
+  gameScenePath: Assets/Scenes/Cinematica.unity
   story: "Las luces del circo se apagaron hace a\xF1os. Esta noche han vuelto a encenderse.\n\nTras la lona desgastada quedan juegos a medio terminar, premios olvidados y una m\xFAsica que sigue sonando aunque nadie le d\xE9 cuerda.\n\nHan cruzado la entrada juntos. Ahora deber\xE1n explorar, superar las pruebas y descubrir qu\xE9 mantiene viva la funci\xF3n.\n\nAqu\xED, cada boleto parece una invitaci\xF3n. Hasta que intentas marcharte."
   home: {fileID: 9000011}
   settings: {fileID: 9000038}

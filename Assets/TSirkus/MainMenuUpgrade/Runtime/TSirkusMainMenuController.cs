@@ -13,7 +13,7 @@ namespace TSirkus.MainMenuUpgrade
     public sealed class TSirkusMainMenuController : MonoBehaviour
     {
         [Header("Destino de Jugar")]
-        public string gameScenePath = "Assets/Scenes/Complete map.unity";
+        public string gameScenePath = "Assets/Scenes/GAME.unity";
         [Header("Historia editable")]
         [TextArea(5, 12)] public string story = "";
         [Header("Referencias de interfaz")]

@@ -1,324 +1,844 @@
-using UnityEngine;
 using System;
-using System.Net.Sockets;
-using System.Text;
-using System.Threading;
+
 using System.Collections.Concurrent;
 
+using System.Net.Sockets;
+
+using System.Text;
+
+using System.Threading;
+
+using UnityEngine;
+
+
+
 public class MobileInputManager : MonoBehaviour
+
 {
+
     [Header("Servidor")]
-    [SerializeField] private string serverIP = "10.33.13.28";
+
+    [SerializeField] private string serverIP = "127.0.0.1";
+
     [SerializeField] private int serverPort = 9000;
 
-    private TcpClient client;
-    private NetworkStream stream;
-    private Thread receiveThread;
-
-    private readonly ConcurrentQueue<string> messageQueue =
-        new ConcurrentQueue<string>();
 
 
     [Serializable]
-    private class PlayerInput
-    {
-        // Movimiento
-        public float x;
-        public float y;
-        public float z;
 
-        // Cámara
+    public class PlayerInput
+
+    {
+
+        // =================================================
+        // MOVIMIENTO / JOYSTICK
+        // =================================================
+
+        public float movementX;
+
+        public float movementY;
+
+        public float movementZ;
+
+
+
+        // =================================================
+        // ACELERÓMETRO FÍSICO
+        // =================================================
+
+        public float accelerometerX;
+
+        public float accelerometerY;
+
+        public float accelerometerZ;
+
+
+
+        // =================================================
+        // ORIENTACIÓN
+        // =================================================
+
+        public float alpha;
+
+        public float beta;
+
+        public float gamma;
+
+
+
+        // =================================================
+        // LOOK
+        // =================================================
+
         public float lookX;
+
         public float lookY;
 
-        // Botones
+
+
+        // =================================================
+        // ESTADOS
+        // =================================================
+
         public bool connected;
+
         public bool jump;
+
         public bool action;
 
-        // Soplido
+
+
+        // =================================================
+        // MICRÓFONO
+        // =================================================
+
         public float blowIntensity;
+
     }
 
 
-    private PlayerInput[] players =
+
+    private readonly PlayerInput[] players =
+
         new PlayerInput[5];
 
 
+
     // =====================================================
-    // AWAKE
+    // TCP
+    // =====================================================
+
+    private TcpClient tcpClient;
+
+    private NetworkStream networkStream;
+
+    private Thread receiveThread;
+
+    private volatile bool running;
+
+
+
+    // =====================================================
+    // COLA
+    // =====================================================
+
+    private readonly ConcurrentQueue<string>
+
+        messageQueue =
+
+            new ConcurrentQueue<string>();
+
+
+
+    // =====================================================
+    // UNITY
     // =====================================================
 
     private void Awake()
+
     {
-        for (int i = 0; i < players.Length; i++)
+
+        DontDestroyOnLoad(gameObject);
+
+
+
+        for (
+
+            int i = 0;
+
+            i < players.Length;
+
+            i++
+
+        )
+
         {
+
             players[i] =
+
                 new PlayerInput();
+
         }
 
-        Debug.Log(
-            "🎮 MOBILE INPUT MANAGER"
-        );
-
-        ConnectToServer();
     }
 
 
+
+    private void Start()
+
+    {
+
+        ConnectToServer();
+
+    }
+
+
+
+    private void Update()
+
+    {
+
+        ProcessMessages();
+
+    }
+
+
+
     // =====================================================
-    // CONEXIÓN
+    // CONECTAR
     // =====================================================
 
     private void ConnectToServer()
+
     {
+
         try
+
         {
-            client =
-                new TcpClient();
-
-            client.Connect(
-                serverIP,
-                serverPort
-            );
-
-            stream =
-                client.GetStream();
 
             Debug.Log(
-                $"✅ CONECTADO AL SERVIDOR TCP → {serverIP}:{serverPort}"
+
+                $"📡 Conectando a Unity TCP: {serverIP}:{serverPort}"
+
             );
 
-            receiveThread =
-                new Thread(
-                    ReceiveData
-                );
 
-            receiveThread.IsBackground =
+
+            tcpClient =
+
+                new TcpClient();
+
+
+
+            tcpClient.Connect(
+
+                serverIP,
+
+                serverPort
+
+            );
+
+
+
+            networkStream =
+
+                tcpClient.GetStream();
+
+
+
+            running =
+
                 true;
 
-            receiveThread.Start();
-        }
-        catch (Exception error)
-        {
-            Debug.LogError(
-                $"❌ ERROR CONECTANDO UNITY: {error.Message}"
-            );
-        }
-    }
 
 
-    // =====================================================
-    // RECIBIR DATOS
-    // =====================================================
+            receiveThread =
 
-    private void ReceiveData()
-    {
-        byte[] buffer =
-            new byte[4096];
+                new Thread(
 
-        StringBuilder messageBuffer =
-            new StringBuilder();
+                    ReceiveLoop
 
-        try
-        {
-            while (
-                client != null &&
-                client.Connected
-            )
-            {
-                int bytesRead =
-                    stream.Read(
-                        buffer,
-                        0,
-                        buffer.Length
-                    );
-
-                if (bytesRead <= 0)
-                    break;
-
-                string data =
-                    Encoding.UTF8.GetString(
-                        buffer,
-                        0,
-                        bytesRead
-                    );
-
-                messageBuffer.Append(
-                    data
                 );
 
-                string completeData =
-                    messageBuffer.ToString();
 
-                string[] messages =
-                    completeData.Split(
-                        '\n'
-                    );
 
-                messageBuffer.Clear();
+            receiveThread.IsBackground =
 
-                for (
-                    int i = 0;
-                    i < messages.Length - 1;
-                    i++
-                )
-                {
-                    if (
-                        !string.IsNullOrWhiteSpace(
-                            messages[i]
-                        )
-                    )
-                    {
-                        messageQueue.Enqueue(
-                            messages[i]
-                        );
-                    }
-                }
+                true;
+
+
+
+            receiveThread.Start();
+
+
+
+            Debug.Log(
+
+                "✅ MobileInputManager conectado al servidor"
+
+            );
+
+        }
+
+        catch (Exception error)
+
+        {
+
+            Debug.LogError(
+
+                $"❌ Error conectando MobileInputManager: {error.Message}"
+
+            );
+
+        }
+
+    }
+
+
+
+    // =====================================================
+    // RECIBIR TCP
+    // =====================================================
+
+    private void ReceiveLoop()
+
+    {
+
+        byte[] buffer =
+
+            new byte[8192];
+
+
+
+        StringBuilder dataBuffer =
+
+            new StringBuilder();
+
+
+
+        while (
+
+            running
+
+        )
+
+        {
+
+            try
+
+            {
 
                 if (
-                    messages.Length > 0 &&
-                    !string.IsNullOrEmpty(
-                        messages[messages.Length - 1]
-                    )
+
+                    networkStream == null ||
+
+                    tcpClient == null ||
+
+                    !tcpClient.Connected
+
                 )
+
                 {
-                    messageBuffer.Append(
-                        messages[messages.Length - 1]
-                    );
+
+                    break;
+
                 }
+
+
+
+                int bytesRead =
+
+                    networkStream.Read(
+
+                        buffer,
+
+                        0,
+
+                        buffer.Length
+
+                    );
+
+
+
+                if (
+
+                    bytesRead <= 0
+
+                )
+
+                {
+
+                    break;
+
+                }
+
+
+
+                string incoming =
+
+                    Encoding.UTF8.GetString(
+
+                        buffer,
+
+                        0,
+
+                        bytesRead
+
+                    );
+
+
+
+                dataBuffer.Append(
+
+                    incoming
+
+                );
+
+
+
+                string currentData =
+
+                    dataBuffer.ToString();
+
+
+
+                int newlineIndex;
+
+
+
+                while (
+
+                    (
+
+                        newlineIndex =
+
+                            currentData.IndexOf('\n')
+
+                    ) >= 0
+
+                )
+
+                {
+
+                    string message =
+
+                        currentData
+
+                            .Substring(
+
+                                0,
+
+                                newlineIndex
+
+                            )
+
+                            .Trim();
+
+
+
+                    currentData =
+
+                        currentData.Substring(
+
+                            newlineIndex + 1
+
+                        );
+
+
+
+                    if (
+
+                        !string.IsNullOrEmpty(
+
+                            message
+
+                        )
+
+                    )
+
+                    {
+
+                        messageQueue.Enqueue(
+
+                            message
+
+                        );
+
+                    }
+
+                }
+
+
+
+                dataBuffer.Clear();
+
+
+
+                dataBuffer.Append(
+
+                    currentData
+
+                );
+
             }
+
+            catch (Exception error)
+
+            {
+
+                if (
+
+                    running
+
+                )
+
+                {
+
+                    Debug.LogError(
+
+                        $"❌ Error recibiendo TCP: {error.Message}"
+
+                    );
+
+                }
+
+
+
+                break;
+
+            }
+
         }
-        catch (Exception error)
-        {
-            Debug.LogError(
-                $"❌ ERROR RECIBIENDO TCP: {error.Message}"
-            );
-        }
+
     }
 
-
-    // =====================================================
-    // UPDATE
-    // =====================================================
-
-    private void Update()
-    {
-        while (
-            messageQueue.TryDequeue(
-                out string message
-            )
-        )
-        {
-            ProcessMessage(
-                message
-            );
-        }
-    }
 
 
     // =====================================================
     // PROCESAR MENSAJES
     // =====================================================
 
-    private void ProcessMessage(
-        string message
-    )
+    private void ProcessMessages()
+
     {
-        try
+
+        while (
+
+            messageQueue.TryDequeue(
+
+                out string message
+
+            )
+
+        )
+
         {
+
+            ProcessMessage(
+
+                message
+
+            );
+
+        }
+
+    }
+
+
+
+    // =====================================================
+    // PROCESAR JSON
+    // =====================================================
+
+    private void ProcessMessage(
+
+        string message
+
+    )
+
+    {
+
+        try
+
+        {
+
             MessageData data =
+
                 JsonUtility.FromJson<MessageData>(
+
                     message
+
                 );
 
-            if (data == null)
+
+
+            if (
+
+                data == null
+
+            )
+
+            {
+
                 return;
+
+            }
+
+
+
+            int playerId =
+
+                data.playerId;
+
+
+
+            if (
+
+                playerId < 1 ||
+
+                playerId > 4
+
+            )
+
+            {
+
+                return;
+
+            }
+
+
+
+            PlayerInput player =
+
+                players[playerId];
+
 
 
             // =================================================
-            // MOVIMIENTO
+            // MOVIMIENTO / JOYSTICK
             // =================================================
 
             if (
+
                 data.type ==
-                "accelerometer"
+
+                "movement"
+
             )
+
             {
-                int id =
-                    data.playerId;
 
-                if (
-                    id < 1 ||
-                    id > 4
-                )
-                    return;
+                player.movementX =
 
-                players[id].x =
                     data.x;
 
-                players[id].y =
+
+
+                player.movementY =
+
                     data.y;
 
-                players[id].z =
+
+
+                player.movementZ =
+
                     data.z;
 
+
+
                 return;
+
             }
 
 
+
             // =================================================
-            // LOOK TÁCTIL
+            // ACELERÓMETRO FÍSICO
             // =================================================
 
             if (
+
                 data.type ==
-                "look"
+
+                "accelerometer"
+
             )
+
             {
-                int id =
-                    data.playerId;
 
-                if (
-                    id < 1 ||
-                    id > 4
-                )
-                    return;
+                player.accelerometerX =
 
-                players[id].lookX +=
                     data.x;
 
-                players[id].lookY +=
+
+
+                player.accelerometerY =
+
                     data.y;
 
+
+
+                player.accelerometerZ =
+
+                    data.z;
+
+
+
+                Debug.Log(
+
+                    $"📱 P{playerId} ACCELEROMETER FÍSICO → " +
+
+                    $"X:{data.x:F2} | " +
+
+                    $"Y:{data.y:F2} | " +
+
+                    $"Z:{data.z:F2}"
+
+                );
+
+
+
                 return;
+
             }
 
 
+
+            // =====================================================
+            // ACELERÓMETRO FÍSICO ENVIADO COMO PUZZLE
+            // =====================================================
+
+            // El servidor separa el sensor físico del joystick
+            // usando type = "puzzle_accelerometer".
+            //
+            // FlashlightController utiliza GetAccelerometer(),
+            // por lo tanto este mensaje debe alimentar exactamente
+            // el mismo buffer del acelerómetro físico.
+
+
+
+            if (
+
+                data.type ==
+
+                "puzzle_accelerometer"
+
+            )
+
+            {
+
+                player.accelerometerX =
+
+                    data.x;
+
+
+
+                player.accelerometerY =
+
+                    data.y;
+
+
+
+                player.accelerometerZ =
+
+                    data.z;
+
+
+
+                Debug.Log(
+
+                    $"📱 P{playerId} PUZZLE ACCELEROMETER → " +
+
+                    $"X:{data.x:F2} | " +
+
+                    $"Y:{data.y:F2} | " +
+
+                    $"Z:{data.z:F2}"
+
+                );
+
+
+
+                return;
+
+            }
+
+
+
             // =================================================
-            // SOPLIDO
+            // ORIENTACIÓN
             // =================================================
 
             if (
+
                 data.type ==
-                "blow"
+
+                "orientation"
+
             )
+
             {
-                int id =
-                    data.playerId;
 
-                if (
-                    id < 1 ||
-                    id > 4
-                )
-                    return;
+                player.alpha =
 
-                players[id].blowIntensity =
-                    Mathf.Clamp01(
-                        data.intensity
-                    );
+                    data.alpha;
+
+
+
+                player.beta =
+
+                    data.beta;
+
+
+
+                player.gamma =
+
+                    data.gamma;
+
+
 
                 return;
+
             }
+
+
+
+            // =================================================
+            // LOOK
+            // =================================================
+
+            if (
+
+                data.type ==
+
+                "look"
+
+            )
+
+            {
+
+                player.lookX +=
+
+                    data.x;
+
+
+
+                player.lookY +=
+
+                    data.y;
+
+
+
+                return;
+
+            }
+
+
+
+            // =================================================
+            // BLOW
+            // =================================================
+
+            if (
+
+                data.type ==
+
+                "blow"
+
+            )
+
+            {
+
+                player.blowIntensity =
+
+                    data.intensity;
+
+
+
+                return;
+
+            }
+
 
 
             // =================================================
@@ -326,44 +846,41 @@ public class MobileInputManager : MonoBehaviour
             // =================================================
 
             if (
+
                 data.type ==
+
                 "player_connected"
+
             )
+
             {
-                int id =
-                    data.playerId;
 
-                if (
-                    id < 1 ||
-                    id > 4
-                )
-                    return;
+                ResetPlayerInput(
 
-                players[id].connected =
-                    true;
+                    player
 
-                players[id].x = 0;
-                players[id].y = 0;
-                players[id].z = 0;
-
-                players[id].lookX = 0;
-                players[id].lookY = 0;
-
-                players[id].jump =
-                    false;
-
-                players[id].action =
-                    false;
-
-                players[id].blowIntensity =
-                    0;
-
-                Debug.Log(
-                    $"🟢 PLAYER {id} CONECTADO"
                 );
 
+
+
+                player.connected =
+
+                    true;
+
+
+
+                Debug.Log(
+
+                    $"📱 PLAYER {playerId} CONECTADO"
+
+                );
+
+
+
                 return;
+
             }
+
 
 
             // =================================================
@@ -371,44 +888,41 @@ public class MobileInputManager : MonoBehaviour
             // =================================================
 
             if (
+
                 data.type ==
+
                 "player_disconnected"
+
             )
+
             {
-                int id =
-                    data.playerId;
 
-                if (
-                    id < 1 ||
-                    id > 4
-                )
-                    return;
+                ResetPlayerInput(
 
-                players[id].connected =
-                    false;
+                    player
 
-                players[id].x = 0;
-                players[id].y = 0;
-                players[id].z = 0;
-
-                players[id].lookX = 0;
-                players[id].lookY = 0;
-
-                players[id].jump =
-                    false;
-
-                players[id].action =
-                    false;
-
-                players[id].blowIntensity =
-                    0;
-
-                Debug.Log(
-                    $"🔴 PLAYER {id} DESCONECTADO"
                 );
 
+
+
+                player.connected =
+
+                    false;
+
+
+
+                Debug.Log(
+
+                    $"📱 PLAYER {playerId} DESCONECTADO"
+
+                );
+
+
+
                 return;
+
             }
+
 
 
             // =================================================
@@ -416,219 +930,567 @@ public class MobileInputManager : MonoBehaviour
             // =================================================
 
             if (
+
                 data.type ==
+
                 "button"
+
             )
+
             {
-                int id =
-                    data.playerId;
 
                 if (
-                    id < 1 ||
-                    id > 4
-                )
-                    return;
 
-
-                if (
                     data.button ==
+
                     "jump"
+
                 )
+
                 {
-                    players[id].jump =
+
+                    player.jump =
+
                         data.pressed;
 
-                    Debug.Log(
-                        $"🦘 SALTO P{id}: {data.pressed}"
-                    );
                 }
+
 
 
                 if (
+
                     data.button ==
+
                     "action"
+
                 )
+
                 {
-                    players[id].action =
+
+                    player.action =
+
                         data.pressed;
 
-                    Debug.Log(
-                        $"⚡ ACCIÓN P{id}: {data.pressed}"
-                    );
                 }
+
+
 
                 return;
+
             }
 
         }
+
         catch (Exception error)
+
         {
+
             Debug.LogError(
-                $"❌ ERROR PROCESANDO MENSAJE: {error.Message}"
+
+                $"❌ Error procesando JSON: {error.Message}\n{message}"
+
             );
+
         }
+
     }
 
 
+
     // =====================================================
-    // MOVIMIENTO
+    // RESET PLAYER
+    // =====================================================
+
+    private void ResetPlayerInput(
+
+        PlayerInput player
+
+    )
+
+    {
+
+        // Movimiento
+
+        player.movementX =
+
+            0f;
+
+
+
+        player.movementY =
+
+            0f;
+
+
+
+        player.movementZ =
+
+            0f;
+
+
+
+        // Acelerómetro físico
+
+        player.accelerometerX =
+
+            0f;
+
+
+
+        player.accelerometerY =
+
+            0f;
+
+
+
+        player.accelerometerZ =
+
+            0f;
+
+
+
+        // Orientación
+
+        player.alpha =
+
+            0f;
+
+
+
+        player.beta =
+
+            0f;
+
+
+
+        player.gamma =
+
+            0f;
+
+
+
+        // Look
+
+        player.lookX =
+
+            0f;
+
+
+
+        player.lookY =
+
+            0f;
+
+
+
+        // Botones
+
+        player.jump =
+
+            false;
+
+
+
+        player.action =
+
+            false;
+
+
+
+        // Micrófono
+
+        player.blowIntensity =
+
+            0f;
+
+    }
+
+
+
+    // =====================================================
+    // GET MOVEMENT
     // =====================================================
 
     public Vector2 GetMovement(
+
         int playerId
+
     )
+
     {
+
         if (
-            playerId < 1 ||
-            playerId > 4
+
+            !IsValidPlayer(
+
+                playerId
+
+            )
+
         )
+
+        {
+
             return Vector2.zero;
 
+        }
+
+
+
         return new Vector2(
-            players[playerId].x,
-            players[playerId].y
+
+            players[playerId].movementX,
+
+            players[playerId].movementY
+
         );
+
     }
 
 
+
     // =====================================================
-    // LOOK
+    // GET LOOK
     // =====================================================
 
     public Vector2 GetLook(
+
         int playerId
+
     )
+
     {
+
         if (
-            playerId < 1 ||
-            playerId > 4
+
+            !IsValidPlayer(
+
+                playerId
+
+            )
+
         )
+
+        {
+
             return Vector2.zero;
 
+        }
+
+
+
         Vector2 look =
+
             new Vector2(
+
                 players[playerId].lookX,
+
                 players[playerId].lookY
+
             );
 
 
-        // Consumir delta una sola vez
 
         players[playerId].lookX =
+
             0f;
 
+
+
         players[playerId].lookY =
+
             0f;
+
 
 
         return look;
+
     }
 
 
+
     // =====================================================
-    // SOPLIDO
+    // GET ORIENTATION
     // =====================================================
 
-    public float GetBlowIntensity(
+    public Vector3 GetOrientation(
+
         int playerId
-    )
-    {
-        if (
-            playerId < 1 ||
-            playerId > 4
-        )
-            return 0f;
 
-        return players[playerId].blowIntensity;
+    )
+
+    {
+
+        if (
+
+            !IsValidPlayer(
+
+                playerId
+
+            )
+
+        )
+
+        {
+
+            return Vector3.zero;
+
+        }
+
+
+
+        return new Vector3(
+
+            players[playerId].alpha,
+
+            players[playerId].beta,
+
+            players[playerId].gamma
+
+        );
+
     }
 
 
+
     // =====================================================
-    // ACELERÓMETRO
+    // GET ACCELEROMETER
     // =====================================================
 
     public Vector3 GetAccelerometer(
+
         int playerId
+
     )
+
     {
+
         if (
-            playerId < 1 ||
-            playerId > 4
+
+            !IsValidPlayer(
+
+                playerId
+
+            )
+
         )
+
+        {
+
             return Vector3.zero;
 
+        }
+
+
+
         return new Vector3(
-            players[playerId].x,
-            players[playerId].y,
-            players[playerId].z
+
+            players[playerId].accelerometerX,
+
+            players[playerId].accelerometerY,
+
+            players[playerId].accelerometerZ
+
         );
+
     }
 
 
+
     // =====================================================
-    // PLAYER CONECTADO
+    // GET BLOW
+    // =====================================================
+
+    public float GetBlowIntensity(
+
+        int playerId
+
+    )
+
+    {
+
+        if (
+
+            !IsValidPlayer(
+
+                playerId
+
+            )
+
+        )
+
+        {
+
+            return 0f;
+
+        }
+
+
+
+        return players[playerId]
+
+            .blowIntensity;
+
+    }
+
+
+
+    // =====================================================
+    // PLAYER CONNECTED
     // =====================================================
 
     public bool IsPlayerConnected(
+
         int playerId
+
     )
+
     {
+
         if (
-            playerId < 1 ||
-            playerId > 4
+
+            !IsValidPlayer(
+
+                playerId
+
+            )
+
         )
+
+        {
+
             return false;
 
-        return players[playerId].connected;
+        }
+
+
+
+        return players[playerId]
+
+            .connected;
+
     }
 
 
+
     // =====================================================
-    // SALTO
+    // JUMP
     // =====================================================
 
     public bool IsJumpPressed(
+
         int playerId
+
     )
+
     {
+
         if (
-            playerId < 1 ||
-            playerId > 4
+
+            !IsValidPlayer(
+
+                playerId
+
+            )
+
         )
+
+        {
+
             return false;
 
-        return players[playerId].jump;
+        }
+
+
+
+        return players[playerId]
+
+            .jump;
+
     }
 
 
+
     // =====================================================
-    // ACCIÓN
+    // ACTION
     // =====================================================
 
     public bool IsActionPressed(
+
         int playerId
+
     )
+
     {
+
         if (
-            playerId < 1 ||
-            playerId > 4
+
+            !IsValidPlayer(
+
+                playerId
+
+            )
+
         )
+
+        {
+
             return false;
 
-        return players[playerId].action;
+        }
+
+
+
+        return players[playerId]
+
+            .action;
+
     }
 
 
+
     // =====================================================
-    // CONEXIÓN
+    // CONEXIÓN GENERAL
     // =====================================================
 
     public bool IsConnected()
+
     {
-        return
-            client != null &&
-            client.Connected;
+
+        return (
+
+            tcpClient != null &&
+
+            tcpClient.Connected
+
+        );
+
     }
+
+
+
+    // =====================================================
+    // VALIDAR PLAYER
+    // =====================================================
+
+    private bool IsValidPlayer(
+
+        int playerId
+
+    )
+
+    {
+
+        return (
+
+            playerId >= 1 &&
+
+            playerId <= 4
+
+        );
+
+    }
+
 
 
     // =====================================================
@@ -636,56 +1498,131 @@ public class MobileInputManager : MonoBehaviour
     // =====================================================
 
     [Serializable]
+
     private class MessageData
+
     {
+
         public string type;
 
         public int playerId;
 
+        public string source;
+
         public float x;
+
         public float y;
+
         public float z;
+
+        public float alpha;
+
+        public float beta;
+
+        public float gamma;
 
         public float intensity;
 
         public string button;
 
         public bool pressed;
+
     }
 
 
+
     // =====================================================
-    // CERRAR
+    // QUIT
     // =====================================================
 
     private void OnApplicationQuit()
+
     {
+
+        running =
+
+            false;
+
+
+
         try
+
         {
-            if (
-                receiveThread != null &&
-                receiveThread.IsAlive
-            )
-            {
-                receiveThread.Abort();
-            }
 
             if (
-                stream != null
+
+                networkStream != null
+
             )
+
             {
-                stream.Close();
+
+                networkStream.Close();
+
             }
 
-            if (
-                client != null
-            )
-            {
-                client.Close();
-            }
         }
+
         catch
+
         {
+
         }
+
+
+
+        try
+
+        {
+
+            if (
+
+                tcpClient != null
+
+            )
+
+            {
+
+                tcpClient.Close();
+
+            }
+
+        }
+
+        catch
+
+        {
+
+        }
+
+
+
+        try
+
+        {
+
+            if (
+
+                receiveThread != null &&
+
+                receiveThread.IsAlive
+
+            )
+
+            {
+
+                receiveThread.Abort();
+
+            }
+
+        }
+
+        catch
+
+        {
+
+        }
+
     }
+
 }
