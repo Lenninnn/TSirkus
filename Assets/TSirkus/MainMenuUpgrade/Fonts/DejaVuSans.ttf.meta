@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: a4b73050b6f759f1a2df1d35503847d2
+TrueTypeFontImporter:
+  externalObjects: {}
+  serializedVersion: 4
+  fontSize: 24
+  includeFontData: 1
+  fontName: DejaVuSans
+  fontNames: []
+  fallbackFontReferences: []
+  fontRenderingMode: 0
+  userData:
+  assetBundleName:
+  assetBundleVariant:
