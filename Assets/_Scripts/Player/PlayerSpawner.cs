@@ -31,9 +31,9 @@ public class PlayerSpawner : MonoBehaviour
 
             newPlayer.name = "Player_" + (i + 1);
 
-            // -------------------------
-            // ASIGNAR PLAYER ID
-            // -------------------------
+            // =========================
+            // PLAYER ID
+            // =========================
 
             PlayerIdentity identity =
                 newPlayer.GetComponent<PlayerIdentity>();
@@ -42,10 +42,52 @@ public class PlayerSpawner : MonoBehaviour
             {
                 identity.SetPlayerId(i + 1);
             }
+            else
+            {
+                Debug.LogError(
+                    $"PlayerIdentity no encontrado en {newPlayer.name}"
+                );
+            }
 
-            // -------------------------
+            // =========================
+            // CONFIGURAR MODELO
+            // =========================
+
+            PlayerModelSelector modelSelector =
+                newPlayer.GetComponent<PlayerModelSelector>();
+
+            if (modelSelector != null)
+            {
+                modelSelector.SelectModel();
+            }
+            else
+            {
+                Debug.LogWarning(
+                    $"PlayerModelSelector no encontrado en {newPlayer.name}"
+                );
+            }
+
+            // =========================
+            // CONFIGURAR IDENTIFICADOR UI
+            // =========================
+
+            PlayerIdentifierUI identifierUI =
+                newPlayer.GetComponentInChildren<PlayerIdentifierUI>(true);
+
+            if (identifierUI != null)
+            {
+                identifierUI.SetIdentifier();
+            }
+            else
+            {
+                Debug.LogWarning(
+                    $"PlayerIdentifierUI no encontrado en {newPlayer.name}"
+                );
+            }
+
+            // =========================
             // CONFIGURAR CÁMARA
-            // -------------------------
+            // =========================
 
             Camera playerCamera =
                 newPlayer.GetComponentInChildren<Camera>();
@@ -63,21 +105,30 @@ public class PlayerSpawner : MonoBehaviour
                     i + 1
                 );
             }
+            else
+            {
+                Debug.LogWarning(
+                    $"No se encontró Camera en {newPlayer.name}"
+                );
+            }
 
-            // -------------------------
+            // =========================
             // AUDIO LISTENER
-            // -------------------------
+            // =========================
 
             AudioListener listener =
                 newPlayer.GetComponentInChildren<AudioListener>();
 
             if (listener != null)
             {
-                // Solo Player 1 tendrá AudioListener.
                 listener.enabled = (i == 0);
             }
         }
     }
+
+    // =========================================
+    // CONFIGURACIÓN DE CÁMARAS
+    // =========================================
 
     private void ConfigureCamera(
         Camera cam,
@@ -89,87 +140,122 @@ public class PlayerSpawner : MonoBehaviour
             if (playerIndex == 0)
             {
                 cam.rect = new Rect(
-                    0f, 0f,
-                    0.5f, 1f
+                    0f,
+                    0f,
+                    0.5f,
+                    1f
                 );
             }
             else
             {
                 cam.rect = new Rect(
-                    0.5f, 0f,
-                    0.5f, 1f
+                    0.5f,
+                    0f,
+                    0.5f,
+                    1f
                 );
             }
         }
-
         else if (totalPlayers == 3)
         {
             if (playerIndex == 0)
             {
                 cam.rect = new Rect(
-                    0f, 0.5f,
-                    0.5f, 0.5f
+                    0f,
+                    0.5f,
+                    0.5f,
+                    0.5f
                 );
             }
             else if (playerIndex == 1)
             {
                 cam.rect = new Rect(
-                    0.5f, 0.5f,
-                    0.5f, 0.5f
+                    0.5f,
+                    0.5f,
+                    0.5f,
+                    0.5f
                 );
             }
             else
             {
                 cam.rect = new Rect(
-                    0.25f, 0f,
-                    0.5f, 0.5f
+                    0.25f,
+                    0f,
+                    0.5f,
+                    0.5f
                 );
             }
         }
-
         else if (totalPlayers == 4)
         {
             switch (playerIndex)
             {
                 case 0:
+
                     cam.rect = new Rect(
-                        0f, 0.5f,
-                        0.5f, 0.5f
+                        0f,
+                        0.5f,
+                        0.5f,
+                        0.5f
                     );
+
                     break;
 
                 case 1:
+
                     cam.rect = new Rect(
-                        0.5f, 0.5f,
-                        0.5f, 0.5f
+                        0.5f,
+                        0.5f,
+                        0.5f,
+                        0.5f
                     );
+
                     break;
 
                 case 2:
+
                     cam.rect = new Rect(
-                        0f, 0f,
-                        0.5f, 0.5f
+                        0f,
+                        0f,
+                        0.5f,
+                        0.5f
                     );
+
                     break;
 
                 case 3:
+
                     cam.rect = new Rect(
-                        0.5f, 0f,
-                        0.5f, 0.5f
+                        0.5f,
+                        0f,
+                        0.5f,
+                        0.5f
                     );
+
                     break;
             }
         }
     }
 
+    // =========================================
+    // HIGHLIGHT LAYERS
+    // =========================================
+
     private void ConfigureHighlightLayer(
         Camera cam,
         int playerId)
     {
-        int layerP1 = LayerMask.NameToLayer("HighlightP1");
-        int layerP2 = LayerMask.NameToLayer("HighlightP2");
-        int layerP3 = LayerMask.NameToLayer("HighlightP3");
-        int layerP4 = LayerMask.NameToLayer("HighlightP4");
+        int layerP1 =
+            LayerMask.NameToLayer("HighlightP1");
+
+        int layerP2 =
+            LayerMask.NameToLayer("HighlightP2");
+
+        int layerP3 =
+            LayerMask.NameToLayer("HighlightP3");
+
+        int layerP4 =
+            LayerMask.NameToLayer("HighlightP4");
 
         if (
             layerP1 == -1 ||
@@ -185,31 +271,41 @@ public class PlayerSpawner : MonoBehaviour
             return;
         }
 
-        // Primero quitar todas las capas de highlight
-        // de esta cámara.
+        // Quitar todas las capas de highlight
         cam.cullingMask &= ~(1 << layerP1);
         cam.cullingMask &= ~(1 << layerP2);
         cam.cullingMask &= ~(1 << layerP3);
         cam.cullingMask &= ~(1 << layerP4);
 
-        // Después activar solamente la correspondiente
-        // a este jugador.
+        // Activar solamente la correspondiente
         switch (playerId)
         {
             case 1:
-                cam.cullingMask |= (1 << layerP1);
+
+                cam.cullingMask |=
+                    (1 << layerP1);
+
                 break;
 
             case 2:
-                cam.cullingMask |= (1 << layerP2);
+
+                cam.cullingMask |=
+                    (1 << layerP2);
+
                 break;
 
             case 3:
-                cam.cullingMask |= (1 << layerP3);
+
+                cam.cullingMask |=
+                    (1 << layerP3);
+
                 break;
 
             case 4:
-                cam.cullingMask |= (1 << layerP4);
+
+                cam.cullingMask |=
+                    (1 << layerP4);
+
                 break;
         }
     }

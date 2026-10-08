@@ -20,7 +20,7 @@ public class PlayerModelSelector : MonoBehaviour
         SelectModel();
     }
 
-    private void SelectModel()
+    public void SelectModel()
     {
         if (playerIdentity == null)
         {
