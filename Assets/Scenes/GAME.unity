@@ -33518,7 +33518,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 42376faee44a8b74186705d886373c8c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MobileInputManager
-  serverIP: 192.168.137.1
+  serverIP: 10.33.37.112
   serverPort: 9000
 --- !u!4 &1846949560
 Transform:
