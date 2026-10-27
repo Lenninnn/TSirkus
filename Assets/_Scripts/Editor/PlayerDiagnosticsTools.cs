@@ -230,7 +230,7 @@ public static class PlayerDiagnosticsTools
 
 
     // Simula input del celular (solo editor, por reflexión; MobileInputManager no se modifica).
-    private static void SetInput(int playerId, string field, object value)
+    internal static void SetInput(int playerId, string field, object value)
     {
         MobileInputManager input = Object.FindAnyObjectByType<MobileInputManager>();
 
@@ -258,7 +258,7 @@ public static class PlayerDiagnosticsTools
     }
 
 
-    private static void RunSteps(params (double delay, System.Action action)[] steps)
+    internal static void RunSteps(params (double delay, System.Action action)[] steps)
     {
         int index = 0;
         double next = EditorApplication.timeSinceStartup + steps[0].delay;

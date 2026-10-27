@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.Video;
 
 public class DoorCinematicController : MonoBehaviour
@@ -25,6 +26,10 @@ public class DoorCinematicController : MonoBehaviour
 
     [Tooltip("Lo activa onPuzzleCompleted; se desactiva al abrir la puerta para dejar libre el corredor.")]
     [SerializeField] private GameObject successObject;
+
+    [Header("Eventos")]
+    [Tooltip("Al terminar todo el flujo: puerta abierta, SuccessObject oculto y control devuelto.")]
+    public UnityEvent onDoorFlowFinished;
 
     private bool cinematicPlaying = false;
 
@@ -164,6 +169,8 @@ public class DoorCinematicController : MonoBehaviour
         Debug.Log(
             "🎬 CINEMÁTICA TERMINADA → PUERTA ABIERTA"
         );
+
+        onDoorFlowFinished?.Invoke();
     }
 
 
@@ -214,6 +221,8 @@ public class DoorCinematicController : MonoBehaviour
         }
 
         DisableSuccessObject();
+
+        onDoorFlowFinished?.Invoke();
     }
 
 

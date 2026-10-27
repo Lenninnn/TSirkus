@@ -35,3 +35,18 @@ Todas aplican a cualquier jugador (P1-P4), cada uno por separado, una vez por pa
 
 Ya existentes (globales, no forman parte de este sistema):
 `aviso-nuevete` (inicio, TutorialImage) y `aviso-explora` (entrada a la carpa, IntroDialogues).
+
+## Objetivos (abajo al centro de cada cuadrante)
+
+Sistema separado de las ayudas: `Assets/_Scripts/AyudasUI/Objetivos/`.
+
+- `ObjectiveDefinition` (asset): sprite, duración, fade y cierre con ACCIÓN de ese jugador.
+- `ObjectivePromptController` (Canvas/ObjectivePromptHUD): `ShowToAll(objetivo)` o
+  `ShowToPlayer(objetivo, id)`. Crea `PlayerObjectiveHUD_P1..P4` en Play Mode, anclados al
+  viewport de cada jugador, entre el 26 % y el 46 % de su altura (encima del HUD de
+  corrupción, sin tapar el centro). Ajustable con `anchorMin` / `anchorMax`.
+- Primer objetivo: `DoorCinematicController.onDoorFlowFinished` → `ShowToAll(Objective_Prueba01)`.
+
+| Placeholder | Asset | Texto final (título / subtítulo) | Cuándo aparece |
+|---|---|---|---|
+| `Assets/UI/Objectives/objective_placeholder_prueba01` | `Objective_Prueba01` | LA PRIMERA PRUEBA TE ESPERA / Adéntrate en el circo. Encuéntrala y sobrevive. | A los 4 jugadores, cada uno en su cuadrante, al terminar la cinemática de la primera puerta (puerta y SuccessObject ya ocultos, control devuelto). ~5,5 s + fade, o ACCIÓN de ese jugador. |

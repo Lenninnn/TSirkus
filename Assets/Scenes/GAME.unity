@@ -4702,7 +4702,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HintZone
   hint: {fileID: 11400000, guid: 64c8dad08c8ee4a00ba5c8609ef66681, type: 2}
   controller: {fileID: 1449831836}
-  playersRequired: 1
   contextPuzzle: {fileID: 1598488317}
   puzzleCondition: 1
 --- !u!65 &197823404
@@ -10812,6 +10811,59 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 488847737}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &505116527
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 505116528}
+  - component: {fileID: 505116529}
+  m_Layer: 0
+  m_Name: ObjectivePromptHUD
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &505116528
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 505116527}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 2062205768}
+  m_Father: {fileID: 790276237}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &505116529
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 505116527}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3db806397a33e4320a3c495c45701850, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ObjectivePromptController
+  objectiveImage: {fileID: 2062205769}
+  anchorMin: {x: 0.2, y: 0.26}
+  anchorMax: {x: 0.8, y: 0.46}
+  mobileInput: {fileID: 1846949559}
 --- !u!1 &508675210
 GameObject:
   m_ObjectHideFlags: 0
@@ -12574,7 +12626,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HintZone
   hint: {fileID: 11400000, guid: a18dc12c4bea84c17b696f0eac659e26, type: 2}
   controller: {fileID: 1449831836}
-  playersRequired: 1
   contextPuzzle: {fileID: 1598488317}
   puzzleCondition: 2
 --- !u!65 &597529635
@@ -15637,6 +15688,7 @@ RectTransform:
   - {fileID: 791745487}
   - {fileID: 1617605681}
   - {fileID: 1449831837}
+  - {fileID: 505116528}
   - {fileID: 1768469332}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -15954,7 +16006,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HintZone
   hint: {fileID: 11400000, guid: d342387d369ef44d4b56a3bab76c5e18, type: 2}
   controller: {fileID: 1449831836}
-  playersRequired: 1
   contextPuzzle: {fileID: 1598488317}
   puzzleCondition: 1
 --- !u!65 &797997895
@@ -18186,6 +18237,21 @@ MonoBehaviour:
   instructionObjects: []
   puzzleDoor: {fileID: 948905449}
   successObject: {fileID: 379116497}
+  onDoorFlowFinished:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 505116529}
+        m_TargetAssemblyTypeName: ObjectivePromptController, Assembly-CSharp
+        m_MethodName: ShowToAll
+        m_Mode: 2
+        m_Arguments:
+          m_ObjectArgument: {fileID: 11400000, guid: 933a8136e28fe46b09f0ab08988c1bfc, type: 2}
+          m_ObjectArgumentAssemblyTypeName: ObjectiveDefinition, Assembly-CSharp
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &905424045
 GameObject:
   m_ObjectHideFlags: 0
@@ -19711,7 +19777,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HintZone
   hint: {fileID: 11400000, guid: d342387d369ef44d4b56a3bab76c5e18, type: 2}
   controller: {fileID: 1449831836}
-  playersRequired: 1
   contextPuzzle: {fileID: 1598488317}
   puzzleCondition: 1
 --- !u!65 &999895121
@@ -27862,6 +27927,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ContextHintController
   canvasGroup: {fileID: 1449831838}
   hintImage: {fileID: 2044995686}
+  hintSize: {x: 280, y: 112}
+  topOffset: 12
   fadeDuration: 0.35
   minVisibleBeforeAction: 0.6
   mobileInput: {fileID: 1846949559}
@@ -30229,7 +30296,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HintZone
   hint: {fileID: 11400000, guid: cfec2a04cb8d74c1f92755f5dc64e81f, type: 2}
   controller: {fileID: 1449831836}
-  playersRequired: 1
   contextPuzzle: {fileID: 1598488317}
   puzzleCondition: 1
 --- !u!65 &1576609211
@@ -30958,7 +31024,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HintZone
   hint: {fileID: 11400000, guid: d342387d369ef44d4b56a3bab76c5e18, type: 2}
   controller: {fileID: 1449831836}
-  playersRequired: 1
   contextPuzzle: {fileID: 1598488317}
   puzzleCondition: 1
 --- !u!65 &1617154047
@@ -32496,7 +32561,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HintZone
   hint: {fileID: 11400000, guid: d342387d369ef44d4b56a3bab76c5e18, type: 2}
   controller: {fileID: 1449831836}
-  playersRequired: 1
   contextPuzzle: {fileID: 1598488317}
   puzzleCondition: 1
 --- !u!65 &1676062833
@@ -36272,7 +36336,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HintZone
   hint: {fileID: 11400000, guid: fcbcdd3ed4061435abc286d49ebc99f0, type: 2}
   controller: {fileID: 1449831836}
-  playersRequired: 1
   contextPuzzle: {fileID: 0}
   puzzleCondition: 0
 --- !u!65 &1899836452
@@ -38198,6 +38261,81 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2046961884}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &2062205767
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2062205768}
+  - component: {fileID: 2062205770}
+  - component: {fileID: 2062205769}
+  m_Layer: 0
+  m_Name: ObjectiveImage
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &2062205768
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2062205767}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 505116528}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &2062205769
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2062205767}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 0}
+  m_Type: 0
+  m_PreserveAspect: 1
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &2062205770
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2062205767}
+  m_CullTransparentMesh: 1
 --- !u!1 &2069537780
 GameObject:
   m_ObjectHideFlags: 0
