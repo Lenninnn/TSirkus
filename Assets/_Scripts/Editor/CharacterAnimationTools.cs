@@ -292,12 +292,12 @@ public static class CharacterAnimationTools
 
         var toWalk = idle.AddTransition(walk);
         toWalk.hasExitTime = false;
-        toWalk.duration = 0.12f;
+        toWalk.duration = 0.10f;
         toWalk.AddCondition(UnityEditor.Animations.AnimatorConditionMode.Greater, threshold, "Speed");
 
         var toIdle = walk.AddTransition(idle);
         toIdle.hasExitTime = false;
-        toIdle.duration = 0.15f;
+        toIdle.duration = 0.08f;
         toIdle.AddCondition(UnityEditor.Animations.AnimatorConditionMode.Less, threshold, "Speed");
 
         AssetDatabase.SaveAssets();

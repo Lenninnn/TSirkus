@@ -267,6 +267,52 @@ public static class CharacterLocomotionSetup
     }
 
 
+    // Transiciones de respuesta inmediata: sin Exit Time, duración fija y corta.
+    private const float ToWalkDuration = 0.10f;
+    private const float ToIdleDuration = 0.08f;
+    private const float SpeedThreshold = 0.15f;
+
+    [MenuItem("TSirkus/Locomocion/Ajustar transiciones AC_Personaje1")] private static void Tune1() => TuneTransitions(1);
+    [MenuItem("TSirkus/Locomocion/Ajustar transiciones AC_Personaje2")] private static void Tune2() => TuneTransitions(2);
+    [MenuItem("TSirkus/Locomocion/Ajustar transiciones AC_Personaje3")] private static void Tune3() => TuneTransitions(3);
+    [MenuItem("TSirkus/Locomocion/Ajustar transiciones AC_Personaje4")] private static void Tune4() => TuneTransitions(4);
+
+    private static void TuneTransitions(int n)
+    {
+        AnimatorController controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(ControllerPath(n));
+        StringBuilder log = new StringBuilder($"[LOCO{n}] Transiciones de AC_Personaje{n}:\n");
+
+        foreach (var child in controller.layers[0].stateMachine.states)
+        {
+            foreach (AnimatorStateTransition transition in child.state.transitions)
+            {
+                bool toIdle = transition.destinationState.name == "Idle";
+
+                transition.hasExitTime = false;
+                transition.hasFixedDuration = true;
+                transition.duration = toIdle ? ToIdleDuration : ToWalkDuration;
+                transition.offset = 0f;
+                transition.conditions = new[]
+                {
+                    new AnimatorCondition
+                    {
+                        mode = toIdle ? AnimatorConditionMode.Less : AnimatorConditionMode.Greater,
+                        parameter = "Speed",
+                        threshold = SpeedThreshold
+                    }
+                };
+
+                log.AppendLine($"[LOCO{n}]    {child.state.name} → {transition.destinationState.name}: exitTime=off, " +
+                               $"{transition.duration:0.00}s fija, Speed {(toIdle ? "<" : ">")} {SpeedThreshold}");
+            }
+        }
+
+        EditorUtility.SetDirty(controller);
+        AssetDatabase.SaveAssets();
+        Debug.Log(log.ToString());
+    }
+
+
     // Mismo controller que AC_Personaje1: Idle ↔ Walk por Speed (> 0.15) y WalkSpeedMultiplier.
     private static void CreateOrUpdateController(int n, AnimationClip idleClip, AnimationClip walkClip)
     {
@@ -310,12 +356,12 @@ public static class CharacterLocomotionSetup
 
         var toWalk = idle.AddTransition(walk);
         toWalk.hasExitTime = false;
-        toWalk.duration = 0.12f;
+        toWalk.duration = ToWalkDuration;
         toWalk.AddCondition(AnimatorConditionMode.Greater, threshold, "Speed");
 
         var toIdle = walk.AddTransition(idle);
         toIdle.hasExitTime = false;
-        toIdle.duration = 0.15f;
+        toIdle.duration = ToIdleDuration;
         toIdle.AddCondition(AnimatorConditionMode.Less, threshold, "Speed");
 
         AssetDatabase.SaveAssets();
@@ -471,6 +517,76 @@ public static class CharacterLocomotionSetup
     }
 
 
+    // Parada: suelta el movimiento en distintos puntos del ciclo de Walk y mide
+    // cuándo se para el Player, cuándo empieza la transición a Idle y cuándo termina.
+    [MenuItem("TSirkus/Locomocion/Probar parada de P1")] private static void Stop1() => TestStop(1);
+    [MenuItem("TSirkus/Locomocion/Probar parada de P2")] private static void Stop2() => TestStop(2);
+    [MenuItem("TSirkus/Locomocion/Probar parada de P3")] private static void Stop3() => TestStop(3);
+    [MenuItem("TSirkus/Locomocion/Probar parada de P4")] private static void Stop4() => TestStop(4);
+
+    private static void TestStop(int n)
+    {
+        PlayerIdentity target = Players().First(p => p.PlayerId == n);
+        Animator animator = target.GetComponentInChildren<PlayerAnimationController>().GetComponent<Animator>();
+        double[] walkTimes = { 1.0, 1.17, 1.34, 1.51 };
+
+        // Los demás a un lateral de la carpa: el carril central queda libre.
+        foreach (PlayerIdentity other in Players().Where(p => p != target))
+            Place(other, new Vector3(-8f, 0f, -9f + 2.5f * other.PlayerId), new Vector3(0f, 1f, -5f));
+        int trial = 0;
+
+        void StartTrial()
+        {
+            Place(target, new Vector3(0f, 0f, -9f), new Vector3(0f, 1f, 10f));
+            PlayerDiagnosticsTools.RunSteps(
+                (0.8, () => PlayerDiagnosticsTools.SetInput(n, "movementY", 1f)),
+                (walkTimes[trial], Release));
+        }
+
+        void Release()
+        {
+            PlayerDiagnosticsTools.SetInput(n, "movementY", 0f);
+
+            double t0 = EditorApplication.timeSinceStartup;
+            float phase = animator.GetCurrentAnimatorStateInfo(0).normalizedTime % 1f;
+            Vector3 last = target.transform.position;
+            double stopped = -1, transition = -1, idle = -1;
+
+            EditorApplication.CallbackFunction watch = null;
+            watch = () =>
+            {
+                if (!EditorApplication.isPlaying) { EditorApplication.update -= watch; return; }
+
+                double ms = (EditorApplication.timeSinceStartup - t0) * 1000.0;
+
+                if (stopped < 0 && (target.transform.position - last).sqrMagnitude < 1e-8) stopped = ms;
+                last = target.transform.position;
+
+                if (transition < 0 && (animator.IsInTransition(0) && animator.GetNextAnimatorStateInfo(0).IsName("Idle")
+                                       || animator.GetCurrentAnimatorStateInfo(0).IsName("Idle")))
+                    transition = ms;
+
+                if (idle < 0 && !animator.IsInTransition(0) && animator.GetCurrentAnimatorStateInfo(0).IsName("Idle"))
+                    idle = ms;
+
+                if (idle >= 0 || ms > 2000)
+                {
+                    EditorApplication.update -= watch;
+                    Debug.Log($"[PARADA P{n}] ensayo {trial + 1}: soltado en fase {phase:0.00} del ciclo → " +
+                              $"Player parado {stopped:0}ms | transición a Idle {transition:0}ms | Idle completo {idle:0}ms");
+
+                    if (++trial < walkTimes.Length)
+                        PlayerDiagnosticsTools.RunSteps((0.8, StartTrial));
+                }
+            };
+
+            EditorApplication.update += watch;
+        }
+
+        StartTrial();
+    }
+
+
     // Dos fases: P1+P3 caminan / P2+P4 quietos, y luego al revés.
     [MenuItem("TSirkus/Locomocion/Probar simultaneo P1-P4")]
     private static void TestSimultaneous()
@@ -502,6 +618,10 @@ public static class CharacterLocomotionSetup
     [MenuItem("TSirkus/Locomocion/Probar P3", true)]
     [MenuItem("TSirkus/Locomocion/Probar P4", true)]
     [MenuItem("TSirkus/Locomocion/Probar simultaneo P1-P4", true)]
+    [MenuItem("TSirkus/Locomocion/Probar parada de P1", true)]
+    [MenuItem("TSirkus/Locomocion/Probar parada de P2", true)]
+    [MenuItem("TSirkus/Locomocion/Probar parada de P3", true)]
+    [MenuItem("TSirkus/Locomocion/Probar parada de P4", true)]
     private static bool PlayModeOnly() => EditorApplication.isPlaying;
 
     [MenuItem("TSirkus/Locomocion/Configurar Personaje2", true)]

@@ -13,8 +13,11 @@ public class PlayerAnimationController : MonoBehaviour
     [SerializeField] private Transform movingRoot;
 
     [Header("Velocidad")]
-    [Tooltip("Suavizado del parámetro Speed (segundos).")]
+    [Tooltip("Suavizado de Speed solo al arrancar (segundos). Al parar, Speed cae a 0 en el mismo frame.")]
     [SerializeField] private float speedDampTime = 0.08f;
+
+    [Tooltip("Por debajo de esto el Player se considera quieto. Igual al umbral Idle/Walk del Animator.")]
+    [SerializeField] private float stopThreshold = 0.15f;
 
     [Tooltip("Por encima de esto se considera un salto (teleport/respawn), no caminar.")]
     [SerializeField] private float maxPlausibleSpeed = 15f;
@@ -69,9 +72,18 @@ public class PlayerAnimationController : MonoBehaviour
         if (speed > maxPlausibleSpeed)
             speed = 0f;
 
+        // Al parar no se suaviza: el Animator recibe 0 en el mismo frame y empieza
+        // la transición a Idle sin terminar el ciclo de Walk.
+        if (speed < stopThreshold)
+        {
+            animator.SetFloat(SpeedId, 0f);
+            return;
+        }
+
         animator.SetFloat(SpeedId, speed, speedDampTime, Time.deltaTime);
 
         // Ajusta el ritmo del paso a la velocidad real para que los pies no patinen.
+        // Solo mientras camina: al parar se conserva, sin pasos a cámara lenta en la salida.
         float clipWorldSpeed = walkClipSpeed * transform.lossyScale.x;
 
         if (clipWorldSpeed > 0f)
