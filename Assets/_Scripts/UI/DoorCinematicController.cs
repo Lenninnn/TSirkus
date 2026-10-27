@@ -23,6 +23,9 @@ public class DoorCinematicController : MonoBehaviour
     [Header("Puerta")]
     [SerializeField] private PuzzleDoor puzzleDoor;
 
+    [Tooltip("Lo activa onPuzzleCompleted; se desactiva al abrir la puerta para dejar libre el corredor.")]
+    [SerializeField] private GameObject successObject;
+
     private bool cinematicPlaying = false;
 
     private readonly List<Behaviour> blockedComponents =
@@ -154,6 +157,8 @@ public class DoorCinematicController : MonoBehaviour
             puzzleDoor.OpenDoor();
         }
 
+        DisableSuccessObject();
+
         UnlockPlayers();
 
         Debug.Log(
@@ -206,6 +211,17 @@ public class DoorCinematicController : MonoBehaviour
         if (puzzleDoor != null)
         {
             puzzleDoor.OpenDoor();
+        }
+
+        DisableSuccessObject();
+    }
+
+
+    private void DisableSuccessObject()
+    {
+        if (successObject != null)
+        {
+            successObject.SetActive(false);
         }
     }
 

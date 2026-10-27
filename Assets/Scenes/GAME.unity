@@ -17932,6 +17932,7 @@ MonoBehaviour:
   - {fileID: 1348289861}
   instructionObjects: []
   puzzleDoor: {fileID: 948905449}
+  successObject: {fileID: 379116497}
 --- !u!1 &905424045
 GameObject:
   m_ObjectHideFlags: 0
