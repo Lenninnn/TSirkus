@@ -10,6 +10,16 @@ public class DoorCinematicController : MonoBehaviour
     [Header("Pantalla de cinemática")]
     [SerializeField] private CanvasGroup cinematicOverlay;
 
+    [Tooltip("Debe ser mayor que el sortingOrder de los PlayerHUD (100) para cubrir toda la pantalla.")]
+    [SerializeField] private int overlaySortingOrder = 1000;
+
+    [Header("Cards / overlays de instrucciones")]
+    [Tooltip("Se dejan en alpha 0 al iniciar y al terminar la cinemática.")]
+    [SerializeField] private CanvasGroup[] instructionCanvasGroups;
+
+    [Tooltip("Se desactivan al iniciar y al terminar la cinemática.")]
+    [SerializeField] private GameObject[] instructionObjects;
+
     [Header("Puerta")]
     [SerializeField] private PuzzleDoor puzzleDoor;
 
@@ -26,6 +36,8 @@ public class DoorCinematicController : MonoBehaviour
             cinematicOverlay.alpha = 0f;
             cinematicOverlay.interactable = false;
             cinematicOverlay.blocksRaycasts = false;
+
+            BringOverlayToFront();
         }
 
         if (videoPlayer != null)
@@ -34,7 +46,26 @@ public class DoorCinematicController : MonoBehaviour
             videoPlayer.isLooping = false;
 
             videoPlayer.loopPointReached += OnVideoFinished;
+            videoPlayer.errorReceived += OnVideoError;
         }
+    }
+
+
+    // Los PlayerHUD usan Canvas overlay con sortingOrder 100;
+    // sin un Canvas propio el video queda debajo de ellos.
+    private void BringOverlayToFront()
+    {
+        Canvas overlayCanvas =
+            cinematicOverlay.GetComponent<Canvas>();
+
+        if (overlayCanvas == null)
+        {
+            overlayCanvas =
+                cinematicOverlay.gameObject.AddComponent<Canvas>();
+        }
+
+        overlayCanvas.overrideSorting = true;
+        overlayCanvas.sortingOrder = overlaySortingOrder;
     }
 
 
@@ -60,6 +91,8 @@ public class DoorCinematicController : MonoBehaviour
         cinematicPlaying = true;
 
         LockPlayers();
+
+        HideInstructionOverlays();
 
         if (cinematicOverlay != null)
         {
@@ -113,6 +146,8 @@ public class DoorCinematicController : MonoBehaviour
             cinematicOverlay.blocksRaycasts = false;
         }
 
+        HideInstructionOverlays();
+
         // AHORA sí abrimos la puerta.
         if (puzzleDoor != null)
         {
@@ -124,6 +159,45 @@ public class DoorCinematicController : MonoBehaviour
         Debug.Log(
             "🎬 CINEMÁTICA TERMINADA → PUERTA ABIERTA"
         );
+    }
+
+
+    // Si el video falla, no dejamos a los jugadores bloqueados.
+    private void OnVideoError(VideoPlayer source, string message)
+    {
+        Debug.LogWarning(
+            $"DoorCinematicController: error de video ({message}). Se abre la puerta igualmente."
+        );
+
+        OnVideoFinished(source);
+    }
+
+
+    private void HideInstructionOverlays()
+    {
+        if (instructionCanvasGroups != null)
+        {
+            foreach (CanvasGroup group in instructionCanvasGroups)
+            {
+                if (group == null)
+                    continue;
+
+                group.alpha = 0f;
+                group.interactable = false;
+                group.blocksRaycasts = false;
+            }
+        }
+
+        if (instructionObjects != null)
+        {
+            foreach (GameObject instruction in instructionObjects)
+            {
+                if (instruction != null)
+                {
+                    instruction.SetActive(false);
+                }
+            }
+        }
     }
 
 
@@ -205,6 +279,7 @@ public class DoorCinematicController : MonoBehaviour
         {
             videoPlayer.loopPointReached -= OnVideoFinished;
             videoPlayer.prepareCompleted -= OnVideoPrepared;
+            videoPlayer.errorReceived -= OnVideoError;
         }
     }
 }

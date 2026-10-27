@@ -17926,6 +17926,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DoorCinematicController
   videoPlayer: {fileID: 902760524}
   cinematicOverlay: {fileID: 1768469333}
+  overlaySortingOrder: 1000
+  instructionCanvasGroups:
+  - {fileID: 1423117732}
+  - {fileID: 1348289861}
+  instructionObjects: []
   puzzleDoor: {fileID: 948905449}
 --- !u!1 &905424045
 GameObject:
@@ -18747,7 +18752,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 85ee405c498e44837885686ee4ddd8d1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PuzzleDoor
-  doorVisual: {fileID: 6131066}
+  doorVisual: {fileID: 1648605819}
   clownSpawner: {fileID: 0}
   triggerFirstClownAppearance: 1
 --- !u!1 &949728111
@@ -31590,6 +31595,11 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1647685413}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &1648605819 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2678727306239475843, guid: 4ecf6aa2a2182cf4c843c0d565e94cd0, type: 3}
+  m_PrefabInstance: {fileID: 486175393}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1650694783
 GameObject:
   m_ObjectHideFlags: 0
