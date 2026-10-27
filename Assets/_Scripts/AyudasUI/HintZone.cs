@@ -1,7 +1,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// Zona del mapa que pide una ayuda cuando entran suficientes jugadores.
+// Zona del mapa que muestra una ayuda SOLO al jugador que entra en ella.
+// Cada jugador la recibe por separado (y "una vez" es una vez por jugador).
 // Puede depender del estado de un puzzle (por ejemplo, solo mientras la
 // puerta sigue cerrada). No bloquea el movimiento.
 [RequireComponent(typeof(Collider))]
@@ -18,17 +19,12 @@ public class HintZone : MonoBehaviour
     [SerializeField] private HintDefinition hint;
     [SerializeField] private ContextHintController controller;
 
-    [Header("Jugadores")]
-    [Tooltip("1 = basta un jugador. 4 = todo el grupo dentro de la zona.")]
-    [Range(1, 4)]
-    [SerializeField] private int playersRequired = 1;
-
     [Header("Contexto (opcional)")]
     [SerializeField] private PuzzleController contextPuzzle;
     [SerializeField] private PuzzleCondition puzzleCondition = PuzzleCondition.Ignore;
 
     private readonly HashSet<PlayerIdentity> playersInside = new HashSet<PlayerIdentity>();
-    private bool requested;
+    private readonly HashSet<PlayerIdentity> requestedFor = new HashSet<PlayerIdentity>();
 
 
     private void Awake()
@@ -53,12 +49,14 @@ public class HintZone : MonoBehaviour
     {
         PlayerIdentity player = other.GetComponentInParent<PlayerIdentity>();
 
-        if (player != null)
-            playersInside.Remove(player);
+        if (player == null)
+            return;
 
-        // Una ayuda repetible se vuelve a pedir cuando el grupo reingresa.
-        if (hint != null && !hint.showOncePerMatch && playersInside.Count < playersRequired)
-            requested = false;
+        playersInside.Remove(player);
+
+        // Una ayuda repetible se vuelve a pedir cuando ese jugador reingresa.
+        if (hint != null && !hint.showOncePerMatch)
+            requestedFor.Remove(player);
     }
 
 
@@ -66,23 +64,25 @@ public class HintZone : MonoBehaviour
     // que espera a que se resuelva un puzzle se dispara en cuanto ocurre.
     private void Update()
     {
-        if (requested || playersInside.Count == 0)
-            return;
-
-        playersInside.RemoveWhere(player => player == null || !player.isActiveAndEnabled);
-
-        if (playersInside.Count < playersRequired || !ContextAllows())
+        if (playersInside.Count == 0 || !ContextAllows())
             return;
 
         if (controller == null || hint == null)
         {
             Debug.LogWarning($"HintZone {name}: falta ContextHintController o HintDefinition.");
-            requested = true;
+            enabled = false;
             return;
         }
 
-        controller.Request(hint);
-        requested = true;
+        playersInside.RemoveWhere(player => player == null || !player.isActiveAndEnabled);
+
+        foreach (PlayerIdentity player in playersInside)
+        {
+            // requestedFor evita pedirla cada frame; el historial de "ya vista"
+            // lo lleva el PlayerHintHUD de cada jugador.
+            if (requestedFor.Add(player))
+                controller.Request(hint, player);
+        }
     }
 
 

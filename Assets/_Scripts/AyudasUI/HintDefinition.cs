@@ -16,7 +16,7 @@ public class HintDefinition : ScriptableObject
     [Tooltip("Si dos ayudas coinciden, se muestra primero la de mayor prioridad.")]
     public int priority = 0;
 
-    [Tooltip("Mostrar solo una vez por partida.")]
+    [Tooltip("Mostrar solo una vez por jugador en cada partida.")]
     public bool showOncePerMatch = true;
 
     [Tooltip("Ocultar automáticamente después de visibleSeconds.")]
@@ -25,6 +25,6 @@ public class HintDefinition : ScriptableObject
     [Min(0.5f)]
     public float visibleSeconds = 4f;
 
-    [Tooltip("Ocultar cuando cualquier jugador pulsa ACCIÓN en el celular.")]
+    [Tooltip("Ocultar cuando ESE jugador pulsa ACCIÓN en su celular.")]
     public bool hideWithAction = true;
 }

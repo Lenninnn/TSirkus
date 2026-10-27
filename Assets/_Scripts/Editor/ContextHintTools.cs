@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Reflection;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -180,13 +181,14 @@ public static class ContextHintTools
         GameObject imageObject = new GameObject("HintImage", typeof(RectTransform), typeof(Image));
         imageObject.transform.SetParent(hud.transform, false);
 
-        // Arriba al centro, como el aviso inicial; proporción de los banners (790x316).
+        // Plantilla: el controlador la clona dentro del cuadrante de cada jugador
+        // y le aplica su tamaño (hintSize, referencia del aviso inicial).
         RectTransform imageRect = (RectTransform)imageObject.transform;
         imageRect.anchorMin = new Vector2(0.5f, 1f);
         imageRect.anchorMax = new Vector2(0.5f, 1f);
         imageRect.pivot = new Vector2(0.5f, 1f);
-        imageRect.anchoredPosition = new Vector2(0f, -24f);
-        imageRect.sizeDelta = new Vector2(520f, 208f);
+        imageRect.anchoredPosition = new Vector2(0f, -12f);
+        imageRect.sizeDelta = new Vector2(280f, 112f);
 
         Image image = imageObject.GetComponent<Image>();
         image.raycastTarget = false;
@@ -250,44 +252,175 @@ public static class ContextHintTools
     // PRUEBA EN PLAY MODE
     // =====================================================
 
-    private static int nextZone;
-
-    [MenuItem("TSirkus/Ayudas/Probar: llevar Player 1 a la siguiente zona (Play Mode)")]
-    private static void TeleportToNextZone()
+    // Mueve a un jugador (1-4) a una zona por nombre, o fuera de las zonas (centro de la carpa).
+    private static void TeleportPlayer(int playerId, string zoneName)
     {
-        HintZone[] zones = Object.FindObjectsByType<HintZone>()
-            .OrderBy(zone => zone.transform.GetSiblingIndex())
-            .ToArray();
-
         PlayerIdentity player = Object.FindObjectsByType<PlayerIdentity>()
             .FirstOrDefault(p =>
-                p.PlayerId == 1 &&
+                p.PlayerId == playerId &&
                 p.TryGetComponent(out CharacterController controller) && controller.enabled &&
                 p.TryGetComponent(out PlayerMovement movement) && movement.enabled);
 
-        if (zones.Length == 0 || player == null)
+        if (player == null)
         {
-            Debug.LogWarning("ContextHintTools: no hay zonas o no se encontró Player 1.");
+            Debug.LogWarning($"ContextHintTools: no se encontró Player {playerId}.");
             return;
         }
 
-        HintZone zone = zones[nextZone % zones.Length];
-        nextZone++;
+        Vector3 target = new Vector3(0f, 0f, -5f);
 
-        CharacterController body = player.GetComponent<CharacterController>();
-        Vector3 target = zone.transform.position;
+        if (zoneName != null)
+        {
+            HintZone zone = Object.FindObjectsByType<HintZone>().FirstOrDefault(z => z.name == zoneName);
+
+            if (zone == null)
+            {
+                Debug.LogWarning($"ContextHintTools: no existe la zona {zoneName}.");
+                return;
+            }
+
+            target = zone.transform.position;
+        }
+
         target.y = player.transform.position.y;
 
+        CharacterController body = player.GetComponent<CharacterController>();
         body.enabled = false;
         player.transform.position = target;
         body.enabled = true;
 
-        Debug.Log($"[AYUDAS TEST] Player 1 → {zone.name}");
+        Debug.Log($"[AYUDAS TEST] Player {playerId} → {zoneName ?? "fuera de las zonas"}");
     }
 
 
-    [MenuItem("TSirkus/Ayudas/Probar: llevar Player 1 a la siguiente zona (Play Mode)", true)]
-    private static bool TeleportToNextZoneValidate()
+    // Simula ACCIÓN de un jugador durante 0,3 s (solo editor, por reflexión;
+    // MobileInputManager no se modifica).
+    private static void PressAction(int playerId)
+    {
+        MobileInputManager input = Object.FindAnyObjectByType<MobileInputManager>();
+
+        System.Array players = typeof(MobileInputManager)
+            .GetField("players", BindingFlags.NonPublic | BindingFlags.Instance)
+            ?.GetValue(input) as System.Array;
+
+        object state = players?.GetValue(playerId);
+        FieldInfo action = state?.GetType().GetField("action");
+
+        if (action == null)
+        {
+            Debug.LogWarning("ContextHintTools: no se pudo simular ACCIÓN.");
+            return;
+        }
+
+        action.SetValue(state, true);
+        double releaseAt = EditorApplication.timeSinceStartup + 0.3;
+
+        EditorApplication.CallbackFunction release = null;
+        release = () =>
+        {
+            if (EditorApplication.timeSinceStartup < releaseAt)
+                return;
+
+            action.SetValue(state, false);
+            EditorApplication.update -= release;
+        };
+
+        EditorApplication.update += release;
+
+        Debug.Log($"[AYUDAS TEST] ACCIÓN de Player {playerId}");
+    }
+
+
+    // Ejecuta pasos con retardo (segundos reales) mientras dura el Play Mode.
+    private static void RunSteps(params (double delay, System.Action action)[] steps)
+    {
+        int index = 0;
+        double next = EditorApplication.timeSinceStartup + steps[0].delay;
+
+        EditorApplication.CallbackFunction tick = null;
+        tick = () =>
+        {
+            if (!EditorApplication.isPlaying)
+            {
+                EditorApplication.update -= tick;
+                return;
+            }
+
+            while (index < steps.Length && EditorApplication.timeSinceStartup >= next)
+            {
+                steps[index].action();
+                index++;
+
+                if (index < steps.Length)
+                    next = EditorApplication.timeSinceStartup + steps[index].delay;
+            }
+
+            if (index >= steps.Length)
+                EditorApplication.update -= tick;
+        };
+
+        EditorApplication.update += tick;
+    }
+
+
+    private static void LogHud(string label)
+    {
+        string state = string.Join(" | ", Enumerable.Range(1, 4).Select(id =>
+        {
+            PlayerHintHUD hud = Object.FindObjectsByType<PlayerHintHUD>().FirstOrDefault(h => h.PlayerId == id);
+            return $"P{id}: {(hud != null && hud.CurrentHint != null ? hud.CurrentHint.name : "-")}";
+        }));
+
+        Debug.Log($"[AYUDAS TEST] {label} → {state}");
+    }
+
+
+    [MenuItem("TSirkus/Ayudas/Probar/Caso 1 - P1 a Interactuar")]
+    private static void Case1() => RunSteps(
+        (0, () => TeleportPlayer(1, "Zona_Interactuar_Switch1")),
+        (1.5, () => LogHud("Caso 1")));
+
+    [MenuItem("TSirkus/Ayudas/Probar/Caso 2 - P3 a Interactuar")]
+    private static void Case2() => RunSteps(
+        (0, () => TeleportPlayer(3, "Zona_Interactuar_Switch1")),
+        (1.5, () => LogHud("Caso 2")));
+
+    [MenuItem("TSirkus/Ayudas/Probar/Caso 3 - P1 sale y vuelve a Interactuar")]
+    private static void Case3() => RunSteps(
+        (0, () => TeleportPlayer(1, null)),
+        (0.6, () => TeleportPlayer(1, "Zona_Interactuar_Switch1")),
+        (1.5, () => LogHud("Caso 3 (P1 no debe repetir Hint_Interactuar)")));
+
+    [MenuItem("TSirkus/Ayudas/Probar/Casos 4 y 5 - ACCION de P2 y luego de P1")]
+    private static void Case4And5() => RunSteps(
+        (0, () => TeleportPlayer(1, "Zona_PuertaCerrada")),
+        (1.5, () => LogHud("Antes de ACCIÓN")),
+        (0, () => PressAction(2)),
+        (1.0, () => LogHud("Caso 4 tras ACCIÓN de P2 (P1 debe seguir)")),
+        (0, () => PressAction(1)),
+        (1.0, () => LogHud("Caso 5 tras ACCIÓN de P1 (P1 debe cerrarse)")));
+
+    [MenuItem("TSirkus/Ayudas/Probar/Caso 6 - P1 a Cooperacion y P4 a Interactuar")]
+    private static void Case6() => RunSteps(
+        (0, () => TeleportPlayer(1, "Zona_Cooperacion_Globos")),
+        (0, () => TeleportPlayer(4, "Zona_Interactuar_Switch1")),
+        (1.5, () => LogHud("Caso 6")));
+
+    [MenuItem("TSirkus/Ayudas/Probar/Pulsar ACCION de P1")]
+    private static void P1Action() => PressAction(1);
+
+    [MenuItem("TSirkus/Ayudas/Probar/Pulsar ACCION de P2")]
+    private static void P2Action() => PressAction(2);
+
+
+    [MenuItem("TSirkus/Ayudas/Probar/Caso 1 - P1 a Interactuar", true)]
+    [MenuItem("TSirkus/Ayudas/Probar/Caso 2 - P3 a Interactuar", true)]
+    [MenuItem("TSirkus/Ayudas/Probar/Caso 3 - P1 sale y vuelve a Interactuar", true)]
+    [MenuItem("TSirkus/Ayudas/Probar/Casos 4 y 5 - ACCION de P2 y luego de P1", true)]
+    [MenuItem("TSirkus/Ayudas/Probar/Caso 6 - P1 a Cooperacion y P4 a Interactuar", true)]
+    [MenuItem("TSirkus/Ayudas/Probar/Pulsar ACCION de P1", true)]
+    [MenuItem("TSirkus/Ayudas/Probar/Pulsar ACCION de P2", true)]
+    private static bool PlayModeOnly()
     {
         return EditorApplication.isPlaying;
     }

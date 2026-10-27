@@ -1,16 +1,23 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-// Muestra las ayudas contextuales (sprites tipo aviso) sin bloquear a los jugadores.
-// Las HintZone / HintEventTrigger piden ayudas con Request(); aquí se ordenan
-// por prioridad y se muestran de una en una.
+// Coordina las ayudas contextuales. Cada jugador tiene su propio PlayerHintHUD
+// dentro de su cuadrante (estado, cola, historial y ACCIÓN independientes).
+// Aquí solo se crean esos HUD y se decide cuándo deben esperar (intro, cinemática...).
 public class ContextHintController : MonoBehaviour
 {
     [Header("UI")]
+    [Tooltip("Contenedor a pantalla completa (ContextHintHUD). Aquí se crea un HUD por jugador.")]
     [SerializeField] private CanvasGroup canvasGroup;
+
+    [Tooltip("Plantilla del aviso. Se clona dentro del HUD de cada jugador.")]
     [SerializeField] private Image hintImage;
+
+    [Tooltip("Tamaño del aviso en el cuadrante de cada jugador. Referencia: aviso inicial (~280x100).")]
+    [SerializeField] private Vector2 hintSize = new Vector2(280f, 112f);
+
+    [SerializeField] private float topOffset = 12f;
 
     [Header("Tiempos")]
     [SerializeField] private float fadeDuration = 0.35f;
@@ -25,13 +32,11 @@ public class ContextHintController : MonoBehaviour
     [Tooltip("Intro, cinemática, tutorial inicial... Las ayudas esperan a que se oculten.")]
     [SerializeField] private CanvasGroup[] waitWhileVisible;
 
-    private readonly List<HintDefinition> pending = new List<HintDefinition>();
-    private readonly HashSet<HintDefinition> shown = new HashSet<HintDefinition>();
-    private readonly bool[] previousAction = new bool[5];
+    private readonly Dictionary<int, PlayerHintHUD> huds = new Dictionary<int, PlayerHintHUD>();
 
-    private HintDefinition current;
-    private float visibleTime;
-    private bool hiding;
+    public float FadeDuration => fadeDuration;
+    public float MinVisibleBeforeAction => minVisibleBeforeAction;
+    public MobileInputManager MobileInput => mobileInput;
 
 
     // =====================================================
@@ -43,18 +48,16 @@ public class ContextHintController : MonoBehaviour
         if (canvasGroup == null)
             canvasGroup = GetComponent<CanvasGroup>();
 
+        // El contenedor siempre visible; cada HUD de jugador hace su propio fade.
         if (canvasGroup != null)
         {
-            canvasGroup.alpha = 0f;
+            canvasGroup.alpha = 1f;
             canvasGroup.interactable = false;
             canvasGroup.blocksRaycasts = false;
         }
 
         if (hintImage != null)
-        {
-            hintImage.raycastTarget = false;
-            hintImage.preserveAspect = true;
-        }
+            hintImage.gameObject.SetActive(false);
 
         if (mobileInput == null)
             mobileInput = FindAnyObjectByType<MobileInputManager>();
@@ -65,129 +68,69 @@ public class ContextHintController : MonoBehaviour
     // PEDIR AYUDA
     // =====================================================
 
-    public void Request(HintDefinition hint)
+    public void Request(HintDefinition hint, PlayerIdentity player)
     {
-        if (hint == null)
-            return;
+        PlayerHintHUD hud = GetHud(player);
 
-        if (hint == current || pending.Contains(hint))
-            return;
-
-        if (hint.showOncePerMatch && shown.Contains(hint))
-            return;
-
-        pending.Add(hint);
+        if (hud != null)
+            hud.Request(hint);
     }
 
 
-    public bool WasShown(HintDefinition hint)
+    public void Request(HintDefinition hint, int playerId)
     {
-        return hint != null && shown.Contains(hint);
+        Request(hint, FindPlayer(playerId));
     }
 
 
-    // =====================================================
-    // UPDATE
-    // =====================================================
-
-    private void Update()
+    public void RequestForAll(HintDefinition hint)
     {
-        if (current != null)
+        foreach (PlayerIdentity player in FindObjectsByType<PlayerIdentity>())
         {
-            UpdateCurrent();
-            return;
-        }
-
-        if (pending.Count == 0 || IsWaiting())
-            return;
-
-        ShowNext();
-    }
-
-
-    private void UpdateCurrent()
-    {
-        if (hiding)
-            return;
-
-        visibleTime += Time.unscaledDeltaTime;
-
-        bool timeUp =
-            current.hideAfterTime &&
-            visibleTime >= current.visibleSeconds;
-
-        bool actionDismiss =
-            current.hideWithAction &&
-            visibleTime >= minVisibleBeforeAction &&
-            AnyActionJustPressed();
-
-        if (timeUp || actionDismiss)
-        {
-            StartCoroutine(HideRoutine());
+            if (player.GetComponentInChildren<Camera>(true) != null)
+                Request(hint, player);
         }
     }
 
 
     // =====================================================
-    // MOSTRAR / OCULTAR
+    // HUD POR JUGADOR
     // =====================================================
 
-    private void ShowNext()
+    private PlayerHintHUD GetHud(PlayerIdentity player)
     {
-        // Mayor prioridad primero; a igual prioridad, la que se pidió antes.
-        int best = 0;
+        if (player == null || hintImage == null)
+            return null;
 
-        for (int i = 1; i < pending.Count; i++)
-        {
-            if (pending[i].priority > pending[best].priority)
-                best = i;
-        }
+        if (huds.TryGetValue(player.PlayerId, out PlayerHintHUD hud) && hud != null)
+            return hud;
 
-        current = pending[best];
-        pending.RemoveAt(best);
-        shown.Add(current);
+        // Misma búsqueda de cámara que PlayerStateHUD.
+        Camera playerCamera = player.GetComponentInChildren<Camera>(true);
 
-        visibleTime = 0f;
-        hiding = false;
-        CacheActionState();
+        if (playerCamera == null)
+            return null;
 
-        if (hintImage != null)
-            hintImage.sprite = current.sprite;
+        GameObject hudObject = new GameObject($"PlayerHintHUD_P{player.PlayerId}", typeof(RectTransform));
+        hudObject.transform.SetParent(transform, false);
 
-        StartCoroutine(Fade(0f, 1f));
+        hud = hudObject.AddComponent<PlayerHintHUD>();
+        hud.Setup(this, player.PlayerId, playerCamera, hintImage, hintSize, topOffset);
 
-        Debug.Log($"💡 AYUDA MOSTRADA: {current.name}");
+        huds[player.PlayerId] = hud;
+        return hud;
     }
 
 
-    private IEnumerator HideRoutine()
+    private static PlayerIdentity FindPlayer(int playerId)
     {
-        hiding = true;
-
-        yield return Fade(canvasGroup != null ? canvasGroup.alpha : 1f, 0f);
-
-        Debug.Log($"💡 AYUDA OCULTA: {current.name}");
-
-        current = null;
-        hiding = false;
-    }
-
-
-    private IEnumerator Fade(float from, float to)
-    {
-        if (canvasGroup == null)
-            yield break;
-
-        float time = 0f;
-
-        while (time < fadeDuration)
+        foreach (PlayerIdentity player in FindObjectsByType<PlayerIdentity>())
         {
-            time += Time.unscaledDeltaTime;
-            canvasGroup.alpha = Mathf.Lerp(from, to, Mathf.Clamp01(time / fadeDuration));
-            yield return null;
+            if (player.PlayerId == playerId && player.GetComponentInChildren<Camera>(true) != null)
+                return player;
         }
 
-        canvasGroup.alpha = to;
+        return null;
     }
 
 
@@ -195,7 +138,7 @@ public class ContextHintController : MonoBehaviour
     // ESPERAR A OTRAS PANTALLAS
     // =====================================================
 
-    private bool IsWaiting()
+    public bool IsWaiting()
     {
         if (waitWhileVisible == null)
             return false;
@@ -207,42 +150,5 @@ public class ContextHintController : MonoBehaviour
         }
 
         return false;
-    }
-
-
-    // =====================================================
-    // ACCIÓN (P1 - P4)
-    // =====================================================
-
-    private bool AnyActionJustPressed()
-    {
-        if (mobileInput == null)
-            return false;
-
-        bool justPressed = false;
-
-        for (int playerId = 1; playerId <= 4; playerId++)
-        {
-            bool pressed = mobileInput.IsActionPressed(playerId);
-
-            if (pressed && !previousAction[playerId])
-                justPressed = true;
-
-            previousAction[playerId] = pressed;
-        }
-
-        return justPressed;
-    }
-
-
-    // Si alguien ya tenía ACCIÓN pulsado al aparecer la ayuda,
-    // debe soltarlo y volver a pulsar para cerrarla.
-    private void CacheActionState()
-    {
-        for (int playerId = 1; playerId <= 4; playerId++)
-        {
-            previousAction[playerId] =
-                mobileInput != null && mobileInput.IsActionPressed(playerId);
-        }
     }
 }

@@ -1,7 +1,8 @@
 using UnityEngine;
 
 // Pide una ayuda desde un evento (UnityEvent de un puzzle, una palanca,
-// una animación...). Ejemplo: PuzzleController.onPuzzleActivated → Show().
+// una animación...). Ejemplo: PuzzleController.onPuzzleActivated → ShowToAll().
+// Cada jugador la ve en su propio cuadrante.
 public class HintEventTrigger : MonoBehaviour
 {
     [SerializeField] private HintDefinition hint;
@@ -15,17 +16,17 @@ public class HintEventTrigger : MonoBehaviour
     }
 
 
-    public void Show()
+    public void ShowToAll()
     {
         if (controller != null)
-            controller.Request(hint);
+            controller.RequestForAll(hint);
     }
 
 
-    // Permite reutilizar un mismo trigger con distintas ayudas desde el inspector.
-    public void Show(HintDefinition otherHint)
+    // Para eventos que conocen al jugador (1-4).
+    public void ShowToPlayer(int playerId)
     {
         if (controller != null)
-            controller.Request(otherHint);
+            controller.Request(hint, playerId);
     }
 }
