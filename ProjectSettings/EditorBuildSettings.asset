@@ -12,7 +12,7 @@ EditorBuildSettings:
     path: Assets/Scenes/Cinematica.unity
     guid: cb0d8083c80db1f409755f3d286c95ed
   - enabled: 1
-    path: Assets/Scenes/GAME_ORIGINAL.unity
+    path: Assets/Scenes/GAME.unity
     guid: 4a0d6db672c254e69b632d135cc54643
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
