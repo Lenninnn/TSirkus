@@ -2858,6 +2858,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PuzzleSwitch
   puzzleController: {fileID: 1598488319}
   isActivated: 0
+  onActivated:
+    m_PersistentCalls:
+      m_Calls: []
+  onRejected:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!65 &112877957
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -3084,6 +3090,54 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &135764862
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 135764863}
+  - component: {fileID: 135764864}
+  m_Layer: 0
+  m_Name: Ambience_Global
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &135764863
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 135764862}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1072349735}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &135764864
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 135764862}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 66bc85f263e9e4c39b6be072972e7af6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AmbienceZone
+  loopCue: {fileID: 11400000, guid: e299ee1549a334522acc004fa0e1e6be, type: 2}
+  global: 1
+  innerRadius: 0
+  fadeDistance: 1
 --- !u!1 &145729839
 GameObject:
   m_ObjectHideFlags: 0
@@ -6316,6 +6370,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -927199367670048503, guid: 7b85b6477edc82240b543ad474b2eb7f, type: 3}
       insertIndex: -1
       addedObject: {fileID: 279212373}
+    - targetCorrespondingSourceObject: {fileID: -927199367670048503, guid: 7b85b6477edc82240b543ad474b2eb7f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 279212378}
     - targetCorrespondingSourceObject: {fileID: -6484941046169300072, guid: 7b85b6477edc82240b543ad474b2eb7f, type: 3}
       insertIndex: -1
       addedObject: {fileID: 602558411}
@@ -6424,6 +6481,48 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PuzzleSwitch
   puzzleController: {fileID: 1598488319}
   isActivated: 0
+  onActivated:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 279212378}
+        m_TargetAssemblyTypeName: SoundEmitter, Assembly-CSharp
+        m_MethodName: PlayCue
+        m_Mode: 2
+        m_Arguments:
+          m_ObjectArgument: {fileID: 11400000, guid: ec46dfd5521a349e6a1bd43a9821b770, type: 2}
+          m_ObjectArgumentAssemblyTypeName: SoundCue, Assembly-CSharp
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  onRejected:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 279212378}
+        m_TargetAssemblyTypeName: SoundEmitter, Assembly-CSharp
+        m_MethodName: PlayCue
+        m_Mode: 2
+        m_Arguments:
+          m_ObjectArgument: {fileID: 11400000, guid: ee0281c5be7c347e48481266847527f7, type: 2}
+          m_ObjectArgumentAssemblyTypeName: SoundCue, Assembly-CSharp
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+--- !u!114 &279212378
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 279212372}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 36cd997b5afe4430ea214c143fc1b7ae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SoundEmitter
 --- !u!1001 &295331898
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6504,6 +6603,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -927199367670048503, guid: 7b85b6477edc82240b543ad474b2eb7f, type: 3}
       insertIndex: -1
       addedObject: {fileID: 295331900}
+    - targetCorrespondingSourceObject: {fileID: -927199367670048503, guid: 7b85b6477edc82240b543ad474b2eb7f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 295331905}
     - targetCorrespondingSourceObject: {fileID: -6484941046169300072, guid: 7b85b6477edc82240b543ad474b2eb7f, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2121600951}
@@ -6612,6 +6714,48 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PuzzleSwitch
   puzzleController: {fileID: 1598488319}
   isActivated: 0
+  onActivated:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 295331905}
+        m_TargetAssemblyTypeName: SoundEmitter, Assembly-CSharp
+        m_MethodName: PlayCue
+        m_Mode: 2
+        m_Arguments:
+          m_ObjectArgument: {fileID: 11400000, guid: ec46dfd5521a349e6a1bd43a9821b770, type: 2}
+          m_ObjectArgumentAssemblyTypeName: SoundCue, Assembly-CSharp
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  onRejected:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 295331905}
+        m_TargetAssemblyTypeName: SoundEmitter, Assembly-CSharp
+        m_MethodName: PlayCue
+        m_Mode: 2
+        m_Arguments:
+          m_ObjectArgument: {fileID: 11400000, guid: ee0281c5be7c347e48481266847527f7, type: 2}
+          m_ObjectArgumentAssemblyTypeName: SoundCue, Assembly-CSharp
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+--- !u!114 &295331905
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 295331899}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 36cd997b5afe4430ea214c143fc1b7ae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SoundEmitter
 --- !u!1 &303866129
 GameObject:
   m_ObjectHideFlags: 0
@@ -7926,6 +8070,54 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 343543097}
   m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &359875255
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 359875256}
+  - component: {fileID: 359875257}
+  m_Layer: 0
+  m_Name: Ambience_Carpa
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &359875256
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 359875255}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 1.5, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1072349735}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &359875257
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 359875255}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 66bc85f263e9e4c39b6be072972e7af6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AmbienceZone
+  loopCue: {fileID: 11400000, guid: 1ce1c33e2cc94426faf3d96a3b15f4a3, type: 2}
+  global: 0
+  innerRadius: 10
+  fadeDistance: 6
 --- !u!1 &374212181
 GameObject:
   m_ObjectHideFlags: 0
@@ -14324,6 +14516,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PuzzleSwitch
   puzzleController: {fileID: 1598488319}
   isActivated: 0
+  onActivated:
+    m_PersistentCalls:
+      m_Calls: []
+  onRejected:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!65 &721534820
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -18158,6 +18356,7 @@ GameObject:
   - component: {fileID: 902760525}
   - component: {fileID: 902760524}
   - component: {fileID: 902760526}
+  - component: {fileID: 902760527}
   m_Layer: 0
   m_Name: DoorCinematicPlayer
   m_TagString: Untagged
@@ -18186,9 +18385,9 @@ VideoPlayer:
   m_DataSource: 0
   m_TimeUpdateMode: 2
   m_PlaybackSpeed: 1
-  m_AudioOutputMode: 0
+  m_AudioOutputMode: 1
   m_TargetAudioSources:
-  - {fileID: 0}
+  - {fileID: 902760527}
   m_DirectAudioVolumes:
   - 1
   m_Url: 
@@ -18252,6 +18451,127 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 948905450}
+        m_TargetAssemblyTypeName: DoorAudio, Assembly-CSharp
+        m_MethodName: PlayOpen
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 1072349734}
+        m_TargetAssemblyTypeName: GameAudio, Assembly-CSharp
+        m_MethodName: PlayCue
+        m_Mode: 2
+        m_Arguments:
+          m_ObjectArgument: {fileID: 11400000, guid: 44a61ee72813d4034a58bc2151275b3e, type: 2}
+          m_ObjectArgumentAssemblyTypeName: SoundCue, Assembly-CSharp
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+--- !u!82 &902760527
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 902760523}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 0}
+  m_PlayOnAwake: 0
+  m_Volume: 0.85
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1 &905424045
 GameObject:
   m_ObjectHideFlags: 0
@@ -18399,6 +18719,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PuzzleSwitch
   puzzleController: {fileID: 1598488319}
   isActivated: 0
+  onActivated:
+    m_PersistentCalls:
+      m_Calls: []
+  onRejected:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!65 &911181571
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -19036,6 +19362,7 @@ GameObject:
   m_Component:
   - component: {fileID: 948905448}
   - component: {fileID: 948905449}
+  - component: {fileID: 948905450}
   m_Layer: 0
   m_Name: PuzzleDoor
   m_TagString: Untagged
@@ -19075,6 +19402,22 @@ MonoBehaviour:
   doorVisual: {fileID: 1648605819}
   clownSpawner: {fileID: 0}
   triggerFirstClownAppearance: 1
+--- !u!114 &948905450
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 948905447}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5aa6dd8c322d4ebcad688076534a254, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DoorAudio
+  openCue: {fileID: 11400000, guid: 8138f5f2eb7094c7299ea7a68f25ed32, type: 2}
+  closeCue: {fileID: 11400000, guid: 902572377259b4e708ea424eaa4e87c6, type: 2}
+  lockedCue: {fileID: 11400000, guid: e3265659e244546158bcddfb704be0ea, type: 2}
+  mechanismCue: {fileID: 0}
 --- !u!1 &949728111
 GameObject:
   m_ObjectHideFlags: 0
@@ -21151,6 +21494,62 @@ Transform:
   m_Children: []
   m_Father: {fileID: 758392462}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1072349733
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1072349735}
+  - component: {fileID: 1072349734}
+  m_Layer: 0
+  m_Name: GameAudio
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1072349734
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1072349733}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4afbccee05b3a4e159c5ae4416514898, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameAudio
+  ambienceVolume: 0.5
+  sfxVolume: 0.9
+  playerVolume: 0.8
+  uiVolume: 0.6
+  cinematicVolume: 0.9
+  poolSize: 10
+  duckWhileVisible:
+  - {fileID: 1768469333}
+  ambienceDuck: 0.25
+--- !u!4 &1072349735
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1072349733}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 135764863}
+  - {fileID: 359875256}
+  - {fileID: 2050920955}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1082177040
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -21231,6 +21630,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -927199367670048503, guid: 7b85b6477edc82240b543ad474b2eb7f, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1082177045}
+    - targetCorrespondingSourceObject: {fileID: -927199367670048503, guid: 7b85b6477edc82240b543ad474b2eb7f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1082177048}
     - targetCorrespondingSourceObject: {fileID: -6484941046169300072, guid: 7b85b6477edc82240b543ad474b2eb7f, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1251296820}
@@ -21269,6 +21671,36 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PuzzleSwitch
   puzzleController: {fileID: 1598488319}
   isActivated: 0
+  onActivated:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1082177048}
+        m_TargetAssemblyTypeName: SoundEmitter, Assembly-CSharp
+        m_MethodName: PlayCue
+        m_Mode: 2
+        m_Arguments:
+          m_ObjectArgument: {fileID: 11400000, guid: ec46dfd5521a349e6a1bd43a9821b770, type: 2}
+          m_ObjectArgumentAssemblyTypeName: SoundCue, Assembly-CSharp
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  onRejected:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1082177048}
+        m_TargetAssemblyTypeName: SoundEmitter, Assembly-CSharp
+        m_MethodName: PlayCue
+        m_Mode: 2
+        m_Arguments:
+          m_ObjectArgument: {fileID: 11400000, guid: ee0281c5be7c347e48481266847527f7, type: 2}
+          m_ObjectArgumentAssemblyTypeName: SoundCue, Assembly-CSharp
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!65 &1082177045
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -21339,6 +21771,18 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &1082177048
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1082177041}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 36cd997b5afe4430ea214c143fc1b7ae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SoundEmitter
 --- !u!1001 &1084595348
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -30587,6 +31031,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 1
         m_CallState: 2
+      - m_Target: {fileID: 1072349734}
+        m_TargetAssemblyTypeName: GameAudio, Assembly-CSharp
+        m_MethodName: PlayCue
+        m_Mode: 2
+        m_Arguments:
+          m_ObjectArgument: {fileID: 11400000, guid: 7d4f7009a70684205a4ff89f2234fe25, type: 2}
+          m_ObjectArgumentAssemblyTypeName: SoundCue, Assembly-CSharp
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   onPuzzleFailed:
     m_PersistentCalls:
       m_Calls: []
@@ -31640,6 +32096,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -927199367670048503, guid: 7b85b6477edc82240b543ad474b2eb7f, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1636084057}
+    - targetCorrespondingSourceObject: {fileID: -927199367670048503, guid: 7b85b6477edc82240b543ad474b2eb7f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1636084065}
     - targetCorrespondingSourceObject: {fileID: -6484941046169300072, guid: 7b85b6477edc82240b543ad474b2eb7f, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1636084060}
@@ -31772,6 +32231,48 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PuzzleSwitch
   puzzleController: {fileID: 1598488319}
   isActivated: 0
+  onActivated:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1636084065}
+        m_TargetAssemblyTypeName: SoundEmitter, Assembly-CSharp
+        m_MethodName: PlayCue
+        m_Mode: 2
+        m_Arguments:
+          m_ObjectArgument: {fileID: 11400000, guid: ec46dfd5521a349e6a1bd43a9821b770, type: 2}
+          m_ObjectArgumentAssemblyTypeName: SoundCue, Assembly-CSharp
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  onRejected:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1636084065}
+        m_TargetAssemblyTypeName: SoundEmitter, Assembly-CSharp
+        m_MethodName: PlayCue
+        m_Mode: 2
+        m_Arguments:
+          m_ObjectArgument: {fileID: 11400000, guid: ee0281c5be7c347e48481266847527f7, type: 2}
+          m_ObjectArgumentAssemblyTypeName: SoundCue, Assembly-CSharp
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+--- !u!114 &1636084065
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1636084054}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 36cd997b5afe4430ea214c143fc1b7ae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SoundEmitter
 --- !u!1 &1639615621
 GameObject:
   m_ObjectHideFlags: 0
@@ -34466,6 +34967,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PuzzleSwitch
   puzzleController: {fileID: 1598488319}
   isActivated: 0
+  onActivated:
+    m_PersistentCalls:
+      m_Calls: []
+  onRejected:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!65 &1793071098
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -38261,6 +38768,54 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2046961884}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &2050920954
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2050920955}
+  - component: {fileID: 2050920956}
+  m_Layer: 0
+  m_Name: Ambience_Corredor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2050920955
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2050920954}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 1.5, z: -23}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1072349735}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2050920956
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2050920954}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 66bc85f263e9e4c39b6be072972e7af6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AmbienceZone
+  loopCue: {fileID: 11400000, guid: 79b1db270e2c84c48b62d3686e224392, type: 2}
+  global: 0
+  innerRadius: 5
+  fadeDistance: 6
 --- !u!1 &2062205767
 GameObject:
   m_ObjectHideFlags: 0
@@ -41974,3 +42529,4 @@ SceneRoots:
   - {fileID: 784513024}
   - {fileID: 902760525}
   - {fileID: 835230040}
+  - {fileID: 1072349735}

@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Events;
 
 public class PuzzleSwitch : MonoBehaviour, IInteractable
 {
@@ -7,6 +8,12 @@ public class PuzzleSwitch : MonoBehaviour, IInteractable
 
     [Header("State")]
     [SerializeField] private bool isActivated;
+
+    [Header("Eventos (feedback: sonido, efectos)")]
+    public UnityEvent onActivated;
+
+    [Tooltip("Ya estaba activado o ese jugador ya participó.")]
+    public UnityEvent onRejected;
 
     private Vector3 initialScale;
 
@@ -18,12 +25,18 @@ public class PuzzleSwitch : MonoBehaviour, IInteractable
     public void Interact(PlayerIdentity player)
     {
         if (isActivated)
+        {
+            onRejected?.Invoke();
             return;
+        }
 
         bool accepted = puzzleController.RegisterPlayer(player);
 
         if (!accepted)
+        {
+            onRejected?.Invoke();
             return;
+        }
 
         isActivated = true;
 
@@ -37,6 +50,8 @@ public class PuzzleSwitch : MonoBehaviour, IInteractable
             initialScale.y * 0.3f,
             initialScale.z
         );
+
+        onActivated?.Invoke();
     }
 
     public void ResetSwitch()
