@@ -904,6 +904,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1325742115653950934, guid: 115a87dd1fa0e479a9c7e5e62d924f67, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2672307765870172632}
+    - targetCorrespondingSourceObject: {fileID: 1325742115653950934, guid: 115a87dd1fa0e479a9c7e5e62d924f67, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7445091549245132546}
+    - targetCorrespondingSourceObject: {fileID: 1325742115653950934, guid: 115a87dd1fa0e479a9c7e5e62d924f67, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5549995734900470349}
+    - targetCorrespondingSourceObject: {fileID: 1325742115653950934, guid: 115a87dd1fa0e479a9c7e5e62d924f67, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5598736314506642228}
   m_SourcePrefab: {fileID: 100100000, guid: 115a87dd1fa0e479a9c7e5e62d924f67, type: 3}
 --- !u!1 &1030736136841999196 stripped
 GameObject:
@@ -973,6 +982,73 @@ MonoBehaviour:
   lookDistance: 100
   showDebugRay: 1
   showDebugMessages: 1
+--- !u!114 &7445091549245132546
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1030736136841999196}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f260997eab9f3b94bb420cfc22fed4d0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AutomaticPlayerMovement
+  movementSpeed: 0.8
+  maximumSpeedMultiplier: 2.2
+  speedChangeSmoothness: 4
+  stopAtFinish: 1
+  finishTolerance: 0.05
+  raceStartManager: {fileID: 0}
+  characterController: {fileID: 0}
+  playerInstability: {fileID: 0}
+  hasStarted: 0
+  hasFinished: 0
+--- !u!114 &5549995734900470349
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1030736136841999196}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d4d4960bbc6995741ab02b5677806eb8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerBalanceVisual
+  playerInstability: {fileID: 0}
+  bodyVisual: {fileID: 6554271002192263823}
+  playerCamera: {fileID: 0}
+  raceStartManager: {fileID: 0}
+  maximumBodyTilt: 15
+  bodySwaySpeed: 5
+  maximumCameraTilt: 4
+  fallAngle: 85
+  fallDuration: 0.6
+  fallForward: 0
+--- !u!114 &5598736314506642228
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1030736136841999196}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e13a3c7d09242e142b5125e07de7fe5d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerInstability
+  balanceSystem: {fileID: 0}
+  automaticMovement: {fileID: 0}
+  balanceVisual: {fileID: 0}
+  maximumTimeOutside: 4
+  recoveryRate: 0.65
+  fallThreshold: 1
+  maximumExits: 5
+  isParticipating: 0
+  instability: 0
+  exitCount: 0
+  isFallen: 0
 --- !u!4 &7097641494393448439 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 9104010384482814333, guid: 115a87dd1fa0e479a9c7e5e62d924f67, type: 3}

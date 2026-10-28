@@ -18,6 +18,7 @@ public class BalanceSystem : MonoBehaviour
     [Header("Jugador")]
     [Min(1)]
     [SerializeField] private int playerId = 3;
+    public int PlayerId => playerId;
 
     [Header("Barra de equilibrio")]
     [SerializeField] private RectTransform barBackground;
