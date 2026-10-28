@@ -7,8 +7,8 @@ using UnityEngine;
 //   cerca, se oye; si todos están lejos, no). Se reproducen en 2D: el paneo izquierda/derecha
 //   no tiene sentido con pantalla dividida.
 // - Pool fijo de AudioSources para one-shots (sin crear/destruir en runtime).
-// - Volumen por categoría (Ambience, SFX, Player, UI, Cinematic) y "ducking" del ambiente
-//   mientras se ven overlays como la cinemática.
+// - Volumen por categoría (Ambience, SFX, Player, UI, Cinematic) y pausa del ambiente
+//   mientras se ven overlays como la cinemática (AmbienceZone hace el fundido y la reanudación).
 public class GameAudio : MonoBehaviour
 {
     public static GameAudio Instance { get; private set; }
@@ -23,10 +23,9 @@ public class GameAudio : MonoBehaviour
     [Header("Pool de one-shots")]
     [SerializeField] private int poolSize = 10;
 
-    [Header("Ducking del ambiente")]
-    [Tooltip("Mientras alguno esté visible (alpha > 0), el ambiente baja a ambienceDuck.")]
+    [Header("Pausa del ambiente")]
+    [Tooltip("Mientras alguno esté visible (alpha > 0) el ambiente se pausa (p. ej. overlay de la cinemática).")]
     [SerializeField] private CanvasGroup[] duckWhileVisible;
-    [Range(0f, 1f)] [SerializeField] private float ambienceDuck = 0.25f;
 
     private readonly List<AudioSource> pool = new List<AudioSource>();
     private readonly Dictionary<SoundCue, float> lastPlayTime = new Dictionary<SoundCue, float>();
@@ -34,7 +33,7 @@ public class GameAudio : MonoBehaviour
     private float nextPlayerRefresh;
     private int nextSource;
 
-    public float AmbienceDuckFactor { get; private set; } = 1f;
+    public bool AmbiencePaused { get; private set; }
 
 
     private void Awake()
@@ -62,18 +61,18 @@ public class GameAudio : MonoBehaviour
 
     private void Update()
     {
-        float target = 1f;
+        bool paused = false;
 
         if (duckWhileVisible != null)
         {
             foreach (CanvasGroup group in duckWhileVisible)
             {
                 if (group != null && group.gameObject.activeInHierarchy && group.alpha > 0.01f)
-                    target = ambienceDuck;
+                    paused = true;
             }
         }
 
-        AmbienceDuckFactor = Mathf.MoveTowards(AmbienceDuckFactor, target, Time.unscaledDeltaTime * 2f);
+        AmbiencePaused = paused;
     }
 
 
@@ -145,7 +144,7 @@ public class GameAudio : MonoBehaviour
     {
         switch (category)
         {
-            case SoundCue.Category.Ambience: return ambienceVolume * AmbienceDuckFactor;
+            case SoundCue.Category.Ambience: return ambienceVolume;
             case SoundCue.Category.Player: return playerVolume;
             case SoundCue.Category.UI: return uiVolume;
             case SoundCue.Category.Cinematic: return cinematicVolume;

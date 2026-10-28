@@ -10,15 +10,15 @@
   anti-duplicado. **Un cue sin clip no suena ni da error**: cada uno indica en `expectedFile`
   qué archivo espera. Para activar un sonido: coloca el archivo, arrástralo al campo `clips`.
 - **`GameAudio`** (objeto `GameAudio` en GAME): pool fijo de 10 AudioSources, volumen por
-  categoría (Ambience 0.5, SFX 0.9, Player 0.8, UI 0.6, Cinematic 0.9) y ducking del ambiente
-  durante la cinemática.
+  categoría (Ambience 0.5, SFX 0.9, Player 0.8, UI 0.6, Cinematic 0.9) y pausa del ambiente
+  mientras se ve la cinemática (se reanuda donde iba, con fade-in de 3 s).
 - Componentes: `PlayerFootsteps` (visual de cada jugador), `PlayerEventAudio` (raíz del Player:
   captura, rescate, tickets), `SoundEmitter` (interruptores), `DoorAudio` (PuzzleDoor),
   `AmbienceZone` (`GameAudio/Ambience_*`), `ClownAudio` (prefab Payaso).
 - Cinemática de la primera puerta: el MP4 **ya trae audio** (mecanismo + impacto ~7,9 s). Se
   enruta por un AudioSource 2D en `DoorCinematicPlayer`. No añadir otros sonidos encima.
 - Menús: `TSirkus/Audio/1. Crear carpetas…`, `2. Conectar audio…`, `Probar pasos`,
-  `Probar audio de la cinematica`.
+  `Probar audio de la cinematica` (incluye el estado del ambiente), `Probar sonido de interruptores`.
 
 ## Archivos existentes
 
@@ -26,6 +26,8 @@
 |---|---|---|
 | `Player/SFX_Player_Footstep_01.mp3` (antes `sonido-pasos personajes`) | 1 pisada recortada, 0,17 s, golpe a 0,02 s | Pasos de los 4 jugadores |
 | `Stings/SFX_Sting_Horror_01.mp3` (antes `sonido-horror`) | Riser/sting estéreo 5 s | `SFX_Sting_Danger`: al capturar a un jugador |
+| `Interactions/SFX_Switch_Activate_01.mp3` (antes `lever pull sound effect`) | Palanca, 0,76 s, arranca a 0,01 s, muy fuerte (pico -0,6 dBFS) | `SFX_Switch_Activate` (volumen 0,55): cada interruptor al activarse |
+| `Ambience/AMB_Circus_Global_01.mp3` (antes `sonido-ambiente-carpa`) | Ambiente de carpa estéreo, 45 s, trae fade-in ~1 s y fade-out ~5 s | `AMB_Circus_Global` (volumen 0,6): loop global desde el inicio con fade-in de 2 s; las vueltas se cruzan 4 s para tapar el fade-out del archivo |
 
 ## Archivos que faltan
 
@@ -35,7 +37,6 @@ Formato: WAV 44,1/48 kHz. One-shots 3D en **mono**; ambientes y UI pueden ser es
 
 | Nombre | Carpeta | Buscar | Duración | Tipo | Uso |
 |---|---|---|---|---|---|
-| `SFX_Switch_Activate_01.wav` | Interactions | old metal lever pull clunk mechanical switch | 0,3–0,8 s | one-shot mundo, mono | Cada interruptor al activarse |
 | `SFX_Ticket_Pickup_01.wav` | Interactions | paper ticket pickup carnival music box ding dark | 0,3–0,8 s | one-shot mundo, mono | Recoger ticket |
 | `SFX_UI_Objective_01.wav` | UI | subtle dark chime objective single note music box | 1–2 s | global, estéreo | Aparece "LA PRIMERA PRUEBA TE ESPERA" |
 | `SFX_Player_Footstep_02..04.wav` | Player | footstep wooden floor old boards single step | 0,2–0,5 s | mundo, mono, sin silencio inicial | Variaciones de pasos (añadir al cue) |
@@ -46,7 +47,6 @@ Formato: WAV 44,1/48 kHz. One-shots 3D en **mono**; ambientes y UI pueden ser es
 
 | Nombre | Carpeta | Buscar | Duración | Tipo | Uso |
 |---|---|---|---|---|---|
-| `AMB_Circus_Global_01.wav` | Ambience | abandoned circus tent wind canvas creak ambience loop | 60–120 s | loop global, estéreo | Fondo de todo el mapa (muy bajo) |
 | `AMB_Tent_Main_01.wav` | Ambience | big tent interior wind canvas flapping metal creak loop | 30–90 s | loop zona | Carpa principal |
 | `AMB_Hallway_01.wav` | Ambience | old wooden corridor creaks low drone loop | 30–60 s | loop zona | Corredor de inicio |
 | `SFX_Clown_ChaseLoop_01.wav` | Enemies | heavy running footsteps loop + breathing | 2–5 s | loop mundo, mono | Payaso persiguiendo |

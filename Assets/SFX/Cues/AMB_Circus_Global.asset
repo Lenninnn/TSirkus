@@ -12,15 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 216cdccb1de7c4398a13372400e4c32a, type: 3}
   m_Name: AMB_Circus_Global
   m_EditorClassIdentifier: Assembly-CSharp::SoundCue
-  clips: []
+  clips:
+  - {fileID: 8300000, guid: 86702bc63a853469ca0298b4cb2dbbbc, type: 3}
   startTime: 0
   category: 0
-  volume: 0.35
+  volume: 0.6
   volumeVariation: 0.05
   pitchRange: {x: 1, y: 1}
   global: 1
   minDistance: 2
   maxDistance: 20
   minInterval: 0.05
-  expectedFile: Assets/SFX/Ambience/AMB_Circus_Global_01.wav
+  expectedFile: Assets/SFX/Ambience/AMB_Circus_Global_01.mp3 (ya existe)
   searchTerms: abandoned circus tent wind canvas creak ambience loop

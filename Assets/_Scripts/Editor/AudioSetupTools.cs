@@ -34,6 +34,8 @@ public static class AudioSetupTools
     {
         (Root + "/sonido-pasos personajes.mp3", Root + "/Player/SFX_Player_Footstep_01.mp3"),
         (Root + "/sonido-horror.mp3", Root + "/Stings/SFX_Sting_Horror_01.mp3"),
+        (Root + "/Interactions/lever pull sound effect.mp3", Root + "/Interactions/SFX_Switch_Activate_01.mp3"),
+        (Root + "/Ambience/sonido-ambiente-carpa.mp3", Root + "/Ambience/AMB_Circus_Global_01.mp3"),
     };
 
     private class Spec
@@ -53,10 +55,12 @@ public static class AudioSetupTools
                    file = "Player/SFX_Player_Footstep_01..04.wav", search = "footstep wooden floor old boards single step (varias tomas)" },
         new Spec { name = "SFX_Sting_Danger", clip = Root + "/Stings/SFX_Sting_Horror_01.mp3", global = true, volume = 0.7f, interval = 4f,
                    file = "Stings/SFX_Sting_Horror_01.mp3 (ya existe)", search = "horror riser sting short" },
+        // Clip muy fuerte (pico -0,6 dBFS): volumen bajo para no tapar el resto.
+        new Spec { name = "SFX_Switch_Activate", clip = Root + "/Interactions/SFX_Switch_Activate_01.mp3",
+                   min = 2f, max = 18f, volume = 0.55f, pitch = new Vector2(0.97f, 1.03f),
+                   file = "Interactions/SFX_Switch_Activate_01.mp3 (ya existe)", search = "old metal lever pull clunk mechanical switch" },
 
         // Pendientes (referencias vacías)
-        new Spec { name = "SFX_Switch_Activate", min = 2f, max = 18f, volume = 0.8f, pitch = new Vector2(0.97f, 1.03f),
-                   file = "Interactions/SFX_Switch_Activate_01.wav", search = "old metal lever pull clunk mechanical switch" },
         new Spec { name = "SFX_Switch_Denied", min = 2f, max = 10f, volume = 0.45f, interval = 0.4f,
                    file = "Interactions/SFX_Switch_Denied_01.wav", search = "locked mechanism rattle short metal click denied" },
         new Spec { name = "SFX_Puzzle_Complete", global = true, volume = 0.6f, interval = 2f,
@@ -85,8 +89,9 @@ public static class AudioSetupTools
                    file = "Enemies/SFX_Clown_Disappear_01.wav", search = "whoosh vanish dark reverse" },
         new Spec { name = "SFX_UI_Objective", category = SoundCue.Category.UI, global = true, volume = 0.5f, interval = 1f,
                    file = "UI/SFX_UI_Objective_01.wav", search = "subtle dark chime objective music box single note" },
-        new Spec { name = "AMB_Circus_Global", category = SoundCue.Category.Ambience, global = true, volume = 0.35f,
-                   file = "Ambience/AMB_Circus_Global_01.wav", search = "abandoned circus tent wind canvas creak ambience loop" },
+        new Spec { name = "AMB_Circus_Global", clip = Root + "/Ambience/AMB_Circus_Global_01.mp3",
+                   category = SoundCue.Category.Ambience, global = true, volume = 0.6f,
+                   file = "Ambience/AMB_Circus_Global_01.mp3 (ya existe)", search = "abandoned circus tent wind canvas creak ambience loop" },
         new Spec { name = "AMB_Tent_Main", category = SoundCue.Category.Ambience, volume = 0.5f,
                    file = "Ambience/AMB_Tent_Main_01.wav", search = "big tent interior wind canvas flapping metal creak loop" },
         new Spec { name = "AMB_Hallway", category = SoundCue.Category.Ambience, volume = 0.45f,
@@ -131,6 +136,9 @@ public static class AudioSetupTools
 
         ConfigureImport(Root + "/Player/SFX_Player_Footstep_01.mp3", forceMono: true);
         ConfigureImport(Root + "/Stings/SFX_Sting_Horror_01.mp3", forceMono: false);
+        ConfigureImport(Root + "/Interactions/SFX_Switch_Activate_01.mp3", forceMono: true);
+        // 45 s estéreo: comprimido en memoria (puede sonar por dos fuentes a la vez para el cruce).
+        ConfigureImport(Root + "/Ambience/AMB_Circus_Global_01.mp3", forceMono: false, AudioClipLoadType.CompressedInMemory);
 
         foreach (Spec spec in Cues)
             CreateCue(spec);
@@ -141,14 +149,15 @@ public static class AudioSetupTools
 
 
     // Solo ajustes del importador (.meta): el archivo original no se modifica.
-    private static void ConfigureImport(string path, bool forceMono)
+    private static void ConfigureImport(string path, bool forceMono,
+        AudioClipLoadType loadType = AudioClipLoadType.DecompressOnLoad)
     {
         if (!(AssetImporter.GetAtPath(path) is AudioImporter importer))
             return;
 
         importer.forceToMono = forceMono;
         AudioImporterSampleSettings settings = importer.defaultSampleSettings;
-        settings.loadType = AudioClipLoadType.DecompressOnLoad;
+        settings.loadType = loadType;
         settings.preloadAudioData = true;
         importer.defaultSampleSettings = settings;
         importer.SaveAndReimport();
@@ -497,21 +506,53 @@ public static class AudioSetupTools
             $"RMS fuente={(videoSource != null ? Rms(d => videoSource.GetOutputData(d, 0)) : 0f):0.0000} " +
             $"RMS listener={Rms(d => AudioListener.GetOutputData(d, 0)):0.0000} " +
             $"listeners activos={Object.FindObjectsByType<AudioListener>().Count(l => l.isActiveAndEnabled)} " +
-            $"MuteAudio(Game view)={EditorUtility.audioMasterMute}");
+            $"MuteAudio(Game view)={EditorUtility.audioMasterMute} | ambiente: " +
+            string.Join(" ", Object.FindObjectsByType<AmbienceZone>().Where(z => z.IsPlayingAudio || z.CurrentVolume > 0f)
+                .Select(z => $"{z.name} sonando={z.IsPlayingAudio} vol={z.CurrentVolume:0.000}")) +
+            $" pausado={GameAudio.Instance.AmbiencePaused}");
+
+        Log("antes de la cinemática");
 
         foreach (PlayerIdentity player in Object.FindObjectsByType<PlayerIdentity>()
                      .Where(p => p.GetComponentInChildren<Camera>(true) != null).OrderBy(p => p.PlayerId))
             puzzle.RegisterPlayer(player);
 
         PlayerDiagnosticsTools.RunSteps(
-            (2.0, () => Log("cinemática +2 s")),
+            (0.6, () => Log("cinemática +0,6 s")),
+            (1.4, () => Log("cinemática +2 s")),
             (2.0, () => Log("cinemática +4 s")),
-            (2.0, () => Log("cinemática +6 s")),
-            (6.0, () => Log("después de la cinemática")));
+            (6.6, () => Log("después +~0,3 s")),
+            (1.0, () => Log("después +~1,3 s (fade-in)")),
+            (2.5, () => Log("después +~3,8 s (completo)")));
     }
 
     [MenuItem("TSirkus/Audio/Probar audio de la cinematica (Play Mode)", true)]
     private static bool PlayModeOnly2() => EditorApplication.isPlaying;
+
+    // Pulsa los 4 interruptores (prueba de ACCIÓN por jugador) y comprueba que, al activarse,
+    // una fuente del pool está reproduciendo el sonido del interruptor.
+    [MenuItem("TSirkus/Audio/Probar sonido de interruptores (Play Mode)")]
+    private static void TestSwitchSound()
+    {
+        foreach (PuzzleSwitch puzzleSwitch in Object.FindObjectsByType<PuzzleSwitch>())
+        {
+            PuzzleSwitch target = puzzleSwitch;
+            target.onActivated.AddListener(() => PlayerDiagnosticsTools.RunSteps((0.05, () =>
+            {
+                var playing = GameAudio.Instance.GetComponentsInChildren<AudioSource>()
+                    .Where(a => a.isPlaying && a.clip != null && a.clip.name == "SFX_Switch_Activate_01").ToArray();
+
+                Debug.Log($"[AUDIO TEST] {target.name} activado → fuentes con SFX_Switch_Activate_01: {playing.Length} " +
+                          $"vol={string.Join(",", playing.Select(a => a.volume.ToString("0.00")))} " +
+                          $"t={string.Join(",", playing.Select(a => a.time.ToString("0.00")))}s");
+            })));
+        }
+
+        EditorApplication.ExecuteMenuItem("TSirkus/Diagnostico/Probar ACCION por jugador en interruptores (Play Mode)");
+    }
+
+    [MenuItem("TSirkus/Audio/Probar sonido de interruptores (Play Mode)", true)]
+    private static bool PlayModeOnly3() => EditorApplication.isPlaying;
 
     private static void Teleport(PlayerIdentity player, Vector3 position, Vector3 forward)
     {
