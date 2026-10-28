@@ -46,7 +46,7 @@ public class CinematicManager : MonoBehaviour
 
         // Cargar la escena del juego
         AsyncOperation operation =
-            SceneManager.LoadSceneAsync("GAME");
+            SceneManager.LoadSceneAsync("ConexionJugadores");
 
         // Evita que la escena se active inmediatamente
         operation.allowSceneActivation = false;

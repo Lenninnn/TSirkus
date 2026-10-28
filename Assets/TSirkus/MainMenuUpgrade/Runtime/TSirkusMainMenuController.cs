@@ -180,7 +180,7 @@ public void Back()
             }
             PlayerPrefs.Save(); busy = true;
             if (transition != null) StopCoroutine(transition);
-            SetPage(home, false); SetPage(settings, false); SetPage(history, false); SetPage(loading, true);
+            SetPage(home, true); SetPage(settings, false); SetPage(history, false); SetPage(loading, false);
             Select(null);
             StartCoroutine(LoadGame());
         }

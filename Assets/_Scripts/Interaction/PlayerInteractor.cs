@@ -9,7 +9,13 @@ public class PlayerInteractor : MonoBehaviour
     [SerializeField] private PlayerIdentity playerIdentity;
 
     [Header("Player")]
+    [Tooltip("Solo respaldo si no hay PlayerIdentity. El input usa PlayerIdentity.PlayerId.")]
     [SerializeField] private int playerId = 1;
+
+    // PlayerSpawner asigna el id con SetPlayerId después de Instantiate (tras Awake),
+    // así que se lee en cada consulta en vez de copiarlo al iniciar.
+    private int CurrentPlayerId =>
+        playerIdentity != null ? playerIdentity.PlayerId : playerId;
 
     [Header("Raycast distances")]
     [SerializeField] private float highlightDistance = 5f;
@@ -203,7 +209,7 @@ public class PlayerInteractor : MonoBehaviour
 
         bool actionPressed =
             mobileInputManager.IsActionPressed(
-                playerId
+                CurrentPlayerId
             );
 
         bool actionJustPressed =

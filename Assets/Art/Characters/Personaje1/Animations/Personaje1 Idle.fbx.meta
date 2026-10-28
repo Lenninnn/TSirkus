@@ -1,133 +1,87 @@
 fileFormatVersion: 2
-guid: 7d0d7ae5138b93d438b91491bfc9bd6a
+guid: 58fcf2f9fb82f45048c64e514ddaf0bf
 ModelImporter:
-  serializedVersion: 21300
+  serializedVersion: 24600
   internalIDToNameTable: []
   externalObjects:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: Mi_000
-    second: {fileID: 2100000, guid: 8f0452a57c4990247bcf885a6adde05f, type: 2}
+      name: Material
+    second: {fileID: 2100000, guid: 7ac23aae47ffd4361814e0ecd60ad61a, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: Mi_001
-    second: {fileID: 2100000, guid: 0efc0d2fe03257847a33c0f6f1a8b54d, type: 2}
+      name: Material.002
+    second: {fileID: 2100000, guid: 0f91f71923798486fbf251b8c40735f0, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: Mi_002
-    second: {fileID: 2100000, guid: 19089631878c30c4dae4b569711809a6, type: 2}
+      name: Material.003
+    second: {fileID: 2100000, guid: 858fefbb86dd948b48e5af9fa13b0dce, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: Mi_003
-    second: {fileID: 2100000, guid: e6728bff460434c489e88cd4318d1b4e, type: 2}
+      name: Material.079
+    second: {fileID: 2100000, guid: f66fc0e6f9e9145a9931be0b09f8005c, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: Mi_004
-    second: {fileID: 2100000, guid: 72f1989470926b249811cbd61d1bc697, type: 2}
+      name: Material.080
+    second: {fileID: 2100000, guid: 80d979e8ddaed4ecdab95087138732d5, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: Mi_005
-    second: {fileID: 2100000, guid: 133d9521324b34147964d16127ada02b, type: 2}
+      name: Material.081
+    second: {fileID: 2100000, guid: 711f30c64491b44d1963dc2b04ccadd2, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: Mi_006
-    second: {fileID: 2100000, guid: aafd03f259610724fb2fa3a9c8c6873e, type: 2}
+      name: Material.082
+    second: {fileID: 2100000, guid: 097a55406f87d485280af6f110b4e4d5, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: Mi_007
-    second: {fileID: 2100000, guid: 898e1a4a6aedfe144ac13a8de7e85463, type: 2}
+      name: Material.083
+    second: {fileID: 2100000, guid: ab0c37f4c80f249f6a18d913e7963588, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: Mi_008
-    second: {fileID: 2100000, guid: 9db8b34ff6cd9a94b814dfd4f0d09ace, type: 2}
+      name: Material.084
+    second: {fileID: 2100000, guid: 22901bcf32d9244ed990a732ce4babb7, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: Mi_009
-    second: {fileID: 2100000, guid: 35360ec68eeee664f8709e6c661dabfb, type: 2}
+      name: Material.086
+    second: {fileID: 2100000, guid: e26a2f94574b64be68d1153e9d6edbfa, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: Mi_010
-    second: {fileID: 2100000, guid: b1f7cad397eda2045b0ef529e0f0de15, type: 2}
+      name: school subjects colors
+    second: {fileID: 2100000, guid: def401692ab1c4f5bb6f75fc96bc07ce, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: Mi_011
-    second: {fileID: 2100000, guid: 9b0ae467971241848836e98c9d3d8e1b, type: 2}
+      name: school subjects colors.001
+    second: {fileID: 2100000, guid: 58450239d17c1471bba93462a26f91d5, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
-      name: Mi_012
-    second: {fileID: 2100000, guid: 22f2a5e965c911543a98a7890d47a6d5, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: Mi_013
-    second: {fileID: 2100000, guid: 1c5590556d0feae4d8cd9792bf9ed9f1, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: Mi_015
-    second: {fileID: 2100000, guid: 85b7f0fecfa28b34593e84430debe775, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: Mi_016
-    second: {fileID: 2100000, guid: f82d26a8c7417244dafb5b971ff217f4, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: Mi_017
-    second: {fileID: 2100000, guid: 5b8fc24c92ba3054582742f6af1fdddf, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: Mi_018
-    second: {fileID: 2100000, guid: 03158520346ecc044b096d7e951cf525, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: Mi_019
-    second: {fileID: 2100000, guid: 7daf4f74703f3994382d24b5fb81a2ed, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: Mi_020
-    second: {fileID: 2100000, guid: 17e38f9b0e47c3c4f968b61c02deaa24, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: Mi_021
-    second: {fileID: 2100000, guid: 5f8c6592b1fc5c94392c808f1a94dd79, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: Mi_022
-    second: {fileID: 2100000, guid: 820986125a32e57438d2bcd0e777c5b4, type: 2}
+      name: school subjects colors.002
+    second: {fileID: 2100000, guid: 01f4fbe3137ea46d18ebf3da76ea0a48, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
     materialSearch: 1
     materialLocation: 1
+    searchTexturesGlobally: 0
   animations:
     legacyGenerateAnimations: 4
     bakeSimulation: 0
     resampleCurves: 1
     optimizeGameObjects: 0
-    removeConstantScaleCurves: 1
-    motionNodeName: 
-    rigImportErrors: 
-    rigImportWarnings: 
+    removeConstantScaleCurves: 0
+    motionNodeName: mixamorig:Hips
     animationImportErrors: 
     animationImportWarnings: 
     animationRetargetingWarnings: 
@@ -141,7 +95,36 @@ ModelImporter:
     animationWrapMode: 0
     extraExposedTransformPaths: []
     extraUserProperties: []
-    clipAnimations: []
+    clipAnimations:
+    - serializedVersion: 16
+      name: P1_Idle
+      takeName: mixamo.com
+      internalID: -203655887218126122
+      firstFrame: 0
+      lastFrame: 298
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      hasAdditiveReferencePose: 0
+      loopTime: 1
+      loopBlend: 0
+      loopBlendOrientation: 1
+      loopBlendPositionY: 1
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 1
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 1
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000u
+      curves: []
+      events: []
+      transformMask: []
+      maskType: 3
+      maskSource: {instanceID: 0}
+      additiveReferencePoseFrame: 0
     isReadable: 0
   meshes:
     lODScreenPercentages: []
@@ -150,6 +133,9 @@ ModelImporter:
     addColliders: 0
     useSRGBMaterialColor: 1
     sortHierarchyByName: 1
+    preBakeConvexCollisionMesh: 0
+    preBakeTriangleCollisionMesh: 0
+    importPhysicalCameras: 1
     importVisibility: 1
     importBlendShapes: 1
     importCameras: 1
@@ -167,6 +153,11 @@ ModelImporter:
     maxBonesPerVertex: 4
     minBoneWeight: 0.001
     optimizeBones: 1
+    generateMeshLods: 0
+    meshLodGenerationFlags: 0
+    maximumMeshLod: -1
+    importUVs: -1
+    importVertexColors: 1
     meshOptimizationFlags: -1
     indexFormat: 0
     secondaryUVAngleDistortion: 8
@@ -186,6 +177,7 @@ ModelImporter:
     legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 0
     blendShapeNormalImportMode: 1
     normalSmoothingSource: 0
+    calculateBlendshapeNormalsDeltaFromImportedNormals: 0
   referencedClips: []
   importAnimation: 1
   humanDescription:
@@ -208,17 +200,11 @@ ModelImporter:
   autoGenerateAvatarMappingIfUnspecified: 1
   animationType: 2
   humanoidOversampling: 1
-  avatarSetup: 0
+  avatarSetup: 1
   addHumanoidExtraRootOnlyWhenUsingAvatar: 1
+  importBlendShapeDeformPercent: 1
   remapMaterialsIfMaterialImportModeIsNone: 0
   additionalBone: 0
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 364602
-  packageName: Abandoned Rusty Vehicles and Props - 3d Game Ready Mini Set
-  packageVersion: 1.0
-  assetPath: Assets/OlegWER/RustyCarsFree/FBX/fbx.fbx
-  uploadId: 871026
