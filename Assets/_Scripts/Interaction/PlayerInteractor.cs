@@ -1,0 +1,353 @@
+using UnityEngine;
+using UnityEngine.InputSystem;
+
+public class PlayerInteractor : MonoBehaviour
+{
+    [Header("References")]
+    [SerializeField] private Camera playerCamera;
+    [SerializeField] private MobileInputManager mobileInputManager;
+    [SerializeField] private PlayerIdentity playerIdentity;
+
+    [Header("Player")]
+    [Tooltip("Solo respaldo si no hay PlayerIdentity. El input usa PlayerIdentity.PlayerId.")]
+    [SerializeField] private int playerId = 1;
+
+    // PlayerSpawner asigna el id con SetPlayerId después de Instantiate (tras Awake),
+    // así que se lee en cada consulta en vez de copiarlo al iniciar.
+    private int CurrentPlayerId =>
+        playerIdentity != null ? playerIdentity.PlayerId : playerId;
+
+    [Header("Raycast distances")]
+    [SerializeField] private float highlightDistance = 5f;
+    [SerializeField] private float interactionDistance = 3f;
+
+    [Header("Raycast settings")]
+    [SerializeField] private LayerMask interactableLayers = ~0;
+
+    private IInteractable currentInteractable;
+    private IHighlightable currentHighlightable;
+    private ICameraHighlightable currentCameraHighlightable;
+    private Collider currentCollider;
+
+    private bool previousActionPressed;
+
+    private void Awake()
+    {
+        if (playerCamera == null)
+        {
+            playerCamera =
+                GetComponentInChildren<Camera>();
+        }
+
+        if (playerIdentity == null)
+        {
+            playerIdentity =
+                GetComponent<PlayerIdentity>();
+        }
+
+        if (mobileInputManager == null)
+        {
+            mobileInputManager =
+                FindObjectOfType<MobileInputManager>();
+        }
+    }
+
+    private void Update()
+    {
+        UpdateRaycast();
+
+        CheckMobileAction();
+        CheckKeyboardAction();
+    }
+
+    // ============================================================
+    // RAYCAST DE INTERACCIÓN
+    // ============================================================
+
+    private void UpdateRaycast()
+    {
+        if (playerCamera == null)
+            return;
+
+        Ray ray = new Ray(
+            playerCamera.transform.position,
+            playerCamera.transform.forward
+        );
+
+        bool hitSomething = Physics.Raycast(
+            ray,
+            out RaycastHit hit,
+            highlightDistance,
+            interactableLayers,
+            QueryTriggerInteraction.Ignore
+        );
+
+        Debug.DrawRay(
+            ray.origin,
+            ray.direction * highlightDistance,
+            hitSomething
+                ? Color.green
+                : Color.red
+        );
+
+        IInteractable detectedInteractable = null;
+        IHighlightable detectedHighlightable = null;
+        ICameraHighlightable detectedCameraHighlightable = null;
+        Collider detectedCollider = null;
+
+        if (hitSomething)
+        {
+            detectedCollider =
+                hit.collider;
+
+            detectedInteractable =
+                hit.collider.GetComponentInParent<IInteractable>();
+
+            detectedHighlightable =
+                hit.collider.GetComponentInParent<IHighlightable>();
+
+            detectedCameraHighlightable =
+                hit.collider.GetComponentInParent<ICameraHighlightable>();
+        }
+
+        // ========================================================
+        // CAMBIÓ EL OBJETO MIRADO
+        // ========================================================
+
+        if (detectedInteractable != currentInteractable)
+        {
+            RemoveCurrentHighlight();
+
+            currentInteractable =
+                detectedInteractable;
+
+            currentHighlightable =
+                detectedHighlightable;
+
+            currentCameraHighlightable =
+                detectedCameraHighlightable;
+
+            currentCollider =
+                detectedCollider;
+
+            ApplyCurrentHighlight();
+
+            if (currentInteractable != null)
+            {
+                MonoBehaviour interactableObject =
+                    currentInteractable as MonoBehaviour;
+
+                if (interactableObject != null)
+                {
+                    Debug.Log(
+                        "Raycast detectó: " +
+                        interactableObject.gameObject.name
+                    );
+                }
+            }
+        }
+        else
+        {
+            currentCollider =
+                detectedCollider;
+        }
+    }
+
+    // ============================================================
+    // HIGHLIGHT
+    // ============================================================
+
+    private void ApplyCurrentHighlight()
+    {
+        // Prioridad:
+        // Highlight independiente por cámara.
+
+        if (currentCameraHighlightable != null)
+        {
+            currentCameraHighlightable.SetHighlightForCamera(
+                playerCamera,
+                true
+            );
+
+            return;
+        }
+
+        // Sistema antiguo como fallback.
+
+        if (currentHighlightable != null)
+        {
+            currentHighlightable.SetHighlight(true);
+        }
+    }
+
+    private void RemoveCurrentHighlight()
+    {
+        if (currentCameraHighlightable != null)
+        {
+            currentCameraHighlightable.SetHighlightForCamera(
+                playerCamera,
+                false
+            );
+
+            return;
+        }
+
+        if (currentHighlightable != null)
+        {
+            currentHighlightable.SetHighlight(false);
+        }
+    }
+
+    // ============================================================
+    // INPUT MÓVIL
+    // ============================================================
+
+    private void CheckMobileAction()
+    {
+        if (mobileInputManager == null)
+            return;
+
+        bool actionPressed =
+            mobileInputManager.IsActionPressed(
+                CurrentPlayerId
+            );
+
+        bool actionJustPressed =
+            actionPressed &&
+            !previousActionPressed;
+
+        if (actionJustPressed)
+        {
+            TryInteract();
+        }
+
+        previousActionPressed =
+            actionPressed;
+    }
+
+    // ============================================================
+    // INPUT TECLADO
+    // ============================================================
+
+    private void CheckKeyboardAction()
+    {
+        if (Keyboard.current == null)
+            return;
+
+        if (Keyboard.current.eKey.wasPressedThisFrame)
+        {
+            TryInteract();
+        }
+    }
+
+    // ============================================================
+    // INTERACCIÓN
+    // ============================================================
+
+    private void TryInteract()
+    {
+        if (currentInteractable == null)
+        {
+            Debug.Log(
+                "No hay objeto interactuable seleccionado."
+            );
+
+            return;
+        }
+
+        if (currentCollider == null)
+        {
+            Debug.Log(
+                "No hay collider seleccionado."
+            );
+
+            return;
+        }
+
+        if (playerIdentity == null)
+        {
+            Debug.LogWarning(
+                "PlayerInteractor no tiene " +
+                "PlayerIdentity asignado."
+            );
+
+            return;
+        }
+
+        if (playerCamera == null)
+            return;
+
+        Vector3 closestPoint =
+            currentCollider.ClosestPoint(
+                playerCamera.transform.position
+            );
+
+        float distance =
+            Vector3.Distance(
+                playerCamera.transform.position,
+                closestPoint
+            );
+
+        if (distance > interactionDistance)
+        {
+            Debug.Log(
+                "El objeto está demasiado lejos " +
+                "para interactuar."
+            );
+
+            return;
+        }
+
+        currentInteractable.Interact(
+            playerIdentity
+        );
+    }
+
+    // ============================================================
+    // MÉTODOS PÚBLICOS
+    // ============================================================
+
+    public bool HasTarget()
+    {
+        return currentInteractable != null;
+    }
+
+    public bool CanInteract()
+    {
+        if (currentInteractable == null)
+            return false;
+
+        if (currentCollider == null)
+            return false;
+
+        if (playerCamera == null)
+            return false;
+
+        Vector3 closestPoint =
+            currentCollider.ClosestPoint(
+                playerCamera.transform.position
+            );
+
+        float distance =
+            Vector3.Distance(
+                playerCamera.transform.position,
+                closestPoint
+            );
+
+        return distance <= interactionDistance;
+    }
+
+    // ============================================================
+    // DESACTIVAR
+    // ============================================================
+
+    private void OnDisable()
+    {
+        RemoveCurrentHighlight();
+
+        currentInteractable = null;
+        currentHighlightable = null;
+        currentCameraHighlightable = null;
+        currentCollider = null;
+    }
+}

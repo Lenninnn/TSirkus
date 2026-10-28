@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: f4b72fa1010740d4d8cd75b32ae70582
+timeCreated: 1486344926
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 79082
+  packageName: Activation Station
+  packageVersion: 1.0
+  assetPath: Assets/Activation Station/Materials/Metallic Red.mat
+  uploadId: 165214

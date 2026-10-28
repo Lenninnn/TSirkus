@@ -1,0 +1,19 @@
+fileFormatVersion: 2
+guid: 9ff4396dd5f712c4497b602d4ba49f5d
+timeCreated: 1484795686
+licenseType: Store
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 79082
+  packageName: Activation Station
+  packageVersion: 1.0
+  assetPath: Assets/Activation Station/Scripts/ActivationCondition.cs
+  uploadId: 165214

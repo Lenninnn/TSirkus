@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 6efd0f419455c4944960a5b78c786b69
+timeCreated: 1481945623
+licenseType: Store
+DefaultImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 79082
+  packageName: Activation Station
+  packageVersion: 1.0
+  assetPath: Assets/Activation Station/Scenes/Test.unity
+  uploadId: 165214

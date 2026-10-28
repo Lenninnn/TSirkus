@@ -6,8 +6,16 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/SampleScene.unity
-    guid: 99c9720ab356a0642a771bea13969a05
+    path: Assets/TSirkus/MainMenuUpgrade/Scenes/MainMenu_Mejorado.unity
+    guid: c77fe9691b905ef1a4f929cdbc46168b
+  - enabled: 1
+    path: Assets/Scenes/Cinematica.unity
+    guid: cb0d8083c80db1f409755f3d286c95ed
+  - enabled: 1
+    path: Assets/Scenes/ConexionJugadores.unity
+    guid: 4c8ce41b1a49a463694a8cbc5d8c1a92
+  - enabled: 1
+    path: Assets/Scenes/GAME.unity
+    guid: 4a0d6db672c254e69b632d135cc54643
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
-  m_UseUCBPForAssetBundles: 0

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: d626a3b003c3d6740be78092bddd1cf8
+timeCreated: 1452063873
+licenseType: Store
+TextScriptImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 79082
+  packageName: Activation Station
+  packageVersion: 1.0
+  assetPath: Assets/Activation Station/Documentation/Setup Guide.txt
+  uploadId: 165214

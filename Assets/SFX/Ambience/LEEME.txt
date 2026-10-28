@@ -1,0 +1,2 @@
+Loops de ambiente (AMB_*): carpa, corredores, zonas de prueba.
+Nombre: SFX_[Sistema]_[Acción]_[NN] / AMB_[Zona]_[NN]. Ver Assets/SFX/LEEME_AUDIO.md

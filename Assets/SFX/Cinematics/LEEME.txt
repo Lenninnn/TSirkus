@@ -1,0 +1,2 @@
+Solo si una cinemática NO trae audio propio (el video de la puerta ya lo trae).
+Nombre: SFX_[Sistema]_[Acción]_[NN] / AMB_[Zona]_[NN]. Ver Assets/SFX/LEEME_AUDIO.md

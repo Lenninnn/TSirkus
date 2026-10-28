@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: e98d44dec610a964191d648e50795b25
+timeCreated: 1486345008
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 79082
+  packageName: Activation Station
+  packageVersion: 1.0
+  assetPath: Assets/Activation Station/Materials/Metallic Silver.mat
+  uploadId: 165214

@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 216cdccb1de7c4398a13372400e4c32a, type: 3}
+  m_Name: SFX_Switch_Activate
+  m_EditorClassIdentifier: Assembly-CSharp::SoundCue
+  clips:
+  - {fileID: 8300000, guid: 70499e7cd08ad492082ddca3a73e53cb, type: 3}
+  startTime: 0
+  category: 1
+  volume: 0.55
+  volumeVariation: 0.05
+  pitchRange: {x: 0.97, y: 1.03}
+  global: 0
+  minDistance: 2
+  maxDistance: 18
+  minInterval: 0.05
+  expectedFile: Assets/SFX/Interactions/SFX_Switch_Activate_01.mp3 (ya existe)
+  searchTerms: old metal lever pull clunk mechanical switch
