@@ -24,7 +24,7 @@
 
 | Archivo | Qué es | Uso |
 |---|---|---|
-| `Player/SFX_Player_Footstep_01.mp3` (antes `sonido-pasos personajes`) | 1 pisada, 0,60 s, golpe a 0,36 s | Pasos de los 4 jugadores (empieza en 0,34 s) |
+| `Player/SFX_Player_Footstep_01.mp3` (antes `sonido-pasos personajes`) | 1 pisada recortada, 0,17 s, golpe a 0,02 s | Pasos de los 4 jugadores |
 | `Stings/SFX_Sting_Horror_01.mp3` (antes `sonido-horror`) | Riser/sting estéreo 5 s | `SFX_Sting_Danger`: al capturar a un jugador |
 
 ## Archivos que faltan

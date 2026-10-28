@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: SFX_Player_Footstep
   m_EditorClassIdentifier: Assembly-CSharp::SoundCue
   clips:
-  - {fileID: 8300000, guid: efdf5fab1279a450b9722989c1a6c041, type: 3}
-  startTime: 0.34
+  - {fileID: 8300000, guid: 16104203449394c45b87d7d4d22cf1da, type: 3}
+  startTime: 0
   category: 2
   volume: 0.85
   volumeVariation: 0.12

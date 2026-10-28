@@ -49,7 +49,7 @@ public static class AudioSetupTools
     {
         // Ya funcionando con los clips actuales
         new Spec { name = "SFX_Player_Footstep", clip = Root + "/Player/SFX_Player_Footstep_01.mp3", category = SoundCue.Category.Player,
-                   volume = 0.85f, min = 2f, max = 14f, start = 0.34f, interval = 0f, variation = 0.12f, pitch = new Vector2(0.94f, 1.06f),
+                   volume = 0.85f, min = 2f, max = 14f, start = 0f, interval = 0f, variation = 0.12f, pitch = new Vector2(0.94f, 1.06f),
                    file = "Player/SFX_Player_Footstep_01..04.wav", search = "footstep wooden floor old boards single step (varias tomas)" },
         new Spec { name = "SFX_Sting_Danger", clip = Root + "/Stings/SFX_Sting_Horror_01.mp3", global = true, volume = 0.7f, interval = 4f,
                    file = "Stings/SFX_Sting_Horror_01.mp3 (ya existe)", search = "horror riser sting short" },
