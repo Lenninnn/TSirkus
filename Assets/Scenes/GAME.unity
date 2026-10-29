@@ -43702,7 +43702,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b1321162c9653ee47acc5bfe544b44f4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BalanceSystem
-  inputManager: {fileID: 0}
+  inputManager: {fileID: 1846949559}
   raceStartManager: {fileID: 1285606875}
   playerId: 1
   barBackground: {fileID: 1218969474}
@@ -44115,7 +44115,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b1321162c9653ee47acc5bfe544b44f4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BalanceSystem
-  inputManager: {fileID: 0}
+  inputManager: {fileID: 1846949559}
   raceStartManager: {fileID: 1285606875}
   playerId: 4
   barBackground: {fileID: 1980887446}
@@ -45163,7 +45163,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b1321162c9653ee47acc5bfe544b44f4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BalanceSystem
-  inputManager: {fileID: 0}
+  inputManager: {fileID: 1846949559}
   raceStartManager: {fileID: 1285606875}
   playerId: 2
   barBackground: {fileID: 1690687837}
@@ -45756,7 +45756,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b1321162c9653ee47acc5bfe544b44f4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BalanceSystem
-  inputManager: {fileID: 0}
+  inputManager: {fileID: 1846949559}
   raceStartManager: {fileID: 1285606875}
   playerId: 3
   barBackground: {fileID: 1373926299}
