@@ -21,6 +21,11 @@ public class RacePlayerBase : MonoBehaviour
 
    
 
+    public void ResetBase()
+    {
+        playersInside.Clear();
+    }
+
     private void OnTriggerEnter(Collider other)
     {
         PlayerIdentity identity =

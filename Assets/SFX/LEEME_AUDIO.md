@@ -29,6 +29,23 @@
 | `Interactions/SFX_Switch_Activate_01.mp3` (antes `lever pull sound effect`) | Palanca, 0,76 s, arranca a 0,01 s, muy fuerte (pico -0,6 dBFS) | `SFX_Switch_Activate` (volumen 0,55): cada interruptor al activarse |
 | `Ambience/AMB_Circus_Global_01.mp3` (antes `sonido-ambiente-carpa`) | Ambiente de carpa estéreo, 45 s, trae fade-in ~1 s y fade-out ~5 s | `AMB_Circus_Global` (volumen 0,6): loop global desde el inicio con fade-in de 2 s; las vueltas se cruzan 4 s para tapar el fade-out del archivo |
 
+## Payaso (`ClownAudio`, prefab `Payaso`)
+
+Todos los eventos ya están conectados; cada cue suena en cuanto tenga su archivo. Colocar el WAV en
+`Assets/SFX/Enemies/` con el nombre exacto y arrastrarlo al campo `clips` del cue en `Assets/SFX/Cues/`.
+Mono, 44,1/48 kHz, sin silencio inicial. Se atenúan por el jugador más cercano (min/max del cue).
+
+| Archivo | Cue | Campo de `ClownAudio` | Cuándo suena |
+|---|---|---|---|
+| `SFX_Clown_Appear_01.wav` | `SFX_Clown_Appear` | Appear Cue | Una vez al aparecer |
+| `SFX_Clown_Idle_01.wav` | `SFX_Clown_Idle` | Idle Cue | Cada 5-10 s mientras está quieto |
+| `SFX_Clown_Footstep_01.wav` | `SFX_Clown_Footstep` | Footstep Cue | Cada pie que apoya caminando |
+| `SFX_Clown_Run_01.wav` | `SFX_Clown_Run` | Run Footstep Cue | Cada pie que apoya corriendo (> 3 m/s) |
+| `SFX_Clown_ChaseStart_01.wav` | `SFX_Clown_ChaseStart` | Chase Start Cue | Una vez al empezar a perseguir |
+| `SFX_Clown_Disappear_01.wav` | `SFX_Clown_Disappear` | Disappear Cue | Una vez al desvanecerse (visto, tiempo o captura) |
+| `SFX_Clown_Capture_01.wav` | `SFX_Clown_Capture` | Capture Cue | Una vez al capturar a un jugador |
+| `SFX_Clown_ChaseLoop_01.wav` (opcional) | `SFX_Clown_ChaseLoop` | Chase Loop Cue | Loop mientras persigue; puede quedar vacío |
+
 ## Archivos que faltan
 
 Formato: WAV 44,1/48 kHz. One-shots 3D en **mono**; ambientes y UI pueden ser estéreo.

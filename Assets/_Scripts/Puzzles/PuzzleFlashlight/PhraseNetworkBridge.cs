@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 
 public class PhraseNetworkBridge : MonoBehaviour
@@ -10,6 +11,8 @@ public class PhraseNetworkBridge : MonoBehaviour
     [Header("Server")]
     [SerializeField] private string serverIP = "127.0.0.1";
     [SerializeField] private int serverPort = 9001;
+    [SerializeField] private float connectTimeoutSeconds = 3f;
+    [SerializeField] private float reconnectSeconds = 3f;
 
     [Header("Debug")]
     [SerializeField] private bool debugLogs = true;
@@ -39,31 +42,73 @@ public class PhraseNetworkBridge : MonoBehaviour
         ProcessIncomingMessages();
     }
 
+    // Igual que MobileInputManager: conexión en segundo plano con tiempo límite y reintentos,
+    // para no congelar Unity si el servidor no está encendido. Mensajes sin cambios.
     private void ConnectToServer()
     {
-        try
+        if (running)
+            return;
+
+        running = true;
+
+        receiveThread = new Thread(ConnectionLoop)
         {
-            if (running)
-                return;
+            IsBackground = true,
+            Name = "PhraseNetworkBridge TCP"
+        };
 
-            DebugLog($"🧩📡 Conectando PhraseNetworkBridge a {serverIP}:{serverPort}");
+        receiveThread.Start();
+    }
 
-            tcpClient = new TcpClient();
-            tcpClient.Connect(serverIP, serverPort);
-            networkStream = tcpClient.GetStream();
-            running = true;
+    private void ConnectionLoop()
+    {
+        string ip = serverIP;
+        int port = serverPort;
+        int failures = 0;
 
-            receiveThread = new Thread(ReceiveLoop);
-            receiveThread.IsBackground = true;
-            receiveThread.Start();
-
-            DebugLog("🧩✅ PhraseNetworkBridge conectado al servidor.");
-        }
-        catch (Exception error)
+        while (running)
         {
-            Debug.LogError(
-                $"🧩❌ Error conectando PhraseNetworkBridge: {error.Message}"
-            );
+            TcpClient client = new TcpClient();
+
+            try
+            {
+                if (failures == 0)
+                    DebugLog($"🧩📡 Conectando PhraseNetworkBridge a {ip}:{port}");
+
+                Task connect = client.ConnectAsync(ip, port);
+
+                if (!connect.Wait(TimeSpan.FromSeconds(connectTimeoutSeconds)) || !client.Connected)
+                    throw new TimeoutException($"sin respuesta en {connectTimeoutSeconds:0.#} s");
+
+                tcpClient = client;
+                networkStream = client.GetStream();
+                failures = 0;
+
+                DebugLog("🧩✅ PhraseNetworkBridge conectado al servidor.");
+
+                ReceiveLoop();
+            }
+            catch (Exception error)
+            {
+                Exception cause = error is AggregateException aggregate && aggregate.InnerException != null
+                    ? aggregate.InnerException
+                    : error;
+
+                if (running && failures % 10 == 0)
+                    Debug.LogWarning($"🧩❌ Error conectando PhraseNetworkBridge ({ip}:{port}): {cause.Message}. Reintentando cada {reconnectSeconds:0.#} s.");
+
+                failures++;
+            }
+            finally
+            {
+                networkStream = null;
+                tcpClient = null;
+
+                try { client.Close(); } catch { }
+            }
+
+            for (float waited = 0f; running && waited < reconnectSeconds; waited += 0.1f)
+                Thread.Sleep(100);
         }
     }
 

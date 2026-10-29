@@ -291,7 +291,7 @@ public class SkrytyeSlovaController : MonoBehaviour
         );
 
         Debug.Log(
-            "🔤 [SKRYTYE SLOVA] ASIGNANDO PALABRAS POR ORDEN"
+            "🔤 [SKRYTYE SLOVA] ASIGNANDO PALABRAS SEGÚN LA FRASE"
         );
 
 
@@ -322,8 +322,22 @@ public class SkrytyeSlovaController : MonoBehaviour
             }
 
 
+            // La palabra decide el jugador (reparto de GetTargetWordsForPlayer, el mismo que se
+            // envía a los celulares en la fase de frase). El orden de la lista solo es respaldo.
             int playerId =
-                GetPlayerFromIndex(i);
+                GetPlayerFromWord(word.Word);
+
+            if (playerId == 0)
+            {
+                playerId =
+                    GetPlayerFromIndex(i);
+
+                Debug.LogWarning(
+                    $"🔤⚠️ [SKRYTYE SLOVA] " +
+                    $"'{word.Word}' no está en el reparto de la frase. " +
+                    $"Se asigna por orden de lista -> PLAYER {playerId}"
+                );
+            }
 
 
             word.ClearPlayerAssignment();
@@ -353,8 +367,39 @@ public class SkrytyeSlovaController : MonoBehaviour
 
 
     // =============================================================
-    // PLAYER SEGÚN ÍNDICE
+    // PLAYER SEGÚN PALABRA (respaldo: según índice)
     // =============================================================
+
+    private int GetPlayerFromWord(
+        string word
+    )
+    {
+        string normalized =
+            NormalizeWord(word);
+
+        if (string.IsNullOrEmpty(normalized))
+        {
+            return 0;
+        }
+
+        for (
+            int playerId = 1;
+            playerId <= TOTAL_PLAYERS;
+            playerId++
+        )
+        {
+            foreach (string target in GetTargetWordsForPlayer(playerId))
+            {
+                if (NormalizeWord(target) == normalized)
+                {
+                    return playerId;
+                }
+            }
+        }
+
+        return 0;
+    }
+
 
     private int GetPlayerFromIndex(
         int index

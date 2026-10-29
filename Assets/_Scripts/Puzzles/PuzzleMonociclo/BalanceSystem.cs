@@ -164,6 +164,18 @@ public class BalanceSystem : MonoBehaviour
         directionChangeTimer = 0f;
     }
 
+    // Reintento de la carrera: recalibra cuando vuelva a empezar.
+    public void ResetForRetry()
+    {
+        IsBalancing = false;
+        IsCalibrating = false;
+        IsBalanced = false;
+        filteredPosition = 0f;
+        currentSafeCenter = -(1f - safeZoneWidth / 2f);
+        safeDirection = 1f;
+        InitializeRandomMovement();
+    }
+
     public void BeginBalance()
     {
         if (IsBalancing || IsCalibrating)
