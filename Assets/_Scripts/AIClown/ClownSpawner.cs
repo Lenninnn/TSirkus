@@ -33,6 +33,12 @@ public class ClownSpawner : MonoBehaviour
     [Tooltip("Si está activo, la primera aparición utilizará el punto específico.")]
     [SerializeField] private bool useSpecificFirstAppearancePoint = true;
 
+    [Tooltip("Segundos tras recuperar el control (fin de la cinemática) antes de la primera aparición.")]
+    [SerializeField] private float firstAppearanceDelay = 2f;
+
+    [Tooltip("Espera máxima (s) a que se cierre el aviso del objetivo antes de la primera aparición.")]
+    [SerializeField] private float maxWaitForObjective = 12f;
+
     [Header("Control de apariciones")]
     [Tooltip("Debe estar desactivado para que el payaso NO aparezca antes de abrir la puerta.")]
     [SerializeField] private bool startAutomatically = false;
@@ -96,6 +102,7 @@ public class ClownSpawner : MonoBehaviour
     private bool appearancesEnabled;
 
     private bool encounterActive;
+    private Coroutine firstAppearanceRoutine;
 
     public bool AppearancesEnabled => appearancesEnabled;
     public bool IsClownPresent => currentClown != null;
@@ -228,7 +235,63 @@ public class ClownSpawner : MonoBehaviour
     // PRIMERA APARICIÓN
     // =========================================================
 
+    // La puerta llama aquí en el mismo frame en que termina la cinemática. La primera aparición
+    // espera a que el overlay de la cinemática haya desaparecido y los jugadores tengan el control,
+    // y a que se cierre el aviso del objetivo (con un máximo), para no pisar la transición.
     public void TriggerFirstAppearance()
+    {
+        if (firstAppearanceRoutine != null)
+        {
+            return;
+        }
+
+        firstAppearanceRoutine = StartCoroutine(FirstAppearanceWhenReady());
+    }
+
+
+    private IEnumerator FirstAppearanceWhenReady()
+    {
+        DebugLog(
+            "Primera aparición pedida: espera al final de la cinemática y del objetivo."
+        );
+
+        yield return null;
+
+        while (GameAudio.Instance != null && GameAudio.Instance.AmbiencePaused)
+        {
+            yield return null;
+        }
+
+        yield return new WaitForSeconds(firstAppearanceDelay);
+
+        float waited = 0f;
+
+        while (waited < maxWaitForObjective && IsAnyObjectiveVisible())
+        {
+            waited += Time.deltaTime;
+            yield return null;
+        }
+
+        firstAppearanceRoutine = null;
+        SpawnFirstAppearance();
+    }
+
+
+    private static bool IsAnyObjectiveVisible()
+    {
+        foreach (PlayerObjectiveHUD hud in FindObjectsByType<PlayerObjectiveHUD>())
+        {
+            if (hud.CurrentObjective != null)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
+    private void SpawnFirstAppearance()
     {
         DebugLog(
             "Se solicitó la PRIMERA APARICIÓN."

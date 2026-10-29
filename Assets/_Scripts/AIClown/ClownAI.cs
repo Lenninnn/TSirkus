@@ -3,10 +3,11 @@ using UnityEngine.AI;
 
 // Comportamiento del payaso mientras está en escena (lo crea y lo quita ClownSpawner).
 //
-// El modelo (patyaso.fbx) es una malla SIN rig ni animaciones: si caminara a la vista se vería
-// deslizarse como una estatua. Por eso se mueve SOLO cuando ninguna cámara lo ve
-// (ClownLookDetector informa con ReportObservation). Si alguien lo distingue a lo lejos, se
-// queda quieto mirando; si lo ve de verdad y de cerca, desaparece (NotifySeenBy → spawner).
+// Modelo animado (AnimationsClown/Payaso, Humanoid): Idle / Walk / Run en un blend tree según la
+// velocidad REAL del NavMeshAgent (parámetro "Speed"). El agente mueve al personaje; el Animator
+// nunca (Apply Root Motion = false), así no se pelean y no hay deriva.
+// Si un jugador lo ve de verdad y de cerca, desaparece (NotifySeenBy → spawner). Visto de lejos
+// sigue caminando (freezeWhileWatchedFromAfar = false); con la opción activa se queda quieto.
 //
 // Sin objetivo: ronda por el NavMesh (destinos aleatorios, pausas, se gira hacia los jugadores).
 // Con objetivo (ClownEncounterManager eligió a quien no miró): lo acecha y, si llega sin ser
@@ -44,7 +45,17 @@ public class ClownAI : MonoBehaviour
     [Tooltip("Nunca captura al último jugador libre (sin nadie libre no hay rescate posible).")]
     [SerializeField] private bool neverCaptureLastFreePlayer = true;
 
+    [Header("Animación")]
+    [Tooltip("Animator del modelo (hijo). Parámetro float \"Speed\" en m/s.")]
+    [SerializeField] private Animator animator;
+
+    [Tooltip("Suavizado (s) del parámetro Speed: transiciones rápidas sin saltos.")]
+    [SerializeField] private float speedDampTime = 0.1f;
+
     [Header("Observación")]
+    [Tooltip("Si está activo, se queda quieto mientras alguien lo distingue a lo lejos (más allá de la distancia en la que desaparece). Era necesario cuando el modelo no tenía animaciones.")]
+    [SerializeField] private bool freezeWhileWatchedFromAfar = false;
+
     [Tooltip("Segundos que sigue quieto después del último reporte de que alguien lo ve.")]
     [SerializeField] private float observationMemory = 0.25f;
 
@@ -63,6 +74,8 @@ public class ClownAI : MonoBehaviour
     private float stuckTimer;
     private float nextRepath;
     private bool warnedNoNavMesh;
+
+    private static readonly int SpeedParameter = Animator.StringToHash("Speed");
 
     public static ClownAI Active { get; private set; }
 
@@ -90,6 +103,16 @@ public class ClownAI : MonoBehaviour
         }
 
         bodyCollider = GetComponent<Collider>();
+
+        if (animator == null)
+        {
+            animator = GetComponentInChildren<Animator>();
+        }
+
+        if (animator != null)
+        {
+            animator.applyRootMotion = false;
+        }
     }
 
 
@@ -120,8 +143,8 @@ public class ClownAI : MonoBehaviour
             return;
         }
 
-        // Alguien lo ve (aunque sea de lejos): se queda quieto como una figura.
-        if (IsObserved)
+        // Alguien lo distingue a lo lejos: opcionalmente se queda quieto como una figura.
+        if (freezeWhileWatchedFromAfar && IsObserved)
         {
             Freeze();
             return;
@@ -142,6 +165,25 @@ public class ClownAI : MonoBehaviour
             Freeze();
             FaceNearestPlayer();
         }
+    }
+
+
+    // Idle / Walk / Run salen de la velocidad real: quieto = Idle, nunca camina en el sitio.
+    private void LateUpdate()
+    {
+        if (animator == null)
+        {
+            return;
+        }
+
+        float speed = 0f;
+
+        if (!IsVanishing && !hasCaptured && navMeshAgent != null && navMeshAgent.enabled && navMeshAgent.isOnNavMesh)
+        {
+            speed = navMeshAgent.velocity.magnitude;
+        }
+
+        animator.SetFloat(SpeedParameter, speed, speedDampTime, Time.deltaTime);
     }
 
 
