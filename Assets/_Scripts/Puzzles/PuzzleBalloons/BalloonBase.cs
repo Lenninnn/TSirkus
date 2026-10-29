@@ -12,6 +12,11 @@ public class BalloonBase : MonoBehaviour
     [SerializeField]
     private BalloonPuzzleController balloonPuzzleController;
 
+    [Tooltip("Altura mínima (m) del trigger. El tablero mide 5 cm a ras de suelo y la cápsula " +
+             "del jugador nunca lo tocaba: se extiende hacia arriba al empezar.")]
+    [SerializeField]
+    private float minimumTriggerHeight = 1.5f;
+
     [Header("Estado")]
     [SerializeField]
     private bool isOccupied = false;
@@ -93,6 +98,8 @@ public class BalloonBase : MonoBehaviour
 
         Collider baseCollider = GetComponent<Collider>();
 
+        ExtendTriggerUpwards(baseCollider as BoxCollider);
+
         if (baseCollider == null)
         {
             Debug.LogError(
@@ -163,6 +170,39 @@ public class BalloonBase : MonoBehaviour
     // =====================================================
     // ENTRADA AL TRIGGER
     // =====================================================
+
+    // Solo en ejecución: la escena no cambia. Los tableros están girados, así que se busca el
+    // eje local que apunta hacia arriba en el mundo y se alarga hacia arriba desde el suelo.
+    private void ExtendTriggerUpwards(BoxCollider box)
+    {
+        if (box == null || !box.isTrigger)
+            return;
+
+        Vector3[] axes = { transform.right, transform.up, transform.forward };
+        int axis = 0;
+
+        for (int i = 1; i < 3; i++)
+        {
+            if (Mathf.Abs(Vector3.Dot(axes[i], Vector3.up)) > Mathf.Abs(Vector3.Dot(axes[axis], Vector3.up)))
+                axis = i;
+        }
+
+        float sign = Mathf.Sign(Vector3.Dot(axes[axis], Vector3.up));
+        float scale = Mathf.Max(0.0001f, Mathf.Abs(transform.lossyScale[axis]));
+
+        if (box.size[axis] * scale >= minimumTriggerHeight)
+            return;
+
+        float height = minimumTriggerHeight / scale;
+        Vector3 size = box.size;
+        Vector3 center = box.center;
+
+        center[axis] = center[axis] - sign * size[axis] * 0.5f + sign * height * 0.5f;
+        size[axis] = height;
+
+        box.size = size;
+        box.center = center;
+    }
 
     private void OnTriggerEnter(Collider other)
     {
