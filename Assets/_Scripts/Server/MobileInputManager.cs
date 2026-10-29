@@ -7,6 +7,7 @@ using System.Net.Sockets;
 using System.Text;
 
 using System.Threading;
+using System.Threading.Tasks;
 
 using UnityEngine;
 
@@ -21,6 +22,12 @@ public class MobileInputManager : MonoBehaviour
     [SerializeField] private string serverIP = "127.0.0.1";
 
     [SerializeField] private int serverPort = 9000;
+
+    [Tooltip("Segundos máximos de cada intento de conexión (en segundo plano).")]
+    [SerializeField] private float connectTimeoutSeconds = 3f;
+
+    [Tooltip("Segundos entre reintentos si el servidor no responde o se corta.")]
+    [SerializeField] private float reconnectSeconds = 3f;
 
 
 
@@ -188,92 +195,81 @@ public class MobileInputManager : MonoBehaviour
     // CONECTAR
     // =====================================================
 
+    // La conexión se hace en un hilo propio: si el servidor de teléfonos no está encendido,
+    // Unity no se congela. Cada intento espera como mucho connectTimeoutSeconds y, si falla
+    // o se corta, se reintenta cada reconnectSeconds. Mensajes y protocolo sin cambios.
     private void ConnectToServer()
-
     {
+        if (running)
+            return;
 
-        try
+        running = true;
 
+        receiveThread = new Thread(ConnectionLoop)
         {
+            IsBackground = true,
+            Name = "MobileInputManager TCP"
+        };
 
-            Debug.Log(
-
-                $"📡 Conectando a Unity TCP: {serverIP}:{serverPort}"
-
-            );
-
-
-
-            tcpClient =
-
-                new TcpClient();
-
-
-
-            tcpClient.Connect(
-
-                serverIP,
-
-                serverPort
-
-            );
-
-
-
-            networkStream =
-
-                tcpClient.GetStream();
-
-
-
-            running =
-
-                true;
-
-
-
-            receiveThread =
-
-                new Thread(
-
-                    ReceiveLoop
-
-                );
-
-
-
-            receiveThread.IsBackground =
-
-                true;
-
-
-
-            receiveThread.Start();
-
-
-
-            Debug.Log(
-
-                "✅ MobileInputManager conectado al servidor"
-
-            );
-
-        }
-
-        catch (Exception error)
-
-        {
-
-            Debug.LogError(
-
-                $"❌ Error conectando MobileInputManager: {error.Message}"
-
-            );
-
-        }
-
+        receiveThread.Start();
     }
 
+
+    private void ConnectionLoop()
+    {
+        string ip = serverIP;
+        int port = serverPort;
+        int failures = 0;
+
+        while (running)
+        {
+            TcpClient client = new TcpClient();
+
+            try
+            {
+                if (failures == 0)
+                    Debug.Log($"📡 Conectando a Unity TCP: {ip}:{port}");
+
+                Task connect = client.ConnectAsync(ip, port);
+
+                if (!connect.Wait(TimeSpan.FromSeconds(connectTimeoutSeconds)) || !client.Connected)
+                    throw new TimeoutException($"sin respuesta en {connectTimeoutSeconds:0.#} s");
+
+                tcpClient = client;
+                networkStream = client.GetStream();
+                failures = 0;
+
+                Debug.Log("✅ MobileInputManager conectado al servidor");
+
+                ReceiveLoop();
+
+                if (running)
+                    Debug.LogWarning("📡 Conexión con el servidor de teléfonos perdida. Reintentando…");
+            }
+            catch (Exception error)
+            {
+                Exception cause = error is AggregateException aggregate && aggregate.InnerException != null
+                    ? aggregate.InnerException
+                    : error;
+
+                // Un aviso al primer fallo y luego uno de vez en cuando, para no llenar la consola.
+                if (running && failures % 10 == 0)
+                    Debug.LogWarning($"❌ Error conectando MobileInputManager ({ip}:{port}): {cause.Message}. Reintentando cada {reconnectSeconds:0.#} s.");
+
+                failures++;
+            }
+            finally
+            {
+                networkStream = null;
+                tcpClient = null;
+
+                try { client.Close(); } catch { }
+            }
+
+            for (float waited = 0f; running && waited < reconnectSeconds; waited += 0.1f)
+                Thread.Sleep(100);
+        }
+    }
 
 
     // =====================================================

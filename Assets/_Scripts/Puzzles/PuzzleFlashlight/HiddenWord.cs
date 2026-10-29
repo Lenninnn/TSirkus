@@ -257,12 +257,11 @@ public class HiddenWord : MonoBehaviour
     // HIDE WORD
     // =============================================================
 
+    // Desactivar solo el componente TMP no basta: el MeshRenderer sigue dibujando la última
+    // malla y la palabra se ve para todos sin linterna. Se apagan ambos.
     private void HideWord()
     {
-        if (wordText != null)
-        {
-            wordText.enabled = false;
-        }
+        SetSourceTextVisible(false);
     }
 
 
@@ -272,9 +271,24 @@ public class HiddenWord : MonoBehaviour
 
     private void ShowWord()
     {
-        if (wordText != null)
+        SetSourceTextVisible(true);
+    }
+
+
+    private void SetSourceTextVisible(bool visible)
+    {
+        if (wordText == null)
         {
-            wordText.enabled = true;
+            return;
+        }
+
+        wordText.enabled = visible;
+
+        Renderer textRenderer = wordText.GetComponent<Renderer>();
+
+        if (textRenderer != null)
+        {
+            textRenderer.enabled = visible;
         }
     }
 

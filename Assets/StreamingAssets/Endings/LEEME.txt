@@ -1,0 +1,11 @@
+Cinemáticas finales de TSirkus (las reproduce GameEndingManager en GAME).
+
+Coloca aquí un video por ganador, con estos nombres exactos:
+  Ending_Player1.mp4
+  Ending_Player2.mp4
+  Ending_Player3.mp4
+  Ending_Player4.mp4
+
+Formato recomendado: MP4 H.264, 1920x1080 (16:9), 30 fps, audio AAC estéreo 48 kHz.
+Si falta el video del ganador (o no se puede reproducir), el juego muestra una pantalla
+provisional con el ganador y continúa a los créditos.

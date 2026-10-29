@@ -217,6 +217,11 @@ public class BalloonPuzzleController : MonoBehaviour
             }
         }
 
+        // Ya superada: no se vuelve a intentar activar (antes avisaba en cada frame
+        // mientras los jugadores seguían sobre las bases).
+        if (puzzleController != null && puzzleController.CurrentState == PuzzleState.Success)
+            return;
+
         // Si el puzzle aún no está activado,
         // solo puede activarse cuando todos estén en sus bases.
         if (!puzzleActivated)

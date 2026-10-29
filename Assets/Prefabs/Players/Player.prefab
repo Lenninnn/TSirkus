@@ -27,7 +27,7 @@ Transform:
   m_GameObject: {fileID: 519259555183627051}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.69525, y: 0.17307997, z: 0.50192}
+  m_LocalPosition: {x: 0.3, y: 1.4, z: 0.4}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -51,14 +51,23 @@ MonoBehaviour:
   flashlightPivot: {fileID: 574021856510952066}
   flashlightLight: {fileID: 7645241797943257901}
   flashlightActive: 1
-  horizontalSensitivity: 3
-  verticalSensitivity: 3
-  maxHorizontalAngle: 270
-  minVerticalAngle: -180
-  maxVerticalAngle: 180
-  rotationSmoothSpeed: 10
+  horizontalGain: 1.5
+  verticalGain: 1.5
+  invertHorizontal: 0
+  invertVertical: 0
+  neutralUpAngle: 0
+  horizontalLimit: 60
+  upLimit: 40
+  downLimit: 30
+  deadZoneDegrees: 1.5
+  sensorSmoothTime: 0.06
+  aimSmoothTime: 0.06
+  shakeTolerance: 0.15
   autoCalibrate: 1
-  accelerometerDeadZone: 0.4
+  calibrationTime: 0.4
+  calibrationStillAngle: 4
+  calibrationMaxWait: 2
+  minValidMagnitude: 0.3
   debugLogs: 1
   debugInterval: 0.5
 --- !u!114 &2758230484663718426
@@ -74,7 +83,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FlashlightWordDetector
   detectionDistance: 15
-  detectionRadius: 0.15
+  revealConeAngle: 5
+  revealRadius: 0.5
+  revealTime: 0.25
   detectionLayers:
     serializedVersion: 2
     m_Bits: 4294967295
@@ -685,10 +696,10 @@ Light:
   serializedVersion: 13
   m_Type: 0
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Intensity: 1
-  m_Range: 10
-  m_SpotAngle: 30
-  m_InnerSpotAngle: 21.80208
+  m_Intensity: 35
+  m_Range: 20
+  m_SpotAngle: 40
+  m_InnerSpotAngle: 22
   m_CookieSize2D: {x: 0.5, y: 0.5}
   m_Shadows:
     m_Type: 0

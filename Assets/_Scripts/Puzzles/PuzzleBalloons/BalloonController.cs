@@ -157,6 +157,10 @@ public class BalloonController : MonoBehaviour
 
     public void SetInflationEnabled(bool enabled)
     {
+        // Se llama en cada frame: solo se registra el cambio.
+        if (inflationEnabled == enabled)
+            return;
+
         inflationEnabled = enabled;
 
         Debug.Log(

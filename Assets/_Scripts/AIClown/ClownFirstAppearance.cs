@@ -8,21 +8,11 @@ public class ClownFirstAppearance : MonoBehaviour
     [SerializeField] private float maximumAppearanceTime = 20f;
 
     [Tooltip("Tiempo que el payaso permanece después de que un jugador lo haya visto.")]
-    [SerializeField] private float timeAfterBeingSeen = 3f;
+    [SerializeField] private float timeAfterBeingSeen = 1f;
 
     [Header("Detección visual")]
-    [Tooltip("Ángulo máximo desde el centro de la cámara para considerar que el jugador está mirando al payaso.")]
-    [Range(1f, 90f)]
-    [SerializeField] private float visionAngle = 35f;
-
-    [Tooltip("Distancia máxima desde la cámara para detectar al payaso.")]
+    [Tooltip("Distancia máxima desde la cámara para detectar al payaso (campo de visión y paredes: ClownVisibility).")]
     [SerializeField] private float maximumViewDistance = 100f;
-
-    [Tooltip("Capas que pueden bloquear la visión del jugador.")]
-    [SerializeField] private LayerMask lineOfSightLayers = ~0;
-
-    [Tooltip("Si está activo, se utilizará un Raycast para comprobar que no haya una pared entre jugador y payaso.")]
-    [SerializeField] private bool requireLineOfSight = true;
 
     [Header("Punto de observación")]
     [Tooltip("Transform opcional que representa la parte del payaso que debe estar visible. Si está vacío, se utiliza este objeto.")]
@@ -43,6 +33,8 @@ public class ClownFirstAppearance : MonoBehaviour
     private ClownSpawner clownSpawner;
 
     private bool initialized;
+
+    public bool IsRunning => initialized;
     private bool hasBeenSeen;
 
     private float appearanceTimer;
@@ -282,108 +274,36 @@ public class ClownFirstAppearance : MonoBehaviour
     // COMPROBAR CÁMARA
     // =========================================================
 
+    // Mismo criterio que durante el juego (ClownVisibility): dentro del viewport de la cámara,
+    // con línea de visión a la cabeza, pecho, cintura o pies, y a menos de maximumViewDistance.
     private bool IsCameraLookingAtTarget(
         Camera playerCamera,
         Vector3 targetPosition)
     {
-        Vector3 direction =
-            targetPosition -
-            playerCamera.transform.position;
+        Collider body = GetComponent<Collider>();
 
-        float distance =
-            direction.magnitude;
+        Bounds bounds = body != null
+            ? body.bounds
+            : new Bounds(targetPosition + Vector3.up * 1.5f, new Vector3(0.9f, 3f, 0.9f));
 
-        if (distance <= 0.01f)
-        {
-            return true;
-        }
-
-        if (distance >
-            maximumViewDistance)
-        {
-            return false;
-        }
-
-        direction.Normalize();
-
-        float angle =
-            Vector3.Angle(
-                playerCamera.transform.forward,
-                direction
-            );
-
-        if (angle >
-            visionAngle)
-        {
-            if (showVisionDebug)
-            {
-                Debug.DrawLine(
-                    playerCamera.transform.position,
-                    targetPosition,
-                    Color.red
-                );
-            }
-
-            return false;
-        }
-
-        // -----------------------------------------------------
-        // COMPROBAR LÍNEA DE VISIÓN
-        // -----------------------------------------------------
-
-        if (requireLineOfSight)
-        {
-            Ray ray =
-                new Ray(
-                    playerCamera.transform.position,
-                    direction
-                );
-
-            RaycastHit hit;
-
-            bool blocked =
-                Physics.Raycast(
-                    ray,
-                    out hit,
-                    distance,
-                    lineOfSightLayers,
-                    QueryTriggerInteraction.Ignore
-                );
-
-            if (blocked)
-            {
-                // Si el primer objeto golpeado NO es el payaso
-                // ni uno de sus hijos, algo está bloqueando la visión.
-
-                if (
-                    hit.transform != transform &&
-                    !hit.transform.IsChildOf(transform)
-                )
-                {
-                    if (showVisionDebug)
-                    {
-                        Debug.DrawLine(
-                            playerCamera.transform.position,
-                            hit.point,
-                            Color.red
-                        );
-                    }
-
-                    return false;
-                }
-            }
-        }
+        bool visible = ClownVisibility.CanCameraSee(
+            playerCamera,
+            transform,
+            bounds,
+            maximumViewDistance,
+            out _
+        );
 
         if (showVisionDebug)
         {
             Debug.DrawLine(
                 playerCamera.transform.position,
-                targetPosition,
-                Color.green
+                bounds.center,
+                visible ? Color.green : Color.red
             );
         }
 
-        return true;
+        return visible;
     }
 
     // =========================================================

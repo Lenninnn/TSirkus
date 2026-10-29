@@ -87,6 +87,14 @@ public static class AudioSetupTools
                    file = "Enemies/SFX_Clown_Capture_01.wav", search = "monster grab attack hit horror" },
         new Spec { name = "SFX_Clown_Disappear", min = 3f, max = 25f, volume = 0.7f, interval = 1f,
                    file = "Enemies/SFX_Clown_Disappear_01.wav", search = "whoosh vanish dark reverse" },
+        new Spec { name = "SFX_Clown_ChaseStart", min = 3f, max = 25f, volume = 0.8f, interval = 3f,
+                   file = "Enemies/SFX_Clown_ChaseStart_01.wav", search = "menacing low growl giggle sting when the clown starts chasing (1-2 s)" },
+        new Spec { name = "SFX_Clown_Idle", min = 2f, max = 12f, volume = 0.45f, interval = 3f, pitch = new Vector2(0.95f, 1.05f),
+                   file = "Enemies/SFX_Clown_Idle_01.wav", search = "creepy slow breathing, cloth rustle, tiny bells (2-4 s, sin bucle)" },
+        new Spec { name = "SFX_Clown_Footstep", min = 2f, max = 18f, volume = 0.6f, interval = 0.15f, pitch = new Vector2(0.92f, 1.06f), variation = 0.1f,
+                   file = "Enemies/SFX_Clown_Footstep_01.wav", search = "heavy single footstep big shoe wooden stage floor (0.3-0.6 s, sin silencio inicial)" },
+        new Spec { name = "SFX_Clown_Run", min = 2f, max = 22f, volume = 0.75f, interval = 0.1f, pitch = new Vector2(0.95f, 1.08f), variation = 0.1f,
+                   file = "Enemies/SFX_Clown_Run_01.wav", search = "fast aggressive single running footstep heavy shoe wood (0.2-0.4 s, sin silencio inicial)" },
         new Spec { name = "SFX_UI_Objective", category = SoundCue.Category.UI, global = true, volume = 0.5f, interval = 1f,
                    file = "UI/SFX_UI_Objective_01.wav", search = "subtle dark chime objective music box single note" },
         new Spec { name = "AMB_Circus_Global", clip = Root + "/Ambience/AMB_Circus_Global_01.mp3",
@@ -414,6 +422,23 @@ public static class AudioSetupTools
     }
 
 
+    // Solo el payaso: crea los cues que falten (sin tocar los demás) y los conecta al prefab.
+    internal static void SetupClownAudio()
+    {
+        if (!AssetDatabase.IsValidFolder(Root + "/Enemies"))
+            AssetDatabase.CreateFolder(Root, "Enemies");
+
+        foreach (Spec spec in Cues)
+        {
+            if (spec.name.StartsWith("SFX_Clown_"))
+                CreateCue(spec);
+        }
+
+        AssetDatabase.SaveAssets();
+        WireClownPrefab();
+    }
+
+
     private static void WireClownPrefab()
     {
         GameObject root = PrefabUtility.LoadPrefabContents(ClownPrefab);
@@ -426,6 +451,10 @@ public static class AudioSetupTools
             so.FindProperty("disappearCue").objectReferenceValue = Cue("SFX_Clown_Disappear");
             so.FindProperty("chaseLoopCue").objectReferenceValue = Cue("SFX_Clown_ChaseLoop");
             so.FindProperty("captureCue").objectReferenceValue = Cue("SFX_Clown_Capture");
+            so.FindProperty("chaseStartCue").objectReferenceValue = Cue("SFX_Clown_ChaseStart");
+            so.FindProperty("idleCue").objectReferenceValue = Cue("SFX_Clown_Idle");
+            so.FindProperty("footstepCue").objectReferenceValue = Cue("SFX_Clown_Footstep");
+            so.FindProperty("runFootstepCue").objectReferenceValue = Cue("SFX_Clown_Run");
             so.ApplyModifiedPropertiesWithoutUndo();
 
             PrefabUtility.SaveAsPrefabAsset(root, ClownPrefab);

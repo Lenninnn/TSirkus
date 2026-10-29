@@ -76,6 +76,23 @@ public class PlayerInstability : MonoBehaviour
         initialized = true;
     }
 
+    // PlayerSpawner asigna el ID real (SetPlayerId) después de Instantiate, así que en Awake todos
+    // valen 1 y los cuatro tomaban la barra de P1: el equilibrio de P1 decidía la caída de todos.
+    // En Start el ID ya es el definitivo.
+    private void Start()
+    {
+        if (playerIdentity == null)
+            return;
+
+        FindBalanceSystem();
+
+        if (balanceSystem != null)
+        {
+            initialized = true;
+            enabled = true;
+        }
+    }
+
     private void FindBalanceSystem()
     {
         BalanceSystem[] systems =
@@ -168,6 +185,18 @@ private void Update()
             $"{name}: participación en puzzle = {isParticipating}",
             this
         );
+    }
+
+    // Reintento de la carrera (todos cayeron): vuelve al estado inicial.
+    public void ResetForRetry()
+    {
+        isFallen = false;
+        instability = 0f;
+        exitCount = 0;
+        wasOutsideSafeZone = false;
+
+        if (balanceVisual != null)
+            balanceVisual.ResetFall();
     }
 
     private void Fall()

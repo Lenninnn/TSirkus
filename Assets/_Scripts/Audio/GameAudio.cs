@@ -35,6 +35,9 @@ public class GameAudio : MonoBehaviour
 
     public bool AmbiencePaused { get; private set; }
 
+    // El final del juego pausa el ambiente mientras dura (cinemática y créditos).
+    public bool ForcePauseAmbience { get; set; }
+
 
     private void Awake()
     {
@@ -61,7 +64,7 @@ public class GameAudio : MonoBehaviour
 
     private void Update()
     {
-        bool paused = false;
+        bool paused = ForcePauseAmbience;
 
         if (duckWhileVisible != null)
         {

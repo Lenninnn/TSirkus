@@ -8,6 +8,10 @@ public class ClownEncounterManager : MonoBehaviour
     [Tooltip("Tiempo total que tienen los jugadores para reaccionar.")]
     [SerializeField] private float reactionWindow = 3f;
 
+    [Tooltip("Al terminar la ventana sin que nadie lo vea: probabilidad de que aceche a un jugador que no lo miró. Si no, sigue rondando.")]
+    [Range(0f, 1f)]
+    [SerializeField] private float chaseChance = 0.35f;
+
     [Header("Referencias")]
     [SerializeField] private ClownSpawner clownSpawner;
 
@@ -181,6 +185,11 @@ public class ClownEncounterManager : MonoBehaviour
             if (player == null)
                 continue;
 
+            // Solo jugadores reales (con cámara): en GAME hay otros objetos con PlayerIdentity.
+            if (!player.isActiveAndEnabled ||
+                player.GetComponentInChildren<Camera>() == null)
+                continue;
+
             PlayerStateController stateController =
                 player.GetComponent<PlayerStateController>();
 
@@ -337,6 +346,20 @@ public class ClownEncounterManager : MonoBehaviour
         // --------------------------------------------------------
         // SELECCIONAR VÍCTIMA
         // --------------------------------------------------------
+
+        if (Random.value > chaseChance)
+        {
+            if (showDebugMessages)
+            {
+                Debug.Log(
+                    "[CLOWN ENCOUNTER] Nadie lo vio: esta vez solo ronda."
+                );
+            }
+
+            FinishLookPhase();
+
+            return;
+        }
 
         PlayerIdentity target =
             SelectCaptureTarget();

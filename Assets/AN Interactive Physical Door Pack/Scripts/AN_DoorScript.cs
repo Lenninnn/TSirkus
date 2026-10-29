@@ -46,9 +46,21 @@ public class AN_DoorScript : MonoBehaviour
 
     void Update()
     {
-        if ( !Remote && Input.GetKeyDown(KeyCode.E) && NearView() )
+        if ( !Remote && InteractPressed() && NearView() )
             Action();
         
+    }
+
+    // El proyecto usa solo el Input System: la API antigua lanza una excepción en cada frame.
+    static bool InteractPressed()
+    {
+#if ENABLE_LEGACY_INPUT_MANAGER
+        return Input.GetKeyDown(KeyCode.E);
+#elif ENABLE_INPUT_SYSTEM
+        return UnityEngine.InputSystem.Keyboard.current != null && UnityEngine.InputSystem.Keyboard.current.eKey.wasPressedThisFrame;
+#else
+        return false;
+#endif
     }
 
     public void Action() // void to open/close door
