@@ -6,6 +6,8 @@ public class PuzzleDoor : MonoBehaviour
     [Tooltip("Objeto visual de la puerta que será desactivado al abrir.")]
     [SerializeField] private GameObject doorVisual;
 
+    public GameObject DoorVisual => doorVisual;
+
     [Header("Payaso")]
     [Tooltip("Objeto que contiene el ClownSpawner.")]
     [SerializeField] private ClownSpawner clownSpawner;

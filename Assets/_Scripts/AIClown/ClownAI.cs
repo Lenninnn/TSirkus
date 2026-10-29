@@ -143,6 +143,13 @@ public class ClownAI : MonoBehaviour
             return;
         }
 
+        // Aparición ambiental: recorrido corto y lejano, sin acechar ni capturar.
+        if (IsAmbient)
+        {
+            UpdateAmbient();
+            return;
+        }
+
         // Alguien lo distingue a lo lejos: opcionalmente se queda quieto como una figura.
         if (freezeWhileWatchedFromAfar && IsObserved)
         {
@@ -210,6 +217,84 @@ public class ClownAI : MonoBehaviour
         if (spawner != null)
         {
             spawner.OnClownSeen(this, player);
+        }
+    }
+
+
+    // =========================================================
+    // APARICIÓN AMBIENTAL (antes de la primera puerta)
+    // =========================================================
+
+    // Recorrido: observa quieto → camina al primer punto → observa → se retira al último punto.
+    // Nunca acecha ni captura (SetTarget se ignora). El spawner lo quita al terminar.
+    public bool IsAmbient { get; private set; }
+    public bool AmbientFinished { get; private set; }
+
+    private Vector3[] ambientRoute;
+    private int ambientIndex;
+    private float ambientWait;
+    private float ambientMidWatch;
+    private bool ambientWalking;
+
+    public void BeginAmbient(Vector3[] route, float firstWatch, float midWatch)
+    {
+        IsAmbient = true;
+        AmbientFinished = false;
+        RoamingEnabled = false;
+        ambientRoute = route;
+        ambientIndex = 0;
+        ambientWait = firstWatch;
+        ambientMidWatch = midWatch;
+        ambientWalking = false;
+        currentTarget = null;
+        hasTarget = false;
+    }
+
+
+    private void UpdateAmbient()
+    {
+        if (ambientWait > 0f)
+        {
+            ambientWait -= Time.deltaTime;
+            Freeze();
+            FaceNearestPlayer();
+            return;
+        }
+
+        if (ambientRoute == null || ambientIndex >= ambientRoute.Length)
+        {
+            AmbientFinished = true;
+            Freeze();
+            return;
+        }
+
+        navMeshAgent.speed = roamSpeed;
+        navMeshAgent.isStopped = false;
+
+        if (!ambientWalking)
+        {
+            ambientWalking = navMeshAgent.SetDestination(ambientRoute[ambientIndex]);
+            stuckTimer = 0f;
+
+            if (!ambientWalking)
+                ambientIndex++;
+
+            return;
+        }
+
+        bool arrived = !navMeshAgent.pathPending &&
+                       navMeshAgent.remainingDistance <= navMeshAgent.stoppingDistance + 0.2f;
+
+        if (navMeshAgent.desiredVelocity.sqrMagnitude > 0.04f && navMeshAgent.velocity.sqrMagnitude < 0.01f)
+            stuckTimer += Time.deltaTime;
+        else
+            stuckTimer = 0f;
+
+        if (arrived || stuckTimer > 2f)
+        {
+            ambientWalking = false;
+            ambientIndex++;
+            ambientWait = ambientIndex < ambientRoute.Length ? ambientMidWatch : 0f;
         }
     }
 
@@ -315,6 +400,11 @@ public class ClownAI : MonoBehaviour
 
     public void SetTarget(Transform target)
     {
+        if (IsAmbient)
+        {
+            return;
+        }
+
         if (target == null)
         {
             Debug.LogWarning(

@@ -20978,6 +20978,8 @@ MonoBehaviour:
   nearestPointTolerance: 3
   firstAppearanceSpawnPoint: {fileID: 564046960}
   useSpecificFirstAppearancePoint: 1
+  firstAppearanceDelay: 2
+  maxWaitForObjective: 12
   startAutomatically: 0
   onlyOneClownAtATime: 1
   minimumTimeBetweenAppearances: 15
@@ -20991,6 +20993,15 @@ MonoBehaviour:
   randomCandidates: 24
   behindBias: 0.75
   unseenCheckDistance: 120
+  ambientBeforeFirstDoor: 1
+  ambientFirstDelay: {x: 20, y: 40}
+  ambientInterval: {x: 45, y: 90}
+  ambientDuration: {x: 14, y: 22}
+  ambientMinDistance: 25
+  ambientMaxDistance: 45
+  ambientWatchTime: {x: 2.5, y: 5}
+  ambientWalkDistance: {x: 6, y: 11}
+  interactionClearance: 4
   maxWaitToLeaveUnseen: 10
   vanishAfterCapture: 1.2
   useSpawnPointRotation: 1
@@ -47054,6 +47065,85 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &859033704
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 859033707}
+  - component: {fileID: 859033706}
+  - component: {fileID: 859033705}
+  m_Layer: 0
+  m_Name: FinalDelJuego
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &859033705
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 859033704}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cfd4bd0ad26844f7f83f4ac00e557594, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RaceWinnerDetector
+  raceStartManager: {fileID: 1285606875}
+  endingManager: {fileID: 859033706}
+  checksPerSecond: 10
+--- !u!114 &859033706
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 859033704}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e08caa5f530f3416e8bf9ceff1a5e483, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameEndingManager
+  endingClips:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  streamingFolder: Endings
+  fileNamePattern: Ending_Player{0}.mp4
+  prepareTimeout: 10
+  credits: {fileID: 11400000, guid: eb7b9feb489084403a3d04fd68c22a73, type: 2}
+  titleFont: {fileID: 11400000, guid: 9c300907500ef400da658810e227a287, type: 2}
+  bodyFont: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  winnerSprites:
+  - {fileID: 21300000, guid: 3e7253863eaf74322a838cabae93a7d1, type: 3}
+  - {fileID: 21300000, guid: a718b10c70f704454adf4c6ee1d35f22, type: 3}
+  - {fileID: 21300000, guid: 5ada3300b4f064f9f985653a98be5600, type: 3}
+  - {fileID: 21300000, guid: 7914d6a8f239e4620a5d8a1fddca0b11, type: 3}
+  creditsScrollSeconds: 22
+  fadeSeconds: 1.5
+  startSceneName: MainMenu_Mejorado
+--- !u!4 &859033707
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 859033704}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -47117,3 +47207,4 @@ SceneRoots:
   - {fileID: 1072349735}
   - {fileID: 819402957}
   - {fileID: 183985140}
+  - {fileID: 859033707}

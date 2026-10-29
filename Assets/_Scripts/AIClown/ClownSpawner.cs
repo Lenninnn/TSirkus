@@ -77,6 +77,32 @@ public class ClownSpawner : MonoBehaviour
     [Tooltip("No aparece donde alguna cámara vería cualquier parte del payaso hasta esta distancia.")]
     [SerializeField] private float unseenCheckDistance = 120f;
 
+    [Header("Apariciones ambientales (antes de la primera puerta)")]
+    [Tooltip("Desde el inicio de la partida hasta que se abre la primera puerta, el payaso aparece de vez en cuando a lo lejos, observa, camina un poco y se retira. No acecha ni captura.")]
+    [SerializeField] private bool ambientBeforeFirstDoor = true;
+
+    [Tooltip("Segundos desde el inicio hasta la primera aparición ambiental (aleatorio en el rango).")]
+    [SerializeField] private Vector2 ambientFirstDelay = new Vector2(20f, 40f);
+
+    [Tooltip("Pausa (s) entre apariciones ambientales, desde que se va hasta la siguiente.")]
+    [SerializeField] private Vector2 ambientInterval = new Vector2(45f, 90f);
+
+    [Tooltip("Duración máxima (s) de cada aparición ambiental.")]
+    [SerializeField] private Vector2 ambientDuration = new Vector2(14f, 22f);
+
+    [Tooltip("Distancia (m) al jugador más cercano. El mínimo es mayor que la distancia a la que desaparece al ser visto (22 m): así se le puede ver caminar.")]
+    [SerializeField] private float ambientMinDistance = 25f;
+    [SerializeField] private float ambientMaxDistance = 45f;
+
+    [Tooltip("Segundos quieto observando al aparecer y entre tramos.")]
+    [SerializeField] private Vector2 ambientWatchTime = new Vector2(2.5f, 5f);
+
+    [Tooltip("Largo (m) del tramo que camina antes de retirarse.")]
+    [SerializeField] private Vector2 ambientWalkDistance = new Vector2(6f, 11f);
+
+    [Tooltip("Nunca aparece ni camina a menos de esto (m) de interruptores, palancas o zonas de interacción.")]
+    [SerializeField] private float interactionClearance = 4f;
+
     [Header("Salida")]
     [Tooltip("Si al acabar su tiempo alguien lo mira de lejos, espera hasta esto (s) a que deje de mirarlo para irse.")]
     [SerializeField] private float maxWaitToLeaveUnseen = 10f;
@@ -103,6 +129,8 @@ public class ClownSpawner : MonoBehaviour
 
     private bool encounterActive;
     private Coroutine firstAppearanceRoutine;
+    private Coroutine ambientRoutine;
+    private bool lastAmbientFailed;
 
     public bool AppearancesEnabled => appearancesEnabled;
     public bool IsClownPresent => currentClown != null;
@@ -142,6 +170,340 @@ public class ClownSpawner : MonoBehaviour
         {
             EnableAppearances();
         }
+        else if (ambientBeforeFirstDoor)
+        {
+            BlockClosedDoors();
+            ambientRoutine = StartCoroutine(AmbientLoop());
+        }
+    }
+
+
+    // El NavMesh se horneó sin la puerta de la primera prueba (el payaso normal solo existe con
+    // ella abierta). Mientras está cerrada, un obstáculo invisible hijo de la puerta corta el
+    // NavMesh: el payaso ambiental no la atraviesa. Al abrirse, la puerta se desactiva y el
+    // obstáculo con ella. Solo en ejecución: la escena no cambia.
+    private static void BlockClosedDoors()
+    {
+        foreach (PuzzleDoor door in FindObjectsByType<PuzzleDoor>())
+        {
+            GameObject visual = door.DoorVisual;
+
+            if (visual == null || !visual.activeInHierarchy || visual.transform.Find("ClownDoorObstacle") != null)
+                continue;
+
+            Bounds bounds = new Bounds();
+            bool found = false;
+
+            foreach (Collider collider in visual.GetComponentsInChildren<Collider>())
+            {
+                if (collider.isTrigger) continue;
+                if (!found) { bounds = collider.bounds; found = true; }
+                else bounds.Encapsulate(collider.bounds);
+            }
+
+            if (!found)
+            {
+                foreach (Renderer renderer in visual.GetComponentsInChildren<Renderer>())
+                {
+                    if (!found) { bounds = renderer.bounds; found = true; }
+                    else bounds.Encapsulate(renderer.bounds);
+                }
+            }
+
+            if (!found)
+                continue;
+
+            var obstacleObject = new GameObject("ClownDoorObstacle");
+            obstacleObject.transform.SetParent(visual.transform, false);
+            obstacleObject.transform.SetPositionAndRotation(bounds.center, Quaternion.identity);
+            obstacleObject.transform.localScale = new Vector3(
+                1f / Mathf.Max(0.0001f, visual.transform.lossyScale.x),
+                1f / Mathf.Max(0.0001f, visual.transform.lossyScale.y),
+                1f / Mathf.Max(0.0001f, visual.transform.lossyScale.z));
+
+            NavMeshObstacle obstacle = obstacleObject.AddComponent<NavMeshObstacle>();
+            obstacle.shape = NavMeshObstacleShape.Box;
+            obstacle.size = bounds.size + new Vector3(0.6f, 0f, 0.6f);
+            obstacle.carving = true;
+            obstacle.carveOnlyStationary = true;
+        }
+    }
+
+
+    // =========================================================
+    // APARICIONES AMBIENTALES
+    // =========================================================
+
+    private IEnumerator AmbientLoop()
+    {
+        yield return new WaitForSeconds(Random.Range(ambientFirstDelay.x, ambientFirstDelay.y));
+
+        while (true)
+        {
+            bool spawned = currentClown == null && TrySpawnAmbient();
+            lastAmbientFailed = currentClown == null && !spawned;
+
+            if (spawned)
+            {
+                ClownAI clown = currentClown.GetComponent<ClownAI>();
+                float lifetime = Random.Range(ambientDuration.x, ambientDuration.y);
+                float elapsed = 0f;
+
+                while (currentClown != null && elapsed < lifetime && !clown.AmbientFinished)
+                {
+                    elapsed += Time.deltaTime;
+                    yield return null;
+                }
+
+                // Se va cuando nadie lo está mirando (como mucho maxWaitToLeaveUnseen).
+                float waited = 0f;
+
+                while (currentClown != null && clown.IsObserved && waited < maxWaitToLeaveUnseen)
+                {
+                    waited += Time.deltaTime;
+                    yield return null;
+                }
+
+                if (currentClown != null)
+                {
+                    Vanish("aparición ambiental: se retira");
+                }
+            }
+
+            // Sin punto visible (todos mirando a todos lados): reintenta antes.
+            float pause = currentClown == null && lastAmbientFailed
+                ? 8f
+                : Random.Range(ambientInterval.x, ambientInterval.y);
+            DebugLog($"Próxima aparición ambiental en aproximadamente {pause:F1} segundos.");
+            yield return new WaitForSeconds(pause);
+        }
+    }
+
+
+    private void StopAmbient()
+    {
+        if (ambientRoutine != null)
+        {
+            StopCoroutine(ambientRoutine);
+            ambientRoutine = null;
+        }
+
+        ClownAI clown = currentClown != null ? currentClown.GetComponent<ClownAI>() : null;
+
+        if (clown != null && clown.IsAmbient)
+        {
+            Vanish("termina la fase ambiental (se abrió la puerta)");
+        }
+    }
+
+
+    // Lejos (25-45 m: se le puede ver caminar sin que desaparezca), fuera de la vista de las 4
+    // cámaras al aparecer, preferiblemente con línea de visión libre hacia algún jugador (para que
+    // pueda verse al girarse), lejos de zonas de interacción y con un recorrido corto válido.
+    public bool TrySpawnAmbient()
+    {
+        if (clownPrefab == null || currentClown != null)
+        {
+            return false;
+        }
+
+        List<PlayerIdentity> players = ActivePlayers();
+
+        if (players.Count == 0)
+        {
+            return false;
+        }
+
+        List<Camera> cameras = new List<Camera>();
+
+        foreach (PlayerIdentity player in players)
+        {
+            cameras.Add(player.GetComponentInChildren<Camera>());
+        }
+
+        List<Vector3> interactions = InteractionPoints();
+        List<Vector3> visible = new List<Vector3>();
+
+        for (int i = 0; i < 120; i++)
+        {
+            PlayerIdentity player = players[Random.Range(0, players.Count)];
+            Vector2 offset = Random.insideUnitCircle.normalized * Random.Range(ambientMinDistance, ambientMaxDistance);
+            Vector3 candidate = player.transform.position + new Vector3(offset.x, 0f, offset.y);
+
+            if (!IsAmbientSpot(candidate, players, interactions, out Vector3 position))
+                continue;
+
+            Bounds body = new Bounds(position + Vector3.up * 1.5f, new Vector3(0.9f, 3f, 0.9f));
+
+            if (ClownVisibility.IsObservedByAny(cameras, body, unseenCheckDistance))
+                continue;
+
+            // Solo puntos que algún jugador vería si se girara: un payaso tras la puerta cerrada
+            // (o tras una pared) no asusta a nadie.
+            if (HasLineOfSightFromAnyPlayer(position, cameras))
+                visible.Add(position);
+        }
+
+        if (visible.Count == 0)
+        {
+            DebugLog("Aparición ambiental: ningún punto lejano visible ahora mismo.");
+            return false;
+        }
+
+        Vector3 spawn = visible[Random.Range(0, visible.Count)];
+
+        if (!BuildAmbientRoute(spawn, players, interactions, out Vector3[] route))
+        {
+            DebugLog("Aparición ambiental: sin recorrido válido desde el punto elegido.");
+            return false;
+        }
+
+        NearestPlayerDistance(spawn, out PlayerIdentity nearest);
+        Vector3 look = nearest.transform.position - spawn;
+        look.y = 0f;
+
+        if (!SpawnClownAt(spawn, look.sqrMagnitude > 0.01f ? Quaternion.LookRotation(look) : Quaternion.identity,
+                $"ambiental ({visible.Count} puntos visibles)"))
+        {
+            return false;
+        }
+
+        currentClown.GetComponent<ClownAI>().BeginAmbient(
+            route,
+            Random.Range(ambientWatchTime.x, ambientWatchTime.y),
+            Random.Range(ambientWatchTime.x, ambientWatchTime.y)
+        );
+
+        return true;
+    }
+
+
+    // Tramo corto de paseo y luego retirada alejándose del jugador más cercano.
+    private bool BuildAmbientRoute(Vector3 spawn, List<PlayerIdentity> players, List<Vector3> interactions, out Vector3[] route)
+    {
+        route = null;
+        NearestPlayerDistance(spawn, out PlayerIdentity nearest);
+        Vector3 away = spawn - nearest.transform.position;
+        away.y = 0f;
+        away.Normalize();
+
+        Vector3 walk = Vector3.zero;
+        bool hasWalk = false;
+
+        for (int i = 0; i < 20 && !hasWalk; i++)
+        {
+            // Paseo de lado respecto a los jugadores (cruza su campo de visión a lo lejos).
+            Vector3 side = Quaternion.Euler(0f, Random.value < 0.5f ? 90f : -90f, 0f) * away;
+            Vector3 direction = Vector3.Slerp(side, away, Random.Range(0f, 0.4f)).normalized;
+            hasWalk = IsAmbientSpot(spawn + direction * Random.Range(ambientWalkDistance.x, ambientWalkDistance.y),
+                players, interactions, out walk) && IsReachable(spawn, walk);
+        }
+
+        if (!hasWalk)
+        {
+            return false;
+        }
+
+        Vector3 exit = walk;
+
+        for (int i = 0; i < 20; i++)
+        {
+            Vector3 direction = Quaternion.Euler(0f, Random.Range(-50f, 50f), 0f) * away;
+
+            if (IsAmbientSpot(walk + direction * Random.Range(6f, 10f), players, interactions, out Vector3 candidate) &&
+                IsReachable(walk, candidate))
+            {
+                exit = candidate;
+                break;
+            }
+        }
+
+        route = new[] { walk, exit };
+        return true;
+    }
+
+
+    private bool IsAmbientSpot(Vector3 candidate, List<PlayerIdentity> players, List<Vector3> interactions, out Vector3 position)
+    {
+        position = candidate;
+
+        if (!NavMesh.SamplePosition(candidate, out NavMeshHit hit, 2f, NavMesh.AllAreas))
+            return false;
+
+        position = hit.position;
+        float distance = NearestPlayerDistance(position, out PlayerIdentity nearest);
+
+        if (nearest == null || distance < ambientMinDistance - 2f || distance > ambientMaxDistance + 5f)
+            return false;
+
+        if (Mathf.Abs(position.y - nearest.transform.position.y) > 2.5f)
+            return false;
+
+        foreach (Vector3 interaction in interactions)
+        {
+            if (Vector3.Distance(position, interaction) < interactionClearance)
+                return false;
+        }
+
+        if (Physics.CheckCapsule(position + Vector3.up * 0.6f, position + Vector3.up * 2.6f, 0.35f,
+                Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
+            return false;
+
+        return NavMesh.SamplePosition(nearest.transform.position, out NavMeshHit playerHit, 2f, NavMesh.AllAreas) &&
+               IsReachable(position, playerHit.position);
+    }
+
+
+    private static bool IsReachable(Vector3 from, Vector3 to)
+    {
+        NavMeshPath path = new NavMeshPath();
+        return NavMesh.CalculatePath(from, to, NavMesh.AllAreas, path) && path.status == NavMeshPathStatus.PathComplete;
+    }
+
+
+    // ¿Algún jugador lo vería si se girara? (línea libre desde su cámara al pecho del payaso).
+    private static bool HasLineOfSightFromAnyPlayer(Vector3 position, List<Camera> cameras)
+    {
+        Vector3 chest = position + Vector3.up * 1.8f;
+
+        foreach (Camera camera in cameras)
+        {
+            Vector3 origin = camera.transform.position;
+            Vector3 toChest = chest - origin;
+            RaycastHit[] hits = Physics.RaycastAll(origin, toChest.normalized, toChest.magnitude - 0.1f,
+                Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+
+            bool blocked = false;
+
+            foreach (RaycastHit hit in hits)
+            {
+                if (hit.transform.root != camera.transform.root)
+                {
+                    blocked = true;
+                    break;
+                }
+            }
+
+            if (!blocked)
+                return true;
+        }
+
+        return false;
+    }
+
+
+    // Interruptores, palancas y disparadores de pruebas: el payaso ambiental no se acerca.
+    private static List<Vector3> InteractionPoints()
+    {
+        List<Vector3> points = new List<Vector3>();
+
+        foreach (MonoBehaviour behaviour in FindObjectsByType<MonoBehaviour>())
+        {
+            if (behaviour is IInteractable || behaviour is PlayerPuzzleTrigger || behaviour is FlashlightPuzzleRoomTrigger)
+                points.Add(behaviour.transform.position);
+        }
+
+        return points;
     }
 
     // =========================================================
@@ -194,6 +556,7 @@ public class ClownSpawner : MonoBehaviour
     public void DisableAppearances()
     {
         appearancesEnabled = false;
+        StopAmbient();
 
         if (appearanceCoroutine != null)
         {
@@ -244,6 +607,9 @@ public class ClownSpawner : MonoBehaviour
         {
             return;
         }
+
+        // Se abrió la puerta: terminan las apariciones ambientales y empieza el sistema normal.
+        StopAmbient();
 
         firstAppearanceRoutine = StartCoroutine(FirstAppearanceWhenReady());
     }
