@@ -1,0 +1,2 @@
+Puertas, estructuras, mecanismos del mapa.
+Nombre: SFX_[Sistema]_[Acción]_[NN] / AMB_[Zona]_[NN]. Ver Assets/SFX/LEEME_AUDIO.md

@@ -1,0 +1,2 @@
+Golpes de tensión globales (peligro, revelaciones).
+Nombre: SFX_[Sistema]_[Acción]_[NN] / AMB_[Zona]_[NN]. Ver Assets/SFX/LEEME_AUDIO.md

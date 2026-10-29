@@ -243,15 +243,15 @@ RectTransform:
   m_GameObject: {fileID: 4408114918402849282}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.68, y: 0.6536965, z: 0.6536965}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 1982422825206557699}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 109, y: 299}
-  m_SizeDelta: {x: 100, y: 100}
+  m_AnchorMin: {x: 0, y: 0.5}
+  m_AnchorMax: {x: 0, y: 0.5}
+  m_AnchoredPosition: {x: 105, y: 45}
+  m_SizeDelta: {x: 162, y: 54}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &3231988142219820004
 CanvasRenderer:
@@ -281,9 +281,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 3288300582778825373, guid: 6baae10377fa29748acdeb6ad971b18d, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 3e7253863eaf74322a838cabae93a7d1, type: 3}
   m_Type: 0
-  m_PreserveAspect: 0
+  m_PreserveAspect: 1
   m_FillCenter: 1
   m_FillMethod: 4
   m_FillAmount: 1
@@ -445,15 +445,15 @@ RectTransform:
   m_GameObject: {fileID: 7743957258102176561}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.68, y: 0.6536965, z: 0.6536965}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 1982422825206557699}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 109.00003, y: 50}
-  m_SizeDelta: {x: 100, y: 100}
+  m_AnchoredPosition: {x: 105, y: 45}
+  m_SizeDelta: {x: 162, y: 54}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5161944343299532721
 CanvasRenderer:
@@ -483,9 +483,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -8473111917198072275, guid: 630d503366684364a8f58ebcdd13f6e7, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 5ada3300b4f064f9f985653a98be5600, type: 3}
   m_Type: 0
-  m_PreserveAspect: 0
+  m_PreserveAspect: 1
   m_FillCenter: 1
   m_FillMethod: 4
   m_FillAmount: 1
@@ -520,15 +520,15 @@ RectTransform:
   m_GameObject: {fileID: 8247975502377733607}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.68, y: 0.6536965, z: 0.6536965}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 1982422825206557699}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 664, y: 50}
-  m_SizeDelta: {x: 100, y: 100}
+  m_AnchorMin: {x: 0.5, y: 0}
+  m_AnchorMax: {x: 0.5, y: 0}
+  m_AnchoredPosition: {x: 105, y: 45}
+  m_SizeDelta: {x: 162, y: 54}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2821203917052160373
 CanvasRenderer:
@@ -558,9 +558,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 1826737631506886542, guid: 2184a7bbe8bd3e944843671e68fa68ec, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 7914d6a8f239e4620a5d8a1fddca0b11, type: 3}
   m_Type: 0
-  m_PreserveAspect: 0
+  m_PreserveAspect: 1
   m_FillCenter: 1
   m_FillMethod: 4
   m_FillAmount: 1
@@ -595,15 +595,15 @@ RectTransform:
   m_GameObject: {fileID: 8427915505091448871}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.68, y: 0.6536965, z: 0.6536965}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 1982422825206557699}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 664, y: 303}
-  m_SizeDelta: {x: 100, y: 100}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 105, y: 45}
+  m_SizeDelta: {x: 162, y: 54}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2786600112551901267
 CanvasRenderer:
@@ -633,9 +633,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 72457181261283318, guid: 616bb20c85c435e4dafcfeedf3e9f5b2, type: 3}
+  m_Sprite: {fileID: 21300000, guid: a718b10c70f704454adf4c6ee1d35f22, type: 3}
   m_Type: 0
-  m_PreserveAspect: 0
+  m_PreserveAspect: 1
   m_FillCenter: 1
   m_FillMethod: 4
   m_FillAmount: 1
@@ -718,6 +718,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 58fcf2f9fb82f45048c64e514ddaf0bf, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2630781182217721558}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 58fcf2f9fb82f45048c64e514ddaf0bf, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7966675815318225437}
   m_SourcePrefab: {fileID: 100100000, guid: 58fcf2f9fb82f45048c64e514ddaf0bf, type: 3}
 --- !u!4 &298997139394720106 stripped
 Transform:
@@ -744,9 +747,28 @@ MonoBehaviour:
   animator: {fileID: 5964574074700507920}
   movingRoot: {fileID: 0}
   speedDampTime: 0.08
+  stopThreshold: 0.15
   maxPlausibleSpeed: 15
   walkClipSpeed: 6.741
   walkSpeedMultiplierRange: {x: 0.5, y: 1.5}
+--- !u!114 &7966675815318225437
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1111704099076352976}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb675cefcfa744cec9475ef8c0c5f035, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerFootsteps
+  animator: {fileID: 5964574074700507920}
+  footstepCue: {fileID: 11400000, guid: cdaf2bcdadea54e87924be566e133099, type: 2}
+  stepPhases:
+  - 0.050000012
+  - 0.55
+  ownLevel: 0.6
 --- !u!95 &5964574074700507920 stripped
 Animator:
   m_CorrespondingSourceObject: {fileID: 5866666021909216657, guid: 58fcf2f9fb82f45048c64e514ddaf0bf, type: 3}
@@ -827,6 +849,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 16ee768c9760f43fd886186d169ec2bd, type: 3}
       insertIndex: -1
       addedObject: {fileID: 3298074673318651153}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 16ee768c9760f43fd886186d169ec2bd, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3921297605777321567}
   m_SourcePrefab: {fileID: 100100000, guid: 16ee768c9760f43fd886186d169ec2bd, type: 3}
 --- !u!4 &1500185157292628881 stripped
 Transform:
@@ -853,9 +878,28 @@ MonoBehaviour:
   animator: {fileID: 4769759125452112363}
   movingRoot: {fileID: 0}
   speedDampTime: 0.08
+  stopThreshold: 0.15
   maxPlausibleSpeed: 15
   walkClipSpeed: 5.850111
   walkSpeedMultiplierRange: {x: 0.5, y: 1.5}
+--- !u!114 &3921297605777321567
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2277250069194195243}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb675cefcfa744cec9475ef8c0c5f035, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerFootsteps
+  animator: {fileID: 4769759125452112363}
+  footstepCue: {fileID: 11400000, guid: cdaf2bcdadea54e87924be566e133099, type: 2}
+  stepPhases:
+  - 0.35
+  - 0.85
+  ownLevel: 0.6
 --- !u!95 &4769759125452112363 stripped
 Animator:
   m_CorrespondingSourceObject: {fileID: 5866666021909216657, guid: 16ee768c9760f43fd886186d169ec2bd, type: 3}
@@ -1037,6 +1081,9 @@ PrefabInstance:
       addedObject: {fileID: 2672307765870172632}
     - targetCorrespondingSourceObject: {fileID: 1325742115653950934, guid: 115a87dd1fa0e479a9c7e5e62d924f67, type: 3}
       insertIndex: -1
+      addedObject: {fileID: 7932680278769796404}
+    - targetCorrespondingSourceObject: {fileID: 1325742115653950934, guid: 115a87dd1fa0e479a9c7e5e62d924f67, type: 3}
+      insertIndex: -1
       addedObject: {fileID: 7445091549245132546}
     - targetCorrespondingSourceObject: {fileID: 1325742115653950934, guid: 115a87dd1fa0e479a9c7e5e62d924f67, type: 3}
       insertIndex: -1
@@ -1113,6 +1160,22 @@ MonoBehaviour:
   lookDistance: 100
   showDebugRay: 1
   showDebugMessages: 1
+--- !u!114 &7932680278769796404
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1030736136841999196}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5f0ef466d26f42c790e37a13518072a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerEventAudio
+  capturedCue: {fileID: 11400000, guid: f8386137c7a844d0d9b147448b862987, type: 2}
+  capturedStingCue: {fileID: 11400000, guid: 3ccd820535776438ab31c53a3d0df100, type: 2}
+  rescuedCue: {fileID: 11400000, guid: b8d8e808256c442c8805c481f37784c9, type: 2}
+  ticketPickupCue: {fileID: 11400000, guid: ee66ceea764ca48a086ba6bc641cc2c2, type: 2}
 --- !u!114 &7445091549245132546
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1287,6 +1350,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 227c5d4a03d9144dbb7dd3dee06d343b, type: 3}
       insertIndex: -1
       addedObject: {fileID: 8600145847211865846}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 227c5d4a03d9144dbb7dd3dee06d343b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2428439409813696788}
   m_SourcePrefab: {fileID: 100100000, guid: 227c5d4a03d9144dbb7dd3dee06d343b, type: 3}
 --- !u!95 &1460992059645914476 stripped
 Animator:
@@ -1318,9 +1384,28 @@ MonoBehaviour:
   animator: {fileID: 1460992059645914476}
   movingRoot: {fileID: 0}
   speedDampTime: 0.08
+  stopThreshold: 0.15
   maxPlausibleSpeed: 15
   walkClipSpeed: 3.998994
   walkSpeedMultiplierRange: {x: 0.5, y: 1.5}
+--- !u!114 &2428439409813696788
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5327055708990074284}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb675cefcfa744cec9475ef8c0c5f035, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerFootsteps
+  animator: {fileID: 1460992059645914476}
+  footstepCue: {fileID: 11400000, guid: cdaf2bcdadea54e87924be566e133099, type: 2}
+  stepPhases:
+  - 0.46666667
+  - 0.9666667
+  ownLevel: 0.6
 --- !u!1001 &5968818627810093401
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1396,6 +1481,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: e4068d363d0714e5abbce1f76bab9eb8, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1173950447637502048}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: e4068d363d0714e5abbce1f76bab9eb8, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 478693102366484114}
   m_SourcePrefab: {fileID: 100100000, guid: e4068d363d0714e5abbce1f76bab9eb8, type: 3}
 --- !u!95 &269957880383952072 stripped
 Animator:
@@ -1427,6 +1515,25 @@ MonoBehaviour:
   animator: {fileID: 269957880383952072}
   movingRoot: {fileID: 0}
   speedDampTime: 0.08
+  stopThreshold: 0.15
   maxPlausibleSpeed: 15
   walkClipSpeed: 4.5367255
   walkSpeedMultiplierRange: {x: 0.5, y: 1.5}
+--- !u!114 &478693102366484114
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6779299779036304392}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb675cefcfa744cec9475ef8c0c5f035, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerFootsteps
+  animator: {fileID: 269957880383952072}
+  footstepCue: {fileID: 11400000, guid: cdaf2bcdadea54e87924be566e133099, type: 2}
+  stepPhases:
+  - 0.03333336
+  - 0.53333336
+  ownLevel: 0.6
