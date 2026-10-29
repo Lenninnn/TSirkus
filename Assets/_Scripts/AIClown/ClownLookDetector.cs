@@ -57,10 +57,10 @@ public class ClownLookDetector : MonoBehaviour
     // UPDATE
     // ============================================================
 
-    private void Update()
+    /*private void Update()
     {
         DetectClown();
-    }
+    }*/
 
     // ============================================================
     // DETECCIÓN
