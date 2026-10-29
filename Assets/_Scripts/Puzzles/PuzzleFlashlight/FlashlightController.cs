@@ -1,5 +1,26 @@
 using UnityEngine;
 
+// Linterna de UN jugador, apuntada inclinando su celular.
+//
+// DATOS QUE LLEGAN (MobileInputManager.GetAccelerometer):
+// accelerationIncludingGravity del navegador, en m/s², ejes del teléfono:
+// x = derecha de la pantalla, y = arriba de la pantalla, z = sale de la pantalla.
+// Con el teléfono quieto el vector es la gravedad (|a| ≈ 9.81) y su dirección dice cómo está
+// inclinado. Algunos teléfonos lo entregan con TODOS los signos invertidos.
+//
+// CÓMO SE INTERPRETA:
+// 1. Calibración: al activar la linterna se promedia la dirección del vector durante
+//    calibrationTime. Esa postura (la que tenga el jugador) pasa a ser "neutral".
+// 2. Filtro: se suaviza el vector para quitar el temblor de la mano; los tirones (|a| lejos de
+//    la gravedad calibrada) casi no cuentan, así un movimiento brusco no hace saltar el haz.
+// 3. Ángulos reales del teléfono respecto a la neutral, independientes de la postura y de la
+//    convención de signos del teléfono:
+//    - arriba/abajo: giro alrededor del eje x del teléfono = cambio de atan2(y, z).
+//    - izquierda/derecha: inclinación hacia el borde derecho/izquierdo = atan2(-x, |yz|),
+//      con el signo fijado por la postura neutral (así no se invierte en teléfonos con signos
+//      invertidos).
+// 4. Zona muerta continua (sin saltos), ganancia en grados de linterna por grado de teléfono,
+//    límites y suavizado final independiente del framerate.
 public class FlashlightController : MonoBehaviour
 {
     // =========================================================
@@ -31,27 +52,52 @@ public class FlashlightController : MonoBehaviour
 
 
     // =========================================================
-    // ROTATION
+    // APUNTADO
     // =========================================================
 
-    [Header("Rotation")]
-    [SerializeField] private float horizontalSensitivity = 35f;
+    [Header("Apuntado (grados de linterna por grado de teléfono)")]
+    [Tooltip("1.5: con ±30° de muñeca (rango cómodo) el haz recorre ±45°.")]
+    [SerializeField] private float horizontalGain = 1.5f;
 
-    [SerializeField] private float verticalSensitivity = 35f;
+    [SerializeField] private float verticalGain = 1.5f;
 
-    [SerializeField] private float maxHorizontalAngle = 75f;
+    [Tooltip("Solo si con el teléfono real el haz va al revés.")]
+    [SerializeField] private bool invertHorizontal = false;
 
-    [SerializeField] private float minVerticalAngle = -60f;
+    [SerializeField] private bool invertVertical = false;
 
-    [SerializeField] private float maxVerticalAngle = 60f;
+    [Tooltip("Grados que el haz apunta hacia arriba en la postura neutral.")]
+    [SerializeField] private float neutralUpAngle = 0f;
 
 
     // =========================================================
-    // SMOOTHING
+    // LÍMITES
     // =========================================================
 
-    [Header("Smoothing")]
-    [SerializeField] private float rotationSmoothSpeed = 10f;
+    [Header("Límites del haz (grados)")]
+    [SerializeField] private float horizontalLimit = 60f;
+
+    [SerializeField] private float upLimit = 40f;
+
+    [SerializeField] private float downLimit = 30f;
+
+
+    // =========================================================
+    // ZONA MUERTA Y FILTROS
+    // =========================================================
+
+    [Header("Zona muerta y filtros")]
+    [Tooltip("Grados de teléfono ignorados alrededor de la neutral. Sin salto al salir de ella.")]
+    [SerializeField] private float deadZoneDegrees = 1.5f;
+
+    [Tooltip("Constante de tiempo del filtro del sensor (s). 0.06 s = corte ~2.7 Hz: quita el temblor (8-12 Hz) y deja pasar el movimiento intencional (< 2 Hz).")]
+    [SerializeField] private float sensorSmoothTime = 0.06f;
+
+    [Tooltip("Constante de tiempo del suavizado del haz (s).")]
+    [SerializeField] private float aimSmoothTime = 0.06f;
+
+    [Tooltip("Desviación de |a| respecto a la gravedad (fracción) a partir de la cual la muestra casi no cuenta. 0.15 = 1.5 m/s²: girar la muñeca no la alcanza, un tirón de la mano sí.")]
+    [SerializeField] private float shakeTolerance = 0.15f;
 
 
     // =========================================================
@@ -61,13 +107,17 @@ public class FlashlightController : MonoBehaviour
     [Header("Calibration")]
     [SerializeField] private bool autoCalibrate = true;
 
+    [Tooltip("Segundos de datos que se promedian para fijar la postura neutral.")]
+    [SerializeField] private float calibrationTime = 0.4f;
 
-    // =========================================================
-    // ACCELEROMETER DEAD ZONE
-    // =========================================================
+    [Tooltip("Si una lectura se aparta más que esto (grados) del promedio, el teléfono se está moviendo y la calibración vuelve a empezar.")]
+    [SerializeField] private float calibrationStillAngle = 4f;
 
-    [Header("Accelerometer Dead Zone")]
-    [SerializeField] private float accelerometerDeadZone = 0.10f;
+    [Tooltip("Tras este tiempo (s) se acepta la postura aunque el teléfono no esté quieto.")]
+    [SerializeField] private float calibrationMaxWait = 2f;
+
+    [Tooltip("Lecturas con |a| menor se consideran 'sin datos' (el servidor envía ceros al conectar).")]
+    [SerializeField] private float minValidMagnitude = 0.3f;
 
 
     // =========================================================
@@ -98,14 +148,32 @@ public class FlashlightController : MonoBehaviour
     // CALIBRACIÓN
     // =========================================================
 
-    private Vector3 initialAccelerometer;
-
     private bool calibrated = false;
+
+    private Vector3 calibrationSum;
+
+    private float calibrationMagnitudeSum;
+
+    private int calibrationSamples;
+
+    private float calibrationTimer;
+
+    private float calibrationWait;
+
+    private float neutralMagnitude;
+
+    private Vector3 neutralPlaneAxis;
+
+    private float neutralPitch;
+
+    private float neutralSide;
 
 
     // =========================================================
     // ROTATION
     // =========================================================
+
+    private Vector3 filteredAcceleration;
 
     private float currentHorizontal;
 
@@ -123,6 +191,13 @@ public class FlashlightController : MonoBehaviour
     private float debugTimer;
 
 
+    // Ángulos del teléfono respecto a la neutral (x = derecha, y = arriba), en grados.
+    public Vector2 PhoneAngles { get; private set; }
+
+    // Ángulos actuales del haz respecto al cuerpo (x = derecha, y = arriba), en grados.
+    public Vector2 BeamAngles => new Vector2(currentHorizontal, currentVertical);
+
+
     // =========================================================
     // UNITY
     // =========================================================
@@ -133,7 +208,6 @@ public class FlashlightController : MonoBehaviour
             $"🔦 [FLASHLIGHT] Awake -> {gameObject.name}"
         );
 
-
         // ---------------------------------------------------------
         // PIVOT
         // ---------------------------------------------------------
@@ -143,7 +217,6 @@ public class FlashlightController : MonoBehaviour
             flashlightPivot =
                 transform;
 
-
             Debug.Log(
                 $"🔦 [FLASHLIGHT] " +
                 $"No se asignó Pivot. " +
@@ -151,14 +224,12 @@ public class FlashlightController : MonoBehaviour
             );
         }
 
-
         // ---------------------------------------------------------
         // PLAYER IDENTITY
         // ---------------------------------------------------------
 
         playerIdentity =
             FindPlayerIdentity();
-
 
         // ---------------------------------------------------------
         // ESTADO INICIAL
@@ -168,8 +239,7 @@ public class FlashlightController : MonoBehaviour
 
         SetLightEnabled(false);
 
-        ResetRotation();
-
+        ResetAim();
 
         // ---------------------------------------------------------
         // INTENTAR ID
@@ -185,14 +255,8 @@ public class FlashlightController : MonoBehaviour
             $"🔦 [FLASHLIGHT] Start -> {gameObject.name}"
         );
 
-
-        // ---------------------------------------------------------
-        // MOBILE INPUT
-        // ---------------------------------------------------------
-
         mobileInput =
-            FindObjectOfType<MobileInputManager>();
-
+            FindAnyObjectByType<MobileInputManager>();
 
         if (mobileInput == null)
         {
@@ -204,19 +268,7 @@ public class FlashlightController : MonoBehaviour
             return;
         }
 
-
-        Debug.Log(
-            "🔦 [FLASHLIGHT] " +
-            "MobileInputManager encontrado."
-        );
-
-
-        // ---------------------------------------------------------
-        // PLAYER ID
-        // ---------------------------------------------------------
-
         TrySyncPlayerId();
-
 
         if (!playerIdAssigned)
         {
@@ -237,53 +289,14 @@ public class FlashlightController : MonoBehaviour
 
     private void Update()
     {
-        // ---------------------------------------------------------
-        // ACTUALIZAR PLAYER ID
-        // ---------------------------------------------------------
-
         TrySyncPlayerId();
 
-
-        if (mobileInput == null)
+        if (mobileInput == null || !playerIdAssigned || !flashlightActive)
         {
             return;
         }
 
-
-        // ---------------------------------------------------------
-        // ESPERAR ID
-        // ---------------------------------------------------------
-
-        if (!playerIdAssigned)
-        {
-            DebugLog(
-                $"🔦 [FLASHLIGHT] " +
-                $"Esperando Player ID -> {gameObject.name}"
-            );
-
-            return;
-        }
-
-
-        // ---------------------------------------------------------
-        // LINTERNA APAGADA
-        // ---------------------------------------------------------
-
-        if (!flashlightActive)
-        {
-            return;
-        }
-
-
-        // ---------------------------------------------------------
-        // PLAYER CONECTADO
-        // ---------------------------------------------------------
-
-        if (
-            !mobileInput.IsPlayerConnected(
-                playerId
-            )
-        )
+        if (!mobileInput.IsPlayerConnected(playerId))
         {
             DebugLog(
                 $"🔦 [FLASHLIGHT] " +
@@ -293,150 +306,321 @@ public class FlashlightController : MonoBehaviour
             return;
         }
 
-
-        // ---------------------------------------------------------
-        // ACELERÓMETRO
-        // ---------------------------------------------------------
-
         Vector3 accelerometer =
             mobileInput.GetAccelerometer(
                 playerId
             );
 
+        float magnitude =
+            accelerometer.magnitude;
 
-        DebugLog(
-            $"🔦 [P{playerId}] Accelerometer -> " +
-            $"X: {accelerometer.x:F2} | " +
-            $"Y: {accelerometer.y:F2} | " +
-            $"Z: {accelerometer.z:F2}"
-        );
+        // ---------------------------------------------------------
+        // SIN DATOS (ceros tras conectar, o el teléfono aún no envía):
+        // el haz se queda donde está y no se calibra con ceros.
+        // ---------------------------------------------------------
 
+        if (magnitude < minValidMagnitude)
+        {
+            DebugLog(
+                $"🔦 [P{playerId}] Esperando datos del acelerómetro..."
+            );
+
+            return;
+        }
 
         // ---------------------------------------------------------
         // CALIBRACIÓN
         // ---------------------------------------------------------
 
-        if (
-            autoCalibrate &&
-            !calibrated
-        )
-        {
-            Calibrate(
-                accelerometer
-            );
-        }
-
-
         if (!calibrated)
         {
+            if (autoCalibrate)
+            {
+                AccumulateCalibration(
+                    accelerometer
+                );
+            }
+
             return;
         }
 
-
         // ---------------------------------------------------------
-        // DELTA
-        // ---------------------------------------------------------
-
-        Vector3 delta =
-            accelerometer -
-            initialAccelerometer;
-
-
-        // ---------------------------------------------------------
-        // DEAD ZONE
+        // FILTRO DEL SENSOR (con rechazo de sacudidas)
         // ---------------------------------------------------------
 
-        if (
-            Mathf.Abs(delta.x) <
-            accelerometerDeadZone
-        )
-        {
-            delta.x = 0f;
-        }
+        float shake =
+            Mathf.Abs(magnitude - neutralMagnitude) /
+            Mathf.Max(0.0001f, neutralMagnitude);
 
+        float trust =
+            Mathf.Clamp(
+                1f - shake / Mathf.Max(0.0001f, shakeTolerance),
+                0.05f,
+                1f
+            );
 
-        if (
-            Mathf.Abs(delta.y) <
-            accelerometerDeadZone
-        )
-        {
-            delta.y = 0f;
-        }
-
+        filteredAcceleration =
+            Vector3.Lerp(
+                filteredAcceleration,
+                accelerometer,
+                Blend(sensorSmoothTime) * trust
+            );
 
         // ---------------------------------------------------------
-        // HORIZONTAL
+        // ÁNGULOS DEL TELÉFONO RESPECTO A LA NEUTRAL
+        // ---------------------------------------------------------
+
+        Vector2 phone =
+            PhoneAnglesFrom(
+                filteredAcceleration
+            );
+
+        float side =
+            phone.x - neutralSide;
+
+        float pitch =
+            Mathf.DeltaAngle(
+                neutralPitch,
+                phone.y
+            );
+
+        PhoneAngles =
+            new Vector2(side, pitch);
+
+        // ---------------------------------------------------------
+        // ZONA MUERTA + GANANCIA + LÍMITES
         // ---------------------------------------------------------
 
         targetHorizontal =
-            delta.x *
-            horizontalSensitivity;
-
-
-        targetHorizontal =
             Mathf.Clamp(
-                targetHorizontal,
-                -maxHorizontalAngle,
-                maxHorizontalAngle
+                ApplyDeadZone(side) * horizontalGain * (invertHorizontal ? -1f : 1f),
+                -horizontalLimit,
+                horizontalLimit
             );
-
-
-        // ---------------------------------------------------------
-        // VERTICAL
-        // ---------------------------------------------------------
-
-        targetVertical =
-            -delta.y *
-            verticalSensitivity;
-
 
         targetVertical =
             Mathf.Clamp(
-                targetVertical,
-                minVerticalAngle,
-                maxVerticalAngle
+                ApplyDeadZone(pitch) * verticalGain * (invertVertical ? -1f : 1f),
+                -downLimit,
+                upLimit
             );
 
+        // ---------------------------------------------------------
+        // SUAVIZADO DEL HAZ
+        // ---------------------------------------------------------
 
-        // ---------------------------------------------------------
-        // SMOOTH
-        // ---------------------------------------------------------
+        float blend =
+            Blend(aimSmoothTime);
 
         currentHorizontal =
             Mathf.Lerp(
                 currentHorizontal,
                 targetHorizontal,
-                rotationSmoothSpeed *
-                Time.deltaTime
+                blend
             );
-
 
         currentVertical =
             Mathf.Lerp(
                 currentVertical,
                 targetVertical,
-                rotationSmoothSpeed *
-                Time.deltaTime
+                blend
             );
 
+        ApplyRotation();
 
-        // ---------------------------------------------------------
-        // ROTACIÓN
-        // ---------------------------------------------------------
+        DebugLog(
+            $"🔦 [P{playerId}] Teléfono -> " +
+            $"lado: {side:F1}° | arriba: {pitch:F1}° " +
+            $"=> Haz -> derecha: {currentHorizontal:F1}° | arriba: {currentVertical:F1}°"
+        );
+    }
 
+
+    // =========================================================
+    // MATEMÁTICA DEL SENSOR
+    // =========================================================
+
+    // x = inclinación lateral (+ derecha), y = rotación alrededor del eje x del teléfono
+    // (+ la parte trasera apunta más arriba). Grados.
+    private Vector2 PhoneAnglesFrom(
+        Vector3 acceleration
+    )
+    {
+        float pitch =
+            Mathf.Atan2(
+                acceleration.y,
+                acceleration.z
+            ) * Mathf.Rad2Deg;
+
+        // El signo de la componente en el plano yz (respecto al eje fijado al calibrar)
+        // compensa a los teléfonos que entregan todos los signos invertidos.
+        float planeSign =
+            Vector3.Dot(acceleration, neutralPlaneAxis) >= 0f ? 1f : -1f;
+
+        float side =
+            Mathf.Atan2(
+                -acceleration.x * planeSign,
+                new Vector2(acceleration.y, acceleration.z).magnitude
+            ) * Mathf.Rad2Deg;
+
+        return new Vector2(side, pitch);
+    }
+
+
+    // Zona muerta continua: dentro vale 0 y fuera resta su ancho (no hay salto en el borde).
+    private float ApplyDeadZone(
+        float degrees
+    )
+    {
+        float magnitude =
+            Mathf.Max(0f, Mathf.Abs(degrees) - deadZoneDegrees);
+
+        return Mathf.Sign(degrees) * magnitude;
+    }
+
+
+    // Mezcla exponencial independiente del framerate.
+    private static float Blend(
+        float smoothTime
+    )
+    {
+        if (smoothTime <= 0f)
+        {
+            return 1f;
+        }
+
+        return 1f - Mathf.Exp(-Time.deltaTime / smoothTime);
+    }
+
+
+    // Promedia la postura mientras el teléfono está quieto (los jugadores pueden venir caminando
+    // cuando empieza la prueba).
+    private void AccumulateCalibration(
+        Vector3 accelerometer
+    )
+    {
+        Vector3 direction =
+            accelerometer.normalized;
+
+        calibrationWait +=
+            Time.deltaTime;
+
+        if (
+            calibrationSamples >= 3 &&
+            calibrationWait < calibrationMaxWait &&
+            Vector3.Angle(direction, calibrationSum) > calibrationStillAngle
+        )
+        {
+            calibrationSum = Vector3.zero;
+            calibrationMagnitudeSum = 0f;
+            calibrationSamples = 0;
+            calibrationTimer = 0f;
+        }
+
+        calibrationSum +=
+            direction;
+
+        calibrationMagnitudeSum +=
+            accelerometer.magnitude;
+
+        calibrationSamples++;
+
+        calibrationTimer +=
+            Time.deltaTime;
+
+        if (calibrationTimer < calibrationTime)
+        {
+            return;
+        }
+
+        FinishCalibration(
+            calibrationSum.normalized,
+            calibrationMagnitudeSum / calibrationSamples
+        );
+    }
+
+
+    private void FinishCalibration(
+        Vector3 direction,
+        float magnitude
+    )
+    {
+        neutralMagnitude =
+            magnitude;
+
+        // Eje del plano yz alineado con la neutral, elegido sin depender del signo global
+        // (el ángulo se lleva a (-90°, 90°]).
+        float planeAngle =
+            Mathf.Atan2(direction.z, direction.y) * Mathf.Rad2Deg;
+
+        if (planeAngle > 90f)
+        {
+            planeAngle -= 180f;
+        }
+        else if (planeAngle <= -90f)
+        {
+            planeAngle += 180f;
+        }
+
+        neutralPlaneAxis =
+            new Vector3(
+                0f,
+                Mathf.Cos(planeAngle * Mathf.Deg2Rad),
+                Mathf.Sin(planeAngle * Mathf.Deg2Rad)
+            );
+
+        Vector3 neutralVector =
+            direction * magnitude;
+
+        filteredAcceleration =
+            neutralVector;
+
+        Vector2 neutralAngles =
+            PhoneAnglesFrom(neutralVector);
+
+        neutralSide =
+            neutralAngles.x;
+
+        neutralPitch =
+            neutralAngles.y;
+
+        ResetAim();
+
+        calibrated =
+            true;
+
+        Debug.Log(
+            $"🔦 [FLASHLIGHT] " +
+            $"CALIBRADO P{playerId} -> " +
+            $"neutral: {neutralVector.x:F2}, {neutralVector.y:F2}, {neutralVector.z:F2} " +
+            $"(|a| {magnitude:F2}, {calibrationSamples} muestras)"
+        );
+
+        if (magnitude < 3f)
+        {
+            Debug.LogWarning(
+                $"🔦⚠️ [FLASHLIGHT] P{playerId}: |a| = {magnitude:F2}. " +
+                $"Se esperaba ≈ 9.81 (m/s², gravedad incluida). Si el teléfono envía en g (≈ 1) funciona igual; " +
+                $"si envía aceleración SIN gravedad (≈ 0) la linterna no puede orientarse."
+            );
+        }
+    }
+
+
+    private void ApplyRotation()
+    {
+        if (flashlightPivot == null)
+        {
+            return;
+        }
+
+        // Euler X positivo baja el haz.
         flashlightPivot.localRotation =
             Quaternion.Euler(
-                currentVertical,
+                -(currentVertical + neutralUpAngle),
                 currentHorizontal,
                 0f
             );
-
-
-        DebugLog(
-            $"🔦 [P{playerId}] Rotación -> " +
-            $"X: {currentVertical:F1} | " +
-            $"Y: {currentHorizontal:F1}"
-        );
     }
 
 
@@ -446,37 +630,21 @@ public class FlashlightController : MonoBehaviour
 
     private PlayerIdentity FindPlayerIdentity()
     {
-        // ---------------------------------------------------------
-        // MISMO OBJETO
-        // ---------------------------------------------------------
-
         PlayerIdentity identity =
             GetComponent<PlayerIdentity>();
-
 
         if (identity != null)
         {
             return identity;
         }
-
-
-        // ---------------------------------------------------------
-        // PADRE
-        // ---------------------------------------------------------
 
         identity =
             GetComponentInParent<PlayerIdentity>();
 
-
         if (identity != null)
         {
             return identity;
         }
-
-
-        // ---------------------------------------------------------
-        // RAÍZ
-        // ---------------------------------------------------------
 
         if (transform.root != null)
         {
@@ -484,7 +652,6 @@ public class FlashlightController : MonoBehaviour
                 transform.root
                     .GetComponent<PlayerIdentity>();
         }
-
 
         return identity;
     }
@@ -496,10 +663,6 @@ public class FlashlightController : MonoBehaviour
 
     private void TrySyncPlayerId()
     {
-        // ---------------------------------------------------------
-        // SI NO HAY IDENTITY O ES INVÁLIDA, BUSCAR OTRA VEZ
-        // ---------------------------------------------------------
-
         if (
             playerIdentity == null ||
             playerIdentity.PlayerId < 1 ||
@@ -510,20 +673,13 @@ public class FlashlightController : MonoBehaviour
                 FindPlayerIdentity();
         }
 
-
         if (playerIdentity == null)
         {
             return;
         }
 
-
         int identityId =
             playerIdentity.PlayerId;
-
-
-        // ---------------------------------------------------------
-        // ID INVÁLIDO
-        // ---------------------------------------------------------
 
         if (
             identityId < 1 ||
@@ -533,11 +689,6 @@ public class FlashlightController : MonoBehaviour
             return;
         }
 
-
-        // ---------------------------------------------------------
-        // ASIGNAR
-        // ---------------------------------------------------------
-
         if (
             !playerIdAssigned ||
             playerId != identityId
@@ -546,24 +697,12 @@ public class FlashlightController : MonoBehaviour
             playerId =
                 identityId;
 
-
             playerIdAssigned =
                 true;
 
+            ResetCalibrationState();
 
-            calibrated =
-                false;
-
-
-            currentHorizontal = 0f;
-            currentVertical = 0f;
-
-            targetHorizontal = 0f;
-            targetVertical = 0f;
-
-
-            ResetRotation();
-
+            ResetAim();
 
             Debug.Log(
                 $"🔦🆔 [FLASHLIGHT] " +
@@ -582,30 +721,17 @@ public class FlashlightController : MonoBehaviour
     {
         // IMPORTANTE:
         // volver a obtener el ID antes de activar.
-
         TrySyncPlayerId();
-
 
         flashlightActive =
             true;
 
+        // La postura con la que el jugador sostiene el teléfono al empezar es la neutral.
+        ResetCalibrationState();
 
-        calibrated =
-            false;
-
-
-        currentHorizontal = 0f;
-        currentVertical = 0f;
-
-        targetHorizontal = 0f;
-        targetVertical = 0f;
-
-
-        ResetRotation();
-
+        ResetAim();
 
         SetLightEnabled(true);
-
 
         Debug.Log(
             $"🔦🔦🔦 [FLASHLIGHT] " +
@@ -624,16 +750,11 @@ public class FlashlightController : MonoBehaviour
         flashlightActive =
             false;
 
+        ResetCalibrationState();
 
-        calibrated =
-            false;
-
-
-        ResetRotation();
-
+        ResetAim();
 
         SetLightEnabled(false);
-
 
         Debug.Log(
             $"🔦 [FLASHLIGHT] " +
@@ -662,19 +783,11 @@ public class FlashlightController : MonoBehaviour
     }
 
 
-    // =========================================================
-    // ACTIVE
-    // =========================================================
-
     public bool IsFlashlightActive()
     {
         return flashlightActive;
     }
 
-
-    // =========================================================
-    // LIGHT
-    // =========================================================
 
     private void SetLightEnabled(
         bool enabledState
@@ -709,28 +822,15 @@ public class FlashlightController : MonoBehaviour
             return;
         }
 
-
         playerId =
             id;
-
 
         playerIdAssigned =
             true;
 
+        ResetCalibrationState();
 
-        calibrated =
-            false;
-
-
-        currentHorizontal = 0f;
-        currentVertical = 0f;
-
-        targetHorizontal = 0f;
-        targetVertical = 0f;
-
-
-        ResetRotation();
-
+        ResetAim();
 
         Debug.Log(
             $"🔦🔦🔦 [FLASHLIGHT] " +
@@ -759,101 +859,57 @@ public class FlashlightController : MonoBehaviour
     // CALIBRAR
     // =========================================================
 
+    // Fija YA la postura actual como neutral (con la última lectura válida).
     public void Calibrate()
     {
         if (mobileInput == null)
         {
             mobileInput =
-                FindObjectOfType<MobileInputManager>();
+                FindAnyObjectByType<MobileInputManager>();
         }
-
-
-        if (mobileInput == null)
-        {
-            Debug.LogWarning(
-                "🔦 [FLASHLIGHT] " +
-                "No se puede calibrar."
-            );
-
-            return;
-        }
-
 
         TrySyncPlayerId();
 
-
-        if (!playerIdAssigned)
+        if (mobileInput == null || !playerIdAssigned)
         {
             Debug.LogWarning(
                 "🔦 [FLASHLIGHT] " +
-                "No se puede calibrar: " +
-                "Player ID no asignado."
+                "No se puede calibrar: falta MobileInputManager o Player ID."
             );
 
             return;
         }
-
 
         Vector3 accelerometer =
             mobileInput.GetAccelerometer(
                 playerId
             );
 
+        if (accelerometer.magnitude < minValidMagnitude)
+        {
+            Debug.LogWarning(
+                $"🔦 [FLASHLIGHT] " +
+                $"No se puede calibrar P{playerId}: no llegan datos del acelerómetro."
+            );
 
-        Calibrate(
-            accelerometer
+            return;
+        }
+
+        calibrationSamples = 1;
+
+        FinishCalibration(
+            accelerometer.normalized,
+            accelerometer.magnitude
         );
     }
 
 
-    private void Calibrate(
-        Vector3 accelerometer
-    )
-    {
-        initialAccelerometer =
-            accelerometer;
-
-
-        currentHorizontal = 0f;
-        currentVertical = 0f;
-
-        targetHorizontal = 0f;
-        targetVertical = 0f;
-
-
-        calibrated =
-            true;
-
-
-        Debug.Log(
-            $"🔦 [FLASHLIGHT] " +
-            $"CALIBRADO P{playerId} -> " +
-            $"X: {initialAccelerometer.x:F2} | " +
-            $"Y: {initialAccelerometer.y:F2} | " +
-            $"Z: {initialAccelerometer.z:F2}"
-        );
-    }
-
-
-    // =========================================================
-    // RESET CALIBRATION
-    // =========================================================
-
+    // Vuelve a tomar la postura neutral con las próximas lecturas.
     public void ResetCalibration()
     {
-        calibrated =
-            false;
+        ResetCalibrationState();
 
-
-        currentHorizontal = 0f;
-        currentVertical = 0f;
-
-        targetHorizontal = 0f;
-        targetVertical = 0f;
-
-
-        ResetRotation();
-
+        ResetAim();
 
         Debug.Log(
             $"🔦 [FLASHLIGHT] " +
@@ -868,17 +924,26 @@ public class FlashlightController : MonoBehaviour
     }
 
 
-    // =========================================================
-    // RESET ROTATION
-    // =========================================================
-
-    private void ResetRotation()
+    private void ResetCalibrationState()
     {
-        if (flashlightPivot != null)
-        {
-            flashlightPivot.localRotation =
-                Quaternion.identity;
-        }
+        calibrated = false;
+        calibrationSum = Vector3.zero;
+        calibrationMagnitudeSum = 0f;
+        calibrationSamples = 0;
+        calibrationTimer = 0f;
+        calibrationWait = 0f;
+    }
+
+
+    private void ResetAim()
+    {
+        currentHorizontal = 0f;
+        currentVertical = 0f;
+        targetHorizontal = 0f;
+        targetVertical = 0f;
+        PhoneAngles = Vector2.zero;
+
+        ApplyRotation();
     }
 
 
@@ -895,10 +960,8 @@ public class FlashlightController : MonoBehaviour
             return;
         }
 
-
         debugTimer +=
             Time.deltaTime;
-
 
         if (
             debugTimer >=
@@ -908,7 +971,6 @@ public class FlashlightController : MonoBehaviour
             Debug.Log(
                 message
             );
-
 
             debugTimer =
                 0f;

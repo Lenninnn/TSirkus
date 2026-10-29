@@ -6,11 +6,23 @@ public class FlashlightWordDetector : MonoBehaviour
     // DETECTION
     // =============================================================
 
+    // Una palabra se revela cuando queda dentro de la parte brillante del haz (no solo bajo
+    // el centro exacto), dentro del alcance de la luz, sin nada delante, durante revealTime.
+
     [Header("Detection")]
+    [Tooltip("Distancia máxima. Nunca más allá del alcance (range) de la luz.")]
     [SerializeField] private float detectionDistance = 15f;
 
-    [SerializeField] private float detectionRadius = 0.15f;
+    [Tooltip("Semiángulo (grados) del haz que revela. 5° ≈ 0.6 m a 7 m: hay que apuntar a la palabra (las vecinas están a ~8°), pero no al centímetro.")]
+    [SerializeField] private float revealConeAngle = 5f;
 
+    [Tooltip("Distancia máxima (m) entre el eje del haz y la palabra. Con la distancia el cono se estrecha: de lejos hay que apuntar más fino.")]
+    [SerializeField] private float revealRadius = 0.5f;
+
+    [Tooltip("Segundos seguidos iluminando la palabra para revelarla (evita revelar al barrer por accidente).")]
+    [SerializeField] private float revealTime = 0.25f;
+
+    [Tooltip("Capas que pueden tapar la palabra.")]
     [SerializeField] private LayerMask detectionLayers = ~0;
 
 
@@ -51,6 +63,13 @@ public class FlashlightWordDetector : MonoBehaviour
     private float debugTimer;
 
     private HiddenWord currentWord;
+
+    private float currentWordLitTime;
+
+    private HiddenWord[] words;
+
+    private readonly RaycastHit[] occlusionHits =
+        new RaycastHit[16];
 
 
     // =============================================================
@@ -261,82 +280,27 @@ public class FlashlightWordDetector : MonoBehaviour
         Vector3 origin =
             transform.position;
 
-
         Vector3 direction =
             transform.forward;
 
+        float maxDistance =
+            flashlightLight != null
+                ? Mathf.Min(detectionDistance, flashlightLight.range)
+                : detectionDistance;
 
-        // ---------------------------------------------------------
-        // DEBUG RAY
-        // ---------------------------------------------------------
 
         if (drawDebugRay)
         {
             Debug.DrawRay(
                 origin,
-                direction * detectionDistance,
+                direction * maxDistance,
                 Color.red
             );
         }
 
 
-        // ---------------------------------------------------------
-        // SPHERE CAST
-        // ---------------------------------------------------------
-
-        RaycastHit hit;
-
-
-        bool detected =
-            Physics.SphereCast(
-                origin,
-                detectionRadius,
-                direction,
-                out hit,
-                detectionDistance,
-                detectionLayers,
-                QueryTriggerInteraction.Collide
-            );
-
-
-        if (!detected)
-        {
-            return;
-        }
-
-
-        // ---------------------------------------------------------
-        // BUSCAR HIDDEN WORD
-        // ---------------------------------------------------------
-
-        HiddenWord hiddenWord =
-            hit.collider
-                .GetComponentInParent<HiddenWord>();
-
-
-        if (hiddenWord == null)
-        {
-            return;
-        }
-
-
-        // ---------------------------------------------------------
-        // YA REVELADA
-        // ---------------------------------------------------------
-
-        if (hiddenWord.IsRevealed)
-        {
-            return;
-        }
-
-
-        // ---------------------------------------------------------
-        // PLAYER ID
-        // ---------------------------------------------------------
-
         int playerId =
             flashlightController.GetPlayerId();
-
 
         if (
             playerId < 1 ||
@@ -353,27 +317,84 @@ public class FlashlightWordDetector : MonoBehaviour
 
 
         // ---------------------------------------------------------
-        // DEBUG
+        // PALABRA DE ESTE JUGADOR MÁS CENTRADA EN EL HAZ
         // ---------------------------------------------------------
 
-        currentWord =
-            hiddenWord;
+        HiddenWord litWord =
+            null;
 
+        float bestAngle =
+            revealConeAngle;
+
+        foreach (HiddenWord word in GetWords())
+        {
+            if (
+                word == null ||
+                word.IsRevealed ||
+                word.AssignedPlayerId != playerId ||
+                !word.gameObject.activeInHierarchy
+            )
+            {
+                continue;
+            }
+
+            Vector3 toWord =
+                WordCenter(word) - origin;
+
+            float distance =
+                toWord.magnitude;
+
+            if (distance > maxDistance)
+            {
+                continue;
+            }
+
+            float angle =
+                Vector3.Angle(direction, toWord);
+
+            if (
+                angle > bestAngle ||
+                distance * Mathf.Sin(angle * Mathf.Deg2Rad) > revealRadius ||
+                !IsUnobstructed(origin, toWord, distance, word)
+            )
+            {
+                continue;
+            }
+
+            litWord =
+                word;
+
+            bestAngle =
+                angle;
+        }
+
+
+        if (litWord != currentWord)
+        {
+            currentWord =
+                litWord;
+
+            currentWordLitTime =
+                0f;
+        }
+
+        if (currentWord == null)
+        {
+            return;
+        }
+
+        currentWordLitTime +=
+            Time.deltaTime;
 
         DebugLog(
             $"🔤🔦 [P{playerId}] " +
-            $"Apuntando a '{hiddenWord.Word}' " +
-            $"| pertenece a P{hiddenWord.AssignedPlayerId}"
+            $"Iluminando '{currentWord.Word}' " +
+            $"({bestAngle:F1}° del centro, {currentWordLitTime:F2} s)"
         );
 
-
-        // ---------------------------------------------------------
-        // ASEGURAR CÁMARA
-        // ---------------------------------------------------------
-
-        if (playerCamera == null)
+        if (currentWordLitTime < revealTime)
         {
-            FindPlayerCamera();
+            return;
         }
 
 
@@ -381,12 +402,19 @@ public class FlashlightWordDetector : MonoBehaviour
         // INTENTAR REVELAR
         // ---------------------------------------------------------
 
+        if (playerCamera == null)
+        {
+            FindPlayerCamera();
+        }
+
+        HiddenWord hiddenWord =
+            currentWord;
+
         bool revealed =
             hiddenWord.TryRevealForPlayer(
                 playerId,
                 playerCamera
             );
-
 
         if (revealed)
         {
@@ -395,6 +423,9 @@ public class FlashlightWordDetector : MonoBehaviour
                 $"PLAYER {playerId} reveló " +
                 $"'{hiddenWord.Word}'"
             );
+
+            currentWord =
+                null;
         }
         else
         {
@@ -405,6 +436,69 @@ public class FlashlightWordDetector : MonoBehaviour
                 $"| pertenece a P{hiddenWord.AssignedPlayerId}"
             );
         }
+    }
+
+
+    private HiddenWord[] GetWords()
+    {
+        if (words == null || words.Length == 0)
+        {
+            words =
+                FindObjectsByType<HiddenWord>();
+        }
+
+        return words;
+    }
+
+
+    private static Vector3 WordCenter(
+        HiddenWord word
+    )
+    {
+        Collider wordCollider =
+            word.GetComponentInChildren<Collider>();
+
+        return wordCollider != null
+            ? wordCollider.bounds.center
+            : word.transform.position;
+    }
+
+
+    // Nada (salvo el propio jugador o la palabra) entre la linterna y la palabra.
+    private bool IsUnobstructed(
+        Vector3 origin,
+        Vector3 toWord,
+        float distance,
+        HiddenWord word
+    )
+    {
+        int count =
+            Physics.RaycastNonAlloc(
+                origin,
+                toWord / distance,
+                occlusionHits,
+                distance - 0.05f,
+                detectionLayers,
+                QueryTriggerInteraction.Ignore
+            );
+
+        for (int i = 0; i < count; i++)
+        {
+            Transform hit =
+                occlusionHits[i].transform;
+
+            if (
+                hit.root == transform.root ||
+                hit.GetComponentInParent<HiddenWord>() == word
+            )
+            {
+                continue;
+            }
+
+            return false;
+        }
+
+        return true;
     }
 
 
