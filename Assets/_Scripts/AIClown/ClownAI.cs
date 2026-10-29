@@ -1,6 +1,16 @@
 using UnityEngine;
 using UnityEngine.AI;
 
+// Comportamiento del payaso mientras está en escena (lo crea y lo quita ClownSpawner).
+//
+// El modelo (patyaso.fbx) es una malla SIN rig ni animaciones: si caminara a la vista se vería
+// deslizarse como una estatua. Por eso se mueve SOLO cuando ninguna cámara lo ve
+// (ClownLookDetector informa con ReportObservation). Si alguien lo distingue a lo lejos, se
+// queda quieto mirando; si lo ve de verdad y de cerca, desaparece (NotifySeenBy → spawner).
+//
+// Sin objetivo: ronda por el NavMesh (destinos aleatorios, pausas, se gira hacia los jugadores).
+// Con objetivo (ClownEncounterManager eligió a quien no miró): lo acecha y, si llega sin ser
+// visto, lo captura (PlayerStateController.Capture → rescate con la palanca).
 public class ClownAI : MonoBehaviour
 {
     [Header("Movimiento")]
@@ -9,6 +19,35 @@ public class ClownAI : MonoBehaviour
     [Tooltip("Distancia a la que el payaso considera que llegó al jugador.")]
     [SerializeField] private float captureDistance = 1.5f;
 
+    [Header("Rondar")]
+    [Tooltip("Radio (m) en el que elige destinos al rondar.")]
+    [SerializeField] private float roamRadius = 12f;
+
+    [Tooltip("Nunca elige un destino de ronda a menos de esto de un jugador.")]
+    [SerializeField] private float roamMinPlayerDistance = 5f;
+
+    [SerializeField] private float roamSpeed = 2.2f;
+
+    [Tooltip("Pausa (s) al llegar a cada destino. Aleatoria en el rango.")]
+    [SerializeField] private Vector2 pauseRange = new Vector2(1.5f, 5f);
+
+    [Tooltip("Grados por segundo al girarse hacia el jugador más cercano mientras espera.")]
+    [SerializeField] private float turnSpeed = 180f;
+
+    [Header("Acecho")]
+    [SerializeField] private float chaseSpeed = 3.4f;
+
+    [Header("Captura")]
+    [Tooltip("Si está activo, alcanzar al objetivo lo deja Capturado (PlayerStateController).")]
+    [SerializeField] private bool capturePlayers = true;
+
+    [Tooltip("Nunca captura al último jugador libre (sin nadie libre no hay rescate posible).")]
+    [SerializeField] private bool neverCaptureLastFreePlayer = true;
+
+    [Header("Observación")]
+    [Tooltip("Segundos que sigue quieto después del último reporte de que alguien lo ve.")]
+    [SerializeField] private float observationMemory = 0.25f;
+
     [Header("Depuración")]
     [SerializeField] private bool showDebugMessages = true;
 
@@ -16,9 +55,32 @@ public class ClownAI : MonoBehaviour
     private bool hasTarget;
     private bool hasCaptured;
 
+    private ClownSpawner spawner;
+    private Collider bodyCollider;
+    private float lastObservedTime = -100f;
+    private float pauseTimer;
+    private bool roamingToDestination;
+    private float stuckTimer;
+    private float nextRepath;
+    private bool warnedNoNavMesh;
+
+    public static ClownAI Active { get; private set; }
+
     public bool HasTarget => hasTarget;
     public Transform CurrentTarget => currentTarget;
     public bool HasCaptured => hasCaptured;
+
+    // Falso durante la primera aparición (escena preparada: se queda quieto).
+    public bool RoamingEnabled { get; set; } = true;
+    public bool IsVanishing { get; private set; }
+    public bool IsObserved => Time.time - lastObservedTime < observationMemory;
+    public bool IsMoving => navMeshAgent != null && navMeshAgent.enabled && navMeshAgent.isOnNavMesh &&
+                            !navMeshAgent.isStopped && navMeshAgent.velocity.sqrMagnitude > 0.01f;
+
+    public Bounds VisualBounds => bodyCollider != null
+        ? bodyCollider.bounds
+        : new Bounds(transform.position + Vector3.up * 1.5f, new Vector3(0.9f, 3f, 0.9f));
+
 
     private void Awake()
     {
@@ -26,24 +88,188 @@ public class ClownAI : MonoBehaviour
         {
             navMeshAgent = GetComponent<NavMeshAgent>();
         }
+
+        bodyCollider = GetComponent<Collider>();
     }
+
+
+    private void OnEnable()
+    {
+        Active = this;
+    }
+
+
+    private void OnDisable()
+    {
+        if (Active == this)
+            Active = null;
+    }
+
+
+    public void Initialize(ClownSpawner owner)
+    {
+        spawner = owner;
+        pauseTimer = Random.Range(pauseRange.x, pauseRange.y);
+    }
+
 
     private void Update()
     {
-        if (!hasTarget || currentTarget == null)
+        if (IsVanishing || hasCaptured || !HasNavMesh())
         {
             return;
         }
 
-        if (hasCaptured)
+        // Alguien lo ve (aunque sea de lejos): se queda quieto como una figura.
+        if (IsObserved)
         {
+            Freeze();
             return;
         }
 
-        MoveTowardsTarget();
+        if (hasTarget && currentTarget != null)
+        {
+            Stalk();
+            return;
+        }
 
-        CheckCaptureDistance();
+        if (RoamingEnabled)
+        {
+            Roam();
+        }
+        else
+        {
+            Freeze();
+            FaceNearestPlayer();
+        }
     }
+
+
+    // =========================================================
+    // OBSERVACIÓN (ClownLookDetector)
+    // =========================================================
+
+    public void ReportObservation(bool observed)
+    {
+        if (observed)
+        {
+            lastObservedTime = Time.time;
+        }
+    }
+
+
+    public void NotifySeenBy(PlayerIdentity player)
+    {
+        if (IsVanishing)
+        {
+            return;
+        }
+
+        if (spawner != null)
+        {
+            spawner.OnClownSeen(this, player);
+        }
+    }
+
+
+    public void MarkVanishing()
+    {
+        IsVanishing = true;
+        Freeze();
+    }
+
+
+    // =========================================================
+    // RONDAR
+    // =========================================================
+
+    private void Roam()
+    {
+        navMeshAgent.speed = roamSpeed;
+
+        if (pauseTimer > 0f)
+        {
+            pauseTimer -= Time.deltaTime;
+            Freeze();
+            FaceNearestPlayer();
+            return;
+        }
+
+        navMeshAgent.isStopped = false;
+
+        if (!roamingToDestination)
+        {
+            roamingToDestination = TryPickRoamDestination();
+            stuckTimer = 0f;
+            return;
+        }
+
+        if (!navMeshAgent.pathPending &&
+            navMeshAgent.remainingDistance <= navMeshAgent.stoppingDistance + 0.2f)
+        {
+            roamingToDestination = false;
+            pauseTimer = Random.Range(pauseRange.x, pauseRange.y);
+            return;
+        }
+
+        // Atascado (quiere moverse y no avanza): nuevo destino.
+        if (navMeshAgent.desiredVelocity.sqrMagnitude > 0.04f &&
+            navMeshAgent.velocity.sqrMagnitude < 0.01f)
+        {
+            stuckTimer += Time.deltaTime;
+
+            if (stuckTimer > 1.5f)
+            {
+                DebugLog("Atascado: cambia de destino.");
+                roamingToDestination = false;
+            }
+        }
+        else
+        {
+            stuckTimer = 0f;
+        }
+    }
+
+
+    private bool TryPickRoamDestination()
+    {
+        Transform nearest = NearestPlayer(out _);
+        NavMeshPath path = new NavMeshPath();
+
+        for (int attempt = 0; attempt < 12; attempt++)
+        {
+            // La mitad de las veces ronda hacia la zona de los jugadores (presencia); si no, al azar.
+            Vector3 center = nearest != null && Random.value < 0.5f
+                ? Vector3.Lerp(transform.position, nearest.position, 0.5f)
+                : transform.position;
+
+            Vector2 offset = Random.insideUnitCircle * roamRadius;
+            Vector3 candidate = center + new Vector3(offset.x, 0f, offset.y);
+
+            if (!NavMesh.SamplePosition(candidate, out NavMeshHit hit, 2f, NavMesh.AllAreas))
+                continue;
+
+            if (Vector3.Distance(hit.position, transform.position) < 3f)
+                continue;
+
+            if (DistanceToNearestPlayer(hit.position) < roamMinPlayerDistance)
+                continue;
+
+            if (!navMeshAgent.CalculatePath(hit.position, path) || path.status != NavMeshPathStatus.PathComplete)
+                continue;
+
+            navMeshAgent.SetPath(path);
+            return true;
+        }
+
+        pauseTimer = Random.Range(pauseRange.x, pauseRange.y);
+        return false;
+    }
+
+
+    // =========================================================
+    // ACECHAR / CAPTURAR
+    // =========================================================
 
     public void SetTarget(Transform target)
     {
@@ -59,65 +285,40 @@ public class ClownAI : MonoBehaviour
         currentTarget = target;
         hasTarget = true;
         hasCaptured = false;
-
-        if (navMeshAgent == null)
-        {
-            navMeshAgent = GetComponent<NavMeshAgent>();
-        }
-
-        if (navMeshAgent == null)
-        {
-            Debug.LogError(
-                $"{gameObject.name}: No tiene un NavMeshAgent."
-            );
-
-            return;
-        }
-
-        navMeshAgent.isStopped = false;
-
-        navMeshAgent.SetDestination(
-            currentTarget.position
-        );
+        nextRepath = 0f;
 
         DebugLog(
-            $"Nuevo objetivo: {currentTarget.name}"
+            $"Acecha a: {currentTarget.name}"
         );
     }
 
-    private void MoveTowardsTarget()
+
+    private void Stalk()
     {
-        if (navMeshAgent == null)
+        PlayerStateController state = currentTarget.GetComponent<PlayerStateController>();
+
+        if (state != null && !state.IsAlive)
         {
+            DebugLog($"{currentTarget.name} ya no está libre: deja de acecharlo.");
+            ClearTarget();
             return;
         }
 
-        if (!navMeshAgent.isOnNavMesh)
-        {
-            Debug.LogWarning(
-                $"{gameObject.name}: El payaso no está colocado sobre un NavMesh."
-            );
+        navMeshAgent.speed = chaseSpeed;
+        navMeshAgent.isStopped = false;
 
-            return;
+        if (Time.time >= nextRepath)
+        {
+            nextRepath = Time.time + 0.25f;
+            navMeshAgent.SetDestination(currentTarget.position);
         }
 
-        navMeshAgent.SetDestination(
-            currentTarget.position
-        );
-    }
-
-    private void CheckCaptureDistance()
-    {
-        float distance = Vector3.Distance(
-            transform.position,
-            currentTarget.position
-        );
-
-        if (distance <= captureDistance)
+        if (Vector3.Distance(transform.position, currentTarget.position) <= captureDistance)
         {
             CaptureTarget();
         }
     }
+
 
     private void CaptureTarget()
     {
@@ -127,37 +328,150 @@ public class ClownAI : MonoBehaviour
         }
 
         hasCaptured = true;
+        Freeze();
 
-        if (navMeshAgent != null)
+        PlayerStateController state = currentTarget.GetComponent<PlayerStateController>();
+        bool captured = false;
+
+        if (capturePlayers && state != null && state.IsAlive &&
+            (!neverCaptureLastFreePlayer || CountFreePlayers() > 1))
         {
-            navMeshAgent.isStopped = true;
+            state.Capture();
+            captured = true;
         }
 
         DebugLog(
-            $"El payaso llegó al objetivo: {currentTarget.name}"
+            captured
+                ? $"CAPTURA: {currentTarget.name}"
+                : $"Alcanzó a {currentTarget.name} sin capturarlo (último jugador libre o captura desactivada)."
         );
 
-        DebugLog(
-            $"CAPTURA: {currentTarget.name}"
-        );
-
-        // BLOQUE 2:
-        // Aquí conectaremos el sistema de estados del jugador.
+        if (spawner != null)
+        {
+            spawner.OnClownCaptured(this);
+        }
     }
+
 
     public void ClearTarget()
     {
         currentTarget = null;
         hasTarget = false;
         hasCaptured = false;
+        roamingToDestination = false;
 
-        if (navMeshAgent != null)
+        if (navMeshAgent != null && navMeshAgent.enabled && navMeshAgent.isOnNavMesh)
         {
-            navMeshAgent.isStopped = true;
+            navMeshAgent.ResetPath();
         }
 
         DebugLog("Objetivo eliminado.");
     }
+
+
+    // =========================================================
+    // UTILIDADES
+    // =========================================================
+
+    private bool HasNavMesh()
+    {
+        if (navMeshAgent != null && navMeshAgent.enabled && navMeshAgent.isOnNavMesh)
+        {
+            return true;
+        }
+
+        if (!warnedNoNavMesh)
+        {
+            warnedNoNavMesh = true;
+            Debug.LogWarning(
+                $"{gameObject.name}: El payaso no está sobre un NavMesh (TSirkus/Payaso/Configurar payaso en GAME)."
+            );
+        }
+
+        return false;
+    }
+
+
+    private void Freeze()
+    {
+        if (navMeshAgent != null && navMeshAgent.enabled && navMeshAgent.isOnNavMesh)
+        {
+            navMeshAgent.isStopped = true;
+            navMeshAgent.velocity = Vector3.zero;
+        }
+    }
+
+
+    private void FaceNearestPlayer()
+    {
+        Transform nearest = NearestPlayer(out _);
+
+        if (nearest == null)
+        {
+            return;
+        }
+
+        Vector3 direction = nearest.position - transform.position;
+        direction.y = 0f;
+
+        if (direction.sqrMagnitude < 0.01f)
+        {
+            return;
+        }
+
+        transform.rotation = Quaternion.RotateTowards(
+            transform.rotation,
+            Quaternion.LookRotation(direction),
+            turnSpeed * Time.deltaTime
+        );
+    }
+
+
+    private static Transform NearestPlayer(Vector3 position, out float distance)
+    {
+        Transform best = null;
+        distance = float.MaxValue;
+
+        foreach (PlayerIdentity player in ClownSpawner.ActivePlayers())
+        {
+            float d = Vector3.Distance(position, player.transform.position);
+
+            if (d < distance)
+            {
+                distance = d;
+                best = player.transform;
+            }
+        }
+
+        return best;
+    }
+
+
+    private Transform NearestPlayer(out float distance) => NearestPlayer(transform.position, out distance);
+
+
+    private static float DistanceToNearestPlayer(Vector3 position)
+    {
+        NearestPlayer(position, out float distance);
+        return distance;
+    }
+
+
+    private static int CountFreePlayers()
+    {
+        int count = 0;
+
+        foreach (PlayerIdentity player in ClownSpawner.ActivePlayers())
+        {
+            PlayerStateController state = player.GetComponent<PlayerStateController>();
+
+            if (state == null || state.IsAlive)
+                count++;
+        }
+
+        return count;
+    }
+
 
     private void DebugLog(string message)
     {
@@ -167,23 +481,25 @@ public class ClownAI : MonoBehaviour
         }
 
         Debug.Log(
-            $"{gameObject.name}: {message}"
+            $"🤡 {gameObject.name}: {message}"
         );
     }
+
+
     [ContextMenu("Probar objetivo")]
-private void TestTarget()
-{
-    GameObject player = GameObject.FindWithTag("Player");
-
-    if (player == null)
+    private void TestTarget()
     {
-        Debug.LogWarning(
-            $"{gameObject.name}: No se encontró ningún objeto con Tag 'Player'."
-        );
+        Transform nearest = NearestPlayer(out _);
 
-        return;
+        if (nearest == null)
+        {
+            Debug.LogWarning(
+                $"{gameObject.name}: No hay jugadores."
+            );
+
+            return;
+        }
+
+        SetTarget(nearest);
     }
-
-    SetTarget(player.transform);
-}
 }
