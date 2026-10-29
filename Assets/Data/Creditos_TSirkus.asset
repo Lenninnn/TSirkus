@@ -15,10 +15,16 @@ MonoBehaviour:
   title: TSIRKUS
   subtitle: "EL ESPECT\xC1CULO HA TERMINADO"
   sections:
-  - heading: EQUIPO
+  - heading: INTEGRANTES
     entries:
-    - name: "Lennin S\xE1nchez"
+    - name: "Mar\xEDa Jos\xE9 Aricapa"
       role: 
-    - name: "Mar\xEDa Jos\xE9"
+    - name: "Luisa Cruz"
+      role: 
+    - name: "Lennin Sanchez"
+      role: 
+    - name: "Juan Jos\xE9 Builes"
+      role: 
+    - name: "Alejandro Avenda\xF1o"
       role: 
   closingLine: 

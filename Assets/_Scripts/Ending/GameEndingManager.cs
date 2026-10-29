@@ -45,6 +45,9 @@ public class GameEndingManager : MonoBehaviour
     [Tooltip("Segundos que tarda en subir todo el bloque de créditos.")]
     [SerializeField] private float creditsScrollSeconds = 22f;
 
+    [Tooltip("Segundos que los créditos quedan quietos y completos antes de apagarse.")]
+    [SerializeField] private float creditsHoldSeconds = 5f;
+
     [Header("Ritmo")]
     [SerializeField] private float fadeSeconds = 1.5f;
 
@@ -385,12 +388,12 @@ public class GameEndingManager : MonoBehaviour
                 if (entry == null || string.IsNullOrWhiteSpace(entry.name))
                     continue;
 
-                y = Line(list, entry.name, bodyFont, 46, Bone, y, 6f, 2f);
+                y = Line(list, entry.name, bodyFont, 52, Bone, y, 6f, 3f);
 
                 if (!string.IsNullOrWhiteSpace(entry.role))
                     y = Line(list, entry.role, bodyFont, 30, Bone * 0.65f, y, 22f, 6f);
                 else
-                    y -= 16f;
+                    y -= 22f;
             }
         }
 
@@ -400,9 +403,11 @@ public class GameEndingManager : MonoBehaviour
             y = Line(list, data.closingLine, bodyFont, 36, Bone * 0.8f, y, 10f, 4f);
         }
 
+        // La lista entra desde abajo y se detiene centrada (o, si es más alta que la pantalla,
+        // con su final a la vista) para que todos los nombres se lean a la vez antes del cierre.
         float height = -y;
         float start = -560f;
-        float end = Mathf.Max(start + height + 200f, 520f + height * 0.5f);
+        float end = Mathf.Max(height * 0.5f, height - 440f);
         list.anchoredPosition = new Vector2(0f, start);
 
         yield return Fade(1f, 0f, fadeSeconds);
@@ -419,6 +424,11 @@ public class GameEndingManager : MonoBehaviour
             list.anchoredPosition = new Vector2(0f, Mathf.Lerp(start, end, k));
             yield return null;
         }
+
+        list.anchoredPosition = new Vector2(0f, end);
+
+        for (float hold = 0f; hold < creditsHoldSeconds && !skip; hold += Time.unscaledDeltaTime)
+            yield return null;
 
         // Final: los créditos se apagan y queda VOLVER AL INICIO.
         CanvasGroup listGroup = list.gameObject.AddComponent<CanvasGroup>();

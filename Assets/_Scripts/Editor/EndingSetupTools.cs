@@ -35,15 +35,17 @@ public static class EndingSetupTools
         if (credits == null)
         {
             credits = ScriptableObject.CreateInstance<EndingCredits>();
-            // Únicos nombres verificables en el proyecto (autores del repositorio). Roles sin
-            // documentar: se dejan vacíos para completarlos.
+            // Integrantes del proyecto, en el orden indicado por el equipo. Sin cargos individuales.
             credits.sections.Add(new EndingCredits.Section
             {
-                heading = "EQUIPO",
+                heading = "INTEGRANTES",
                 entries =
                 {
-                    new EndingCredits.Entry { name = "Lennin Sánchez", role = "" },
-                    new EndingCredits.Entry { name = "María José", role = "" }
+                    new EndingCredits.Entry { name = "María José Aricapa", role = "" },
+                    new EndingCredits.Entry { name = "Luisa Cruz", role = "" },
+                    new EndingCredits.Entry { name = "Lennin Sanchez", role = "" },
+                    new EndingCredits.Entry { name = "Juan José Builes", role = "" },
+                    new EndingCredits.Entry { name = "Alejandro Avendaño", role = "" }
                 }
             });
             AssetDatabase.CreateAsset(credits, CreditsPath);
