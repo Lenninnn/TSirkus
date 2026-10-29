@@ -18442,9 +18442,9 @@ MonoBehaviour:
   onDoorFlowFinished:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 505116529}
-        m_TargetAssemblyTypeName: ObjectivePromptController, Assembly-CSharp
-        m_MethodName: ShowToAll
+      - m_Target: {fileID: 1300000003}
+        m_TargetAssemblyTypeName: TrialCompleteBanner, Assembly-CSharp
+        m_MethodName: ShowCompletedThenObjective
         m_Mode: 2
         m_Arguments:
           m_ObjectArgument: {fileID: 11400000, guid: 933a8136e28fe46b09f0ab08988c1bfc, type: 2}
@@ -35790,6 +35790,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1863071727}
   - component: {fileID: 1863071728}
+  - component: {fileID: 1300000004}
   m_Layer: 0
   m_Name: 'BallonController '
   m_TagString: Untagged
@@ -35824,7 +35825,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c24ab30ba5ab31a4eb9679a3f403d4d4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BalloonPuzzleController
-  puzzleController: {fileID: 1598488317}
+  puzzleController: {fileID: 1300000004}
   balloonBases:
   - {fileID: 159462815}
   - {fileID: 877584466}
@@ -35832,7 +35833,7 @@ MonoBehaviour:
   - {fileID: 335842353}
   balloonController: {fileID: 2130629007}
   requiredHoldTime: 5
-  enableDebugLogs: 1
+  enableDebugLogs: 0
   enablePeriodicDebug: 1
   periodicDebugInterval: 2
   puzzleActivated: 0
@@ -42793,7 +42794,7 @@ GameObject:
   m_Component:
   - component: {fileID: 152254765}
   m_Layer: 0
-  m_Name: FinishPoint2
+  m_Name: FinishPoint3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -44057,7 +44058,7 @@ GameObject:
   m_Component:
   - component: {fileID: 829268770}
   m_Layer: 0
-  m_Name: FinishPoint1
+  m_Name: FinishPoint4
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -44895,7 +44896,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1216966397}
   m_Layer: 0
-  m_Name: StartPoint1
+  m_Name: StartPoint4
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -45022,7 +45023,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bca5e82ef5ddb554eb199fb26a8193ea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RaceStartManager
-  requiredPlayersToStart: 1
+  requiredPlayersToStart: 4
+  requiredPuzzles:
+  - {fileID: 2128766179}
+  - {fileID: 1300000004}
   onRaceStarted:
     m_PersistentCalls:
       m_Calls: []
@@ -45450,7 +45454,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1443709871}
   m_Layer: 0
-  m_Name: StartPoint4
+  m_Name: StartPoint1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -45662,7 +45666,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1542422674}
   m_Layer: 0
-  m_Name: FinishPoint4
+  m_Name: FinishPoint1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -45822,7 +45826,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1641705820}
   m_Layer: 0
-  m_Name: StartPoint2
+  m_Name: StartPoint3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -46677,7 +46681,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1967094244}
   m_Layer: 0
-  m_Name: FinishPoint3
+  m_Name: FinishPoint2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -46860,7 +46864,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2065422509}
   m_Layer: 0
-  m_Name: StartPoint3
+  m_Name: StartPoint2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -47144,6 +47148,93 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1300000004
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1863071726}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63f3dacd2adf3484296422025706adc0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PuzzleController
+  currentState: 0
+  onPuzzleActivated:
+    m_PersistentCalls:
+      m_Calls: []
+  onPuzzleCompleted:
+    m_PersistentCalls:
+      m_Calls: []
+  onPuzzleFailed:
+    m_PersistentCalls:
+      m_Calls: []
+  onPuzzleReset:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!1 &1300000001
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1300000002}
+  - component: {fileID: 1300000003}
+  m_Layer: 5
+  m_Name: CartelesPrueba
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1300000002
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1300000001}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1300000003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1300000001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eb2df9bd1f4524d6384a3c67e45bd445, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TrialCompleteBanner
+  trials:
+  - puzzle: {fileID: 2128766179}
+    nextObjective: {fileID: 0}
+  - puzzle: {fileID: 1300000004}
+    nextObjective: {fileID: 0}
+  completedTitle: PRUEBA COMPLETADA
+  completedSubtitle: "CONTIN\xDAA"
+  frame: {fileID: 21300000, guid: 471e6c9ab737243deadf7ae9ff726ead, type: 3}
+  titleFont: {fileID: 11400000, guid: 9c300907500ef400da658810e227a287, type: 2}
+  subtitleFont: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  titleColor: {r: 0.44, g: 0.05, b: 0.05, a: 1}
+  subtitleColor: {r: 0.12, g: 0.04, b: 0.02, a: 1}
+  anchorMin: {x: 0.18, y: 0.5}
+  anchorMax: {x: 0.82, y: 0.76}
+  visibleSeconds: 2.6
+  fadeSeconds: 0.45
+  objectives: {fileID: 505116529}
+  sortingOrder: 900
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -47208,3 +47299,4 @@ SceneRoots:
   - {fileID: 819402957}
   - {fileID: 183985140}
   - {fileID: 859033707}
+  - {fileID: 1300000002}

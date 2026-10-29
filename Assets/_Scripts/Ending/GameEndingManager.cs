@@ -48,6 +48,9 @@ public class GameEndingManager : MonoBehaviour
     [Tooltip("Segundos que los créditos quedan quietos y completos antes de apagarse.")]
     [SerializeField] private float creditsHoldSeconds = 5f;
 
+    [Tooltip("Segundos del cartel JUEGO COMPLETADO / CONTINÚA antes de la cinemática.")]
+    [SerializeField] private float gameCompletedSeconds = 3f;
+
     [Header("Ritmo")]
     [SerializeField] private float fadeSeconds = 1.5f;
 
@@ -57,6 +60,8 @@ public class GameEndingManager : MonoBehaviour
 
     private static readonly Color Blood = new Color(0.62f, 0.04f, 0.05f);
     private static readonly Color Bone = new Color(0.93f, 0.87f, 0.76f);
+    private static readonly Color Ink = new Color(0.44f, 0.05f, 0.05f);
+    private static readonly Color InkDark = new Color(0.16f, 0.06f, 0.02f);
 
     private int winner;
     private Canvas canvas;
@@ -137,6 +142,9 @@ public class GameEndingManager : MonoBehaviour
 
         Stage = "fundido";
         yield return Fade(0f, 1f, fadeSeconds);
+
+        Stage = "juego completado";
+        yield return GameCompletedScreen();
 
         string missing;
         bool played = false;
@@ -304,6 +312,50 @@ public class GameEndingManager : MonoBehaviour
 
 
     // Sin MP4: ganador sobre fondo oscuro con resplandor rojo, CONTINUAR o 10 s.
+    // Mismo cartel de pergamino que PRUEBA COMPLETADA, a pantalla completa: la partida terminó.
+    private IEnumerator GameCompletedScreen()
+    {
+        RectTransform panel = Panel("JuegoCompletado");
+        AddGlow(panel, new Vector2(0f, 20f), new Vector2(1700f, 950f), 0.6f);
+
+        Sprite frame = TrialCompleteBanner.Instance != null ? TrialCompleteBanner.Instance.Frame : null;
+
+        if (frame != null)
+        {
+            Image plaque = new GameObject("Cartel", typeof(RectTransform), typeof(Image)).GetComponent<Image>();
+            plaque.transform.SetParent(panel, false);
+            plaque.sprite = frame;
+            plaque.preserveAspect = true;
+            plaque.raycastTarget = false;
+            plaque.rectTransform.sizeDelta = new Vector2(1350f, 540f);
+
+            // Zona de texto del marco (790x316): título ~0.55 y subtítulo ~0.34 de su altura.
+            Text(plaque.rectTransform, "JUEGO COMPLETADO", titleFont, 84, Ink, new Vector2(0f, 30f), 6f);
+            Text(plaque.rectTransform, "CONTINÚA", bodyFont, 46, InkDark, new Vector2(0f, -86f), 12f);
+
+            Image rule = new GameObject("Linea", typeof(RectTransform), typeof(Image)).GetComponent<Image>();
+            rule.transform.SetParent(plaque.transform, false);
+            rule.color = Ink;
+            rule.raycastTarget = false;
+            rule.rectTransform.sizeDelta = new Vector2(500f, 3f);
+            rule.rectTransform.anchoredPosition = new Vector2(0f, -46f);
+        }
+        else
+        {
+            Text(panel, "JUEGO COMPLETADO", titleFont, 130, Blood, new Vector2(0f, 50f), 10f);
+            Text(panel, "CONTINÚA", bodyFont, 50, Bone, new Vector2(0f, -90f), 14f);
+        }
+
+        yield return Fade(1f, 0f, fadeSeconds);
+
+        for (float t = 0f; t < gameCompletedSeconds; t += Time.unscaledDeltaTime)
+            yield return null;
+
+        yield return Fade(0f, 1f, fadeSeconds);
+        Destroy(panel.gameObject);
+    }
+
+
     private IEnumerator WinnerScreen()
     {
         RectTransform panel = Panel("PantallaGanador");
@@ -588,18 +640,22 @@ public class GameEndingManager : MonoBehaviour
     }
 
 
-    // La fuente puede declarar un carácter con el glifo vacío: se exige que tenga dibujo.
+    // La tipografía de títulos (Carnevalee) no trae mayúsculas acentuadas ni Ñ (sus glifos están vacíos).
+    // Se decide sin pedir glifos a la fuente: forzar glifos en atlas dinámicos durante la partida
+    // estropeaba otros caracteres (la "Ú" se veía como "ú" y la "Á" perdía la tilde).
+    private const string MissingInTitleFont = "ÁÉÍÓÚÜÑáéíóúüñ¡¿";
+
     private static bool DrawsAll(TMP_FontAsset font, string text)
     {
-        font.HasCharacters(text, out uint[] _, false, true);
+        if (font == null || string.IsNullOrEmpty(text))
+            return true;
+
+        if (!font.name.StartsWith("Carnevalee"))
+            return true;
 
         foreach (char c in text)
         {
-            if (char.IsWhiteSpace(c))
-                continue;
-
-            if (!font.characterLookupTable.TryGetValue(c, out TMP_Character character) ||
-                character.glyph == null || character.glyph.metrics.width <= 0f)
+            if (MissingInTitleFont.IndexOf(c) >= 0)
                 return false;
         }
 
