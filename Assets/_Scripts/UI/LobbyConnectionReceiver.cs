@@ -47,7 +47,21 @@ public class LobbyConnectionReceiver : MonoBehaviour
         }
     }
 
+    // Antes solo intentaba conectar una vez: si el servidor de teléfonos arrancaba después de
+    // abrir esta pantalla, el lobby se quedaba en 0/4 para siempre. Ahora reintenta cada 3 s
+    // (en este hilo, sin bloquear Unity). Mensajes sin cambios.
     private void ConnectionLoop()
+    {
+        while (running)
+        {
+            ConnectionSession();
+
+            for (int waited = 0; running && waited < 30; waited++)
+                Thread.Sleep(100);
+        }
+    }
+
+    private void ConnectionSession()
     {
         try
         {
@@ -119,6 +133,8 @@ public class LobbyConnectionReceiver : MonoBehaviour
         finally
         {
             serverConnected = false;
+
+            try { tcpClient?.Close(); } catch { }
         }
     }
 

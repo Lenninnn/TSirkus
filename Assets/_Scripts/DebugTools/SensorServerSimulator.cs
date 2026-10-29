@@ -202,6 +202,8 @@ public static class SensorServerSimulator
 
         foreach (PhraseNetworkBridge bridge in UnityEngine.Object.FindObjectsByType<PhraseNetworkBridge>(FindObjectsInactive.Include))
             Redirect(bridge, PhrasePort);
+        foreach (LobbyConnectionReceiver lobby in UnityEngine.Object.FindObjectsByType<LobbyConnectionReceiver>(FindObjectsInactive.Include))
+            Redirect(lobby, SensorPort);
     }
 
     private static void Redirect(object target, int port)
