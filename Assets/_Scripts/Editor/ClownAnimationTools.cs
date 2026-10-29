@@ -32,6 +32,99 @@ public static class ClownAnimationTools
     private const float FallbackHeight = 2.6f;
 
 
+    // Texturas del payaso (Assets/TexturesClown). El FBX ya dice qué imagen va en cada material
+    // (DiffuseColor), pero con rutas de Windows del autor que Unity no encuentra. Se crean
+    // materiales URP/Lit con esa misma correspondencia y se registran como remap del FBX
+    // (Materials > On Demand Remap): el prefab los recibe sin cambios. Para deshacer, quitar los
+    // remaps en el inspector del FBX.
+    private const string TextureFolder = "Assets/TexturesClown";
+    private const string MaterialFolder = Folder + "/Materials";
+
+    // material del FBX → (textura según el FBX, suavidad).
+    private static readonly (string material, string texture, float smoothness)[] TextureMap =
+    {
+        // Suavidad baja: tela, pelo y piel mates (con más brillo los focos cálidos del circo
+        // dejaban reflejos blancos en el pelo y la gola).
+        ("Material.013", "WhatsApp Image 2026-09-03 at 12.35.05 PM.jpeg", 0.08f), // cabeza: rostro, pelo, gola
+        ("Material.018", "Gemini_Generated_Image_7w1s5k7w1s5k7w1s.jpg", 0.5f),    // ojos (húmedos)
+        ("Material.019", "Gemini_Generated_Image_lz5mvnlz5mvnlz5m.jpg", 0.3f),    // boca / dientes
+        ("Material.011", "WhatsApp Image 2026-09-03 at 12.52.23 PM.jpeg", 0.05f), // pelo
+        ("Material.004", "Gemini_Generated_Image_n0gxnjn0gxnjn0gx.jpg", 0.05f),   // traje
+        ("Material.001", "Gemini_Generated_Image_a0n9gta0n9gta0n9.jpg", 0.05f),   // tela sucia
+        ("Material.012", "Gemini_Generated_Image_1w0ygj1w0ygj1w0y.jpg", 0.15f),   // pintura roja
+        ("Material #26.001", "Gemini_Generated_Image_1w0ygj1w0ygj1w0y.jpg", 0.15f) // pintura roja (nariz)
+    };
+
+
+    [MenuItem("TSirkus/Payaso/Asignar texturas del payaso")]
+    private static void AssignTextures()
+    {
+        if (EditorApplication.isPlaying)
+        {
+            Debug.LogWarning("[PAYASO TEX] Sal de Play Mode primero.");
+            return;
+        }
+
+        var log = new StringBuilder("[PAYASO TEX]\n");
+        Shader lit = Shader.Find("Universal Render Pipeline/Lit");
+
+        if (lit == null)
+        {
+            Debug.LogError("[PAYASO TEX] No se encontró URP/Lit.");
+            return;
+        }
+
+        if (!AssetDatabase.IsValidFolder(MaterialFolder))
+            AssetDatabase.CreateFolder(Folder, "Materials");
+
+        var importer = (ModelImporter)AssetImporter.GetAtPath(ModelPath);
+
+        foreach ((string materialName, string textureName, float smoothness) in TextureMap)
+        {
+            var texture = AssetDatabase.LoadAssetAtPath<Texture2D>($"{TextureFolder}/{textureName}");
+
+            if (texture == null)
+            {
+                log.AppendLine($"  ✗ {materialName}: falta {textureName}");
+                continue;
+            }
+
+            string path = $"{MaterialFolder}/Payaso_{materialName.Replace("#", "").Replace(" ", "_")}.mat";
+            var material = AssetDatabase.LoadAssetAtPath<Material>(path);
+
+            if (material == null)
+            {
+                material = new Material(lit);
+                AssetDatabase.CreateAsset(material, path);
+            }
+
+            material.shader = lit;
+            material.SetTexture("_BaseMap", texture);
+            material.SetColor("_BaseColor", Color.white);
+            material.SetFloat("_Metallic", 0f);
+            material.SetFloat("_Smoothness", smoothness);
+            EditorUtility.SetDirty(material);
+
+            importer.AddRemap(new AssetImporter.SourceAssetIdentifier(typeof(Material), materialName), material);
+            log.AppendLine($"  {materialName} → {path} (base map {textureName}, suavidad {smoothness})");
+        }
+
+        AssetDatabase.SaveAssets();
+        importer.SaveAndReimport();
+
+        // Comprobación: qué material y textura usa cada malla del prefab.
+        GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
+
+        foreach (Renderer renderer in prefab.GetComponentsInChildren<Renderer>(true))
+        {
+            log.AppendLine($"  prefab {renderer.name}: " + string.Join(", ", renderer.sharedMaterials.Select(m =>
+                m == null ? "NULL" : $"{m.name} [{m.shader.name}] {(m.GetTexture("_BaseMap") != null ? m.GetTexture("_BaseMap").name : "sin textura")}")));
+        }
+
+        Debug.Log(log.ToString());
+    }
+
+
     [MenuItem("TSirkus/Payaso/Configurar animaciones y prefab del payaso")]
     private static void Setup()
     {
