@@ -9,10 +9,15 @@ public class RaceStartManager : MonoBehaviour
     [Min(1)]
     public int requiredPlayersToStart = 2;
 
+    [Header("Pruebas previas")]
+    [Tooltip("La carrera no empieza hasta que estas pruebas estén superadas (orden de la historia).")]
+    public PuzzleController[] requiredPuzzles;
+
     [Header("Evento al iniciar")]
     public UnityEvent onRaceStarted;
 
     private readonly HashSet<int> playersOnBases = new HashSet<int>();
+    private float nextLockedNotice;
 
     public bool RaceStarted { get; private set; }
 
@@ -22,6 +27,14 @@ public class RaceStartManager : MonoBehaviour
     {
         Debug.Log("RaceStartManager está activo. Jugadores necesarios: "
                   + requiredPlayersToStart);
+    }
+
+    // Si los cuatro ya estaban sobre las bases cuando se completó la última prueba previa,
+    // la carrera empieza sin que tengan que bajarse y volver a subir.
+    private void Update()
+    {
+        if (!RaceStarted && PlayersReady >= requiredPlayersToStart && PreviousTrialsCompleted)
+            CheckIfReady();
     }
 
     public void RegisterPlayerOnBase(int playerId)
@@ -70,10 +83,48 @@ public class RaceStartManager : MonoBehaviour
         }
     }
 
+    public bool PreviousTrialsCompleted
+    {
+        get
+        {
+            if (requiredPuzzles == null)
+                return true;
+
+            foreach (PuzzleController puzzle in requiredPuzzles)
+            {
+                if (puzzle != null && puzzle.CurrentState != PuzzleState.Success)
+                    return false;
+            }
+
+            return true;
+        }
+    }
+
+    // Reintento: nadie llegó a la meta. Los jugadores vuelven a sus bases para empezar otra vez.
+    public void ResetRace()
+    {
+        RaceStarted = false;
+        playersOnBases.Clear();
+        Debug.Log("RaceStartManager: carrera reiniciada. Esperando a los jugadores en sus bases.");
+    }
+
     private void CheckIfReady()
     {
         if (RaceStarted)
             return;
+
+        if (PlayersReady >= requiredPlayersToStart && !PreviousTrialsCompleted)
+        {
+            Debug.Log("La carrera aún no puede empezar: faltan pruebas anteriores.");
+
+            if (TrialCompleteBanner.Instance != null && Time.time >= nextLockedNotice)
+            {
+                nextLockedNotice = Time.time + 10f;
+                TrialCompleteBanner.Instance.Show(null, "LA FUNCIÓN AÚN NO TERMINA", "SUPEREN LAS PRUEBAS ANTERIORES");
+            }
+
+            return;
+        }
 
         if (PlayersReady >= requiredPlayersToStart)
         {

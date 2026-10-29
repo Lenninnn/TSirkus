@@ -88,6 +88,21 @@ public class AutomaticPlayerMovement : MonoBehaviour
         FindRoute();
     }
 
+    // Mismo motivo que PlayerInstability: en Awake el ID aún es 1; en Start ya es el real.
+    private void Start()
+    {
+        if (playerIdentity == null || raceStartManager == null)
+            return;
+
+        referencesReady = false;
+        startPoint = null;
+        finishPoint = null;
+        FindRoute();
+
+        if (referencesReady)
+            enabled = true;
+    }
+
     private void FindRoute()
     {
         int playerId = playerIdentity.PlayerId;
@@ -256,6 +271,15 @@ public class AutomaticPlayerMovement : MonoBehaviour
 
         if (stopAtFinish)
             enabled = false;
+    }
+
+    // Reintento de la carrera: vuelve a esperar el inicio desde su base.
+    public void ResetForRetry()
+    {
+        hasStarted = false;
+        hasFinished = false;
+        currentSpeedMultiplier = 1f;
+        enabled = referencesReady;
     }
 
     public void StopMovement()

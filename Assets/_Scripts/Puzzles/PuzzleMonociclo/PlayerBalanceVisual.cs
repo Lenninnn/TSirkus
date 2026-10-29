@@ -156,6 +156,14 @@ public class PlayerBalanceVisual : MonoBehaviour
         }
     }
 
+    // Reintento: permite volver a erguirse y caer de nuevo.
+    public void ResetFall()
+    {
+        falling = false;
+        fallCompleted = false;
+        fallTimer = 0f;
+    }
+
     private void ResetVisuals()
     {
         bodyVisual.localRotation = Quaternion.Slerp(
