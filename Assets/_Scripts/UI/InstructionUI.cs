@@ -10,11 +10,16 @@ public class InstructionUI : MonoBehaviour
 
     private void Awake()
     {
-        instructionText.gameObject.SetActive(false);
+        if (instructionText != null)
+            instructionText.gameObject.SetActive(false);
     }
 
     public void ShowInstruction(string message, float duration = 4f)
     {
+        // En GAME no hay texto asignado (los avisos usan el sistema de ayudas con imagen).
+        if (instructionText == null)
+            return;
+
         if (currentRoutine != null)
         {
             StopCoroutine(currentRoutine);

@@ -2995,7 +2995,7 @@ MonoBehaviour:
   playButton: {fileID: 1602225153}
   settingsButton: {fileID: 1430842373}
   historyButton: {fileID: 335690586}
-  settingsBack: {fileID: 0}
+  settingsBack: {fileID: 635799890}
   historyBack: {fileID: 9000135}
   musicSlider: {fileID: 0}
   volumeLabel: {fileID: 9000070}
@@ -3508,7 +3508,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 9000161}
         m_TargetAssemblyTypeName: TSirkus.MainMenuUpgrade.TSirkusMainMenuController, Assembly-CSharp
-        m_MethodName: Play
+        m_MethodName: OpenSettings
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -6190,7 +6190,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 9000161}
         m_TargetAssemblyTypeName: TSirkus.MainMenuUpgrade.TSirkusMainMenuController, Assembly-CSharp
-        m_MethodName: Play
+        m_MethodName: OpenHistory
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

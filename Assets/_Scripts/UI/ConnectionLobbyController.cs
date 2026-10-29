@@ -71,7 +71,7 @@ public class ConnectionLobbyController : MonoBehaviour
 
         if (connected)
         {
-            text.text = "CONECTADO ✓";
+            text.text = "CONECTADO"; // "✓" no existe en LiberationSans: se veía un cuadro vacío.
 
             text.color = new Color(
                 0.35f,
